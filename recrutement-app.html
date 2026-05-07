@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maisons Naturéa — Recrutement franchise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87..125,300..900&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+:root{
+/* Vert sapin Naturéa officiel #355222 (remplace l'ancien bleu marine) */
+--ink:#355222;--ink2:#243919;--ink3:#4a6e34;
+/* Terracotta Naturéa officiel #d69362 (remplace le doré) */
+--gold:#d69362;--gold2:#e6b18a;--gold3:#f0c9a3;
+/* Crème naturelle */
+--sand:#f0ebdf;--sand2:#e6dfc5;--mist:#f7f4ec;
+--border:#e3dccc;
+/* Textes naturels */
+--text:#1f2e25;--muted:#6b7a70;
+/* Sémantique */
+--green:#2f8557;--red:#b8453d;--purple:#7a5e8d;
+--sh:0 2px 16px rgba(53,82,34,.08);
+--sh2:0 8px 40px rgba(53,82,34,.14);
+--sh3:0 20px 60px rgba(53,82,34,.20);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Archivo',sans-serif;background:var(--mist);color:var(--text);min-height:100vh}
+
+/* APP */
+#screen-app{display:block;min-height:100vh}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:252px;min-width:252px;background:var(--ink);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
+.sb-logo{padding:18px 18px 16px;border-bottom:1px solid rgba(214,147,98,.18)}
+.sb-logo .sb-banner{display:block;width:100%;height:auto;border-radius:8px}
+.sb-user{margin:16px 16px 0;background:rgba(255,255,255,.05);border:1px solid rgba(214,147,98,.15);border-radius:10px;padding:12px 14px}
+.rtag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+.rtag.admin{background:rgba(214,147,98,.2);color:var(--gold3)}
+.rtag.cand{background:rgba(168,188,160,.2);color:#a8bca0}
+.sb-uname{color:#fff;font-size:14px;font-weight:500}
+.sb-uemail{color:rgba(255,255,255,.4);font-size:12px;margin-top:1px}
+.sb-logout{display:flex;align-items:center;gap:6px;margin:8px 16px 0;padding:7px 10px;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;border-radius:6px;transition:all .2s;border:none;background:none;width:calc(100% - 32px);font-family:'Archivo',sans-serif}
+.sb-logout:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.65)}
+.nav-sec{padding:20px 0 6px}
+.nav-lbl{color:rgba(214,147,98,.5);font-size:10px;text-transform:uppercase;letter-spacing:2px;padding:0 24px 8px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 24px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .18s;font-size:13.5px;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(214,147,98,.07);color:rgba(255,255,255,.85)}
+.nav-item.active{background:rgba(214,147,98,.11);color:#fff;border-left-color:var(--gold2);font-weight:500}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+
+/* MAIN */
+.main{margin-left:252px;flex:1;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:16px 36px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Archivo Black','Archivo',sans-serif;font-size:22px;color:var(--ink);font-weight:900;text-transform:uppercase;letter-spacing:-.2px}
+.topbar-sub{color:var(--muted);font-size:12.5px;margin-top:1px}
+.content{padding:30px 36px}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-family:'Archivo',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;border:none;transition:all .18s;text-transform:uppercase;letter-spacing:.05em}
+.btn-primary{background:var(--ink);color:#fff}.btn-primary:hover{background:var(--ink2)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-danger{background:#fdf0f0;color:var(--red);border:1px solid #f5c0c0}.btn-danger:hover{background:#fde0e0}
+.btn-green{background:var(--green);color:#fff}
+
+/* CARDS */
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:var(--sh)}
+.card-hd{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-hd h3{font-family:'Archivo Black','Archivo',sans-serif;font-size:16px;color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat{background:#fff;border-radius:12px;padding:22px;border:1px solid var(--border);box-shadow:var(--sh)}
+.stat-n{font-family:'Archivo Black','Archivo',sans-serif;font-size:36px;color:var(--ink);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat-l{color:var(--muted);font-size:12.5px;margin-top:5px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{background:var(--sand);padding:11px 15px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)}
+td{padding:13px 15px;border-bottom:1px solid var(--sand2);font-size:13.5px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sand);cursor:pointer}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.b-new{background:#e8f4fd;color:#1a6fa3}.b-contact{background:#fff8e1;color:#b07d00}
+.b-rdv{background:#e8f5e9;color:var(--green)}.b-ok{background:#f3e8ff;color:var(--purple)}
+.b-recr{background:#fce4ec;color:#c2185b}.b-no{background:#fde8e8;color:var(--red)}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.fg label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.fg input,.fg select,.fg textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:14px;color:var(--ink);background:var(--sand);transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--gold);background:#fff}
+.fg textarea{resize:vertical;min-height:80px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.fgrid .full{grid-column:1/-1}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:26px;flex-wrap:wrap}
+.tab{padding:11px 18px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);border-bottom-color:var(--gold);font-weight:600}
+.tc{display:none}.tc.active{display:block}
+
+/* STARS */
+.stars{display:flex;gap:3px;cursor:pointer}
+.stars .on{color:var(--gold);font-size:19px}.stars .off{color:var(--border);font-size:19px}
+
+/* DOCUMENTS - new style */
+.doc-section{margin-bottom:32px}
+.doc-section-title{font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;color:var(--ink);margin-bottom:14px;padding-bottom:9px;border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.doc-list{display:flex;flex-direction:column;gap:8px}
+.doc-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:#fff;border:1.5px solid var(--border);border-radius:10px;transition:all .2s}
+.doc-row.has{border-color:var(--green);background:#f0faf5}
+.doc-row-icon{font-size:22px;flex-shrink:0;width:30px;text-align:center}
+.doc-row-info{flex:1;min-width:0}
+.doc-row-name{font-size:13.5px;font-weight:600;color:var(--ink)}
+.doc-row-file{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-row-file.ok{color:var(--green)}
+.doc-row-actions{display:flex;gap:6px;flex-shrink:0}
+.doc-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:#fff;font-family:'Archivo',sans-serif;transition:all .15s;white-space:nowrap}
+.doc-btn:hover{border-color:var(--gold);color:var(--gold)}
+.doc-btn.upload{background:var(--ink);color:#fff;border-color:var(--ink)}
+.doc-btn.upload:hover{background:var(--ink2)}
+.doc-btn.view{background:var(--sand)}
+.doc-btn.dl{background:var(--sand)}
+.doc-btn.del{color:var(--red);border-color:#f5c0c0}
+.doc-btn.del:hover{background:#fde8e8}
+
+/* DISC inside docs */
+.disc-section{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:22px}
+.disc-section.done{border-color:var(--green);background:#f0faf5}
+.disc-qtext{font-size:14px;color:var(--ink);font-weight:500;padding:14px 16px;background:var(--sand);border-radius:10px;border-left:4px solid var(--gold);margin-bottom:14px;line-height:1.5}
+.disc-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.disc-opt{padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:flex-start;gap:9px}
+.disc-opt:hover{border-color:var(--gold);background:var(--sand)}
+.disc-opt.sel{border-color:var(--ink);background:var(--ink);color:#fff}
+.disc-opt .ol{font-weight:700;font-size:13px;min-width:16px;flex-shrink:0}
+.pbar-bg{background:var(--sand2);border-radius:20px;height:7px;overflow:hidden}
+.pbar-fill{height:7px;background:linear-gradient(90deg,var(--gold),var(--gold3));border-radius:20px;transition:width .4s}
+.disc-hero{background:var(--ink);color:#fff;border-radius:12px;padding:26px;text-align:center;margin-bottom:18px}
+.disc-ltr{font-family:'Archivo Black','Archivo',sans-serif;font-size:72px;color:var(--gold2);font-weight:900;line-height:1}
+.disc-pname{font-size:20px;font-weight:600;margin-top:6px}
+.disc-pdesc{color:rgba(255,255,255,.65);font-size:13px;margin-top:8px;line-height:1.7}
+.disc-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.dbi{text-align:center}
+.dbi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.dbi-track{background:var(--sand2);border-radius:4px;height:100px;display:flex;align-items:flex-end;overflow:hidden}
+.dbi-fill{width:100%;border-radius:4px 4px 0 0;transition:height .9s cubic-bezier(.4,0,.2,1)}
+.dbi-fill.D{background:#e74c3c}.dbi-fill.I{background:#f39c12}.dbi-fill.S{background:#27ae60}.dbi-fill.C{background:#2980b9}
+.dbi-score{font-size:16px;font-weight:700;color:var(--ink);margin-top:5px}
+
+/* QUESTIONNAIRE */
+.qs{margin-bottom:26px}
+.qs-title{font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;color:var(--ink);margin-bottom:13px;padding-bottom:8px;border-bottom:2px solid var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.qi{margin-bottom:14px}
+.qi label{font-size:13.5px;color:var(--text);font-weight:500;display:block;margin-bottom:6px}
+.rg{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px}
+.ro{display:flex;align-items:center;gap:6px;font-size:13px}
+.ro input[type=radio]{width:15px;height:15px;accent-color:var(--gold)}
+.qi select{padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13.5px;background:var(--sand);width:100%;max-width:400px}
+
+/* AVATAR */
+.av{width:56px;height:56px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black','Archivo',sans-serif;font-size:18px;color:var(--gold2);font-weight:900;flex-shrink:0;letter-spacing:.5px}
+
+/* PORTAL */
+.portal-hero{background:var(--ink);border-radius:16px;padding:28px 32px;margin-bottom:22px;display:flex;align-items:center;gap:22px;background-image:repeating-linear-gradient(135deg,transparent,transparent 50px,rgba(214,147,98,.04) 50px,rgba(214,147,98,.04) 100px)}
+.ph-text h2{font-family:'Archivo Black','Archivo',sans-serif;font-size:22px;color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:-.2px}
+.ph-text p{color:rgba(255,255,255,.45);font-size:13px;margin-top:5px}
+.progress-steps{display:flex;background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:22px}
+.ps{flex:1;padding:12px 10px;text-align:center;border-right:1px solid var(--border)}
+.ps:last-child{border-right:none}
+.ps.done{background:var(--green)}
+.ps-icon{font-size:16px;display:block;margin-bottom:3px}
+.ps-lbl{font-size:11px;font-weight:500;color:var(--muted)}
+.ps.done .ps-lbl{color:rgba(255,255,255,.85)}
+.portal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.portal-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
+.portal-card:hover{border-color:var(--gold);box-shadow:var(--sh2)}
+.portal-card .pc-icon{font-size:28px;margin-bottom:8px}
+.portal-card .pc-title{font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;color:var(--ink);margin-bottom:5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+.portal-card .pc-sub{font-size:12.5px;color:var(--muted)}
+
+/* PROFILE */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--sh)}
+.pcard h4{font-family:'Archivo Black','Archivo',sans-serif;font-size:13px;color:var(--ink);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--sand2);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.ir{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);font-size:13px}
+.ir:last-child{border-bottom:none}
+.ir .il{color:var(--muted);font-weight:500}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .ei{font-size:44px;margin-bottom:10px}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;background:var(--sand2);color:var(--text)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:13px 20px;border-radius:10px;font-size:13.5px;z-index:999;box-shadow:var(--sh2);animation:fu .3s;display:none;border-left:4px solid var(--gold2)}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* FILE VIEWER OVERLAY */
+.fv-overlay{display:none;position:fixed;inset:0;background:rgba(53,82,34,.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.fv-overlay.on{display:flex}
+.fv-box{background:#fff;border-radius:14px;width:80vw;max-width:900px;height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--sh3)}
+.fv-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fff}
+.fv-header h3{font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+.fv-header-btns{display:flex;gap:8px}
+.fv-body{flex:1;display:flex;align-items:center;justify-content:center;background:var(--sand);overflow:hidden}
+.fv-body img{max-width:100%;max-height:100%;object-fit:contain}
+.fv-body iframe{width:100%;height:100%;border:none}
+.fv-placeholder{text-align:center;color:var(--muted);padding:40px}
+.fv-placeholder .ei{font-size:52px;margin-bottom:12px}
+
+@media(max-width:920px){
+  .sidebar{width:210px;min-width:210px}.main{margin-left:210px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* MINI-PICK (switch admin/candidat) */
+#mini-wrap{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+#mini-wrap .ov{position:absolute;inset:0;background:rgba(53,82,34,.55);backdrop-filter:blur(2px)}
+.mini-pick{position:relative;background:#fff;border-radius:12px;padding:22px;width:100%;max-width:380px;box-shadow:var(--sh3);max-height:80vh;overflow-y:auto}
+.mini-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;background:var(--sand);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;text-align:left;transition:all .15s;font-family:'Archivo',sans-serif}
+.mini-row:hover{border-color:var(--gold);background:var(--mist)}
+.mini-row .av{background:var(--ink)}
+
+/* sb-switch (ex sb-logout) */
+.sb-logout{font-weight:600}
+.sb-logout:hover{color:var(--gold2)!important}
+
+
+/* ============================================================
+   HARMONISATION CHARTE GRAPHIQUE NATURÉA
+   Injection automatique — peut être retirée d'un bloc
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* === HARMONISATION CHARTE NATURÉA === */
+:root {
+  --mist: #FBFAF5 !important;
+  --sand: #EDE5D2 !important;
+  --text: #1E2D10 !important;
+  --ink: #2B4A1A !important;
+  --muted: #6B7A56 !important;
+  --border: #DDD5BF !important;
+  --gold: #E07840 !important;
+  --green: #5A7A3A !important;
+  --purple: #7A5E8D !important;
+  --red: #B8453D !important;
+}
+
+
+/* Force fonts harmonisées */
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div {
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif !important;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cormorant Garamond", Georgia, serif !important;
+  letter-spacing: -0.3px;
+}
+code, pre, .mono, [class*="mono"] {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace !important;
+}
+
+/* === FIN HARMONISATION === */
+</style>
+</head>
+<body>
+
+<!-- ══ APP ══ -->
+<div id="screen-app">
+<div class="app">
+<nav class="sidebar">
+  <div class="sb-logo">
+    <img class="sb-banner" src="data:image/webp;base64,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" alt="Maisons Naturéa"/>
+  </div>
+  <div class="sb-user">
+    <div class="rtag" id="sb-rtag">ADMIN</div>
+    <div class="sb-uname" id="sb-name">—</div>
+    <div class="sb-uemail" id="sb-email">—</div>
+  </div>
+  <button class="sb-logout" id="sb-switch" onclick="doLogout()">⇄ Changer de vue</button>
+  <!-- ADMIN NAV — no DISC/questionnaire buttons -->
+  <div id="nav-admin" style="display:none">
+    <div class="nav-sec"><div class="nav-lbl">Tableau de bord</div>
+      <div class="nav-item" onclick="go('dashboard')"><span class="nav-icon">📊</span> Vue d'ensemble</div>
+    </div>
+    <div class="nav-sec"><div class="nav-lbl">Candidats</div>
+      <div class="nav-item" onclick="go('crm')"><span class="nav-icon">👥</span> CRM Candidats</div>
+      <div class="nav-item" onclick="go('new-candidate')"><span class="nav-icon">➕</span> Nouveau candidat</div>
+    </div>
+  </div>
+  <!-- CANDIDATE NAV -->
+  <div id="nav-cand" style="display:none">
+    <div class="nav-sec"><div class="nav-lbl">Mon espace</div>
+      <div class="nav-item" onclick="go('portal-home')"><span class="nav-icon">🏠</span> Accueil</div>
+      <div class="nav-item" onclick="go('portal-docs')"><span class="nav-icon">📁</span> Mon dossier</div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- ADMIN: DASHBOARD -->
+<div id="page-dashboard" class="page" style="display:none">
+  <div class="topbar"><div><div class="topbar-title">Vue d'ensemble</div><div class="topbar-sub">Tableau de bord franchiseur</div></div><button class="btn btn-primary" onclick="go('new-candidate')">+ Nouveau candidat</button></div>
+  <div class="content">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n" id="st0">0</div><div class="stat-l">Total candidats</div></div>
+      <div class="stat"><div class="stat-n" id="st1" style="color:var(--gold)">0</div><div class="stat-l">Nouveaux</div></div>
+      <div class="stat"><div class="stat-n" id="st2" style="color:var(--green)">0</div><div class="stat-l">RDV planifiés</div></div>
+      <div class="stat"><div class="stat-n" id="st3" style="color:var(--purple)">0</div><div class="stat-l">Qualifiés</div></div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>Derniers candidats</h3><button class="btn btn-outline btn-sm" onclick="go('crm')">Voir tout</button></div>
+      <table><thead><tr><th>Candidat</th><th>Source</th><th>Statut</th><th>Note</th><th>Progression dossier</th></tr></thead>
+      <tbody id="dash-tb"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN: CRM — no "Actions" column -->
+<div id="page-crm" class="page" style="display:none">
+  <div class="topbar"><div><div class="topbar-title">CRM Candidats</div><div class="topbar-sub">Gérez et suivez vos candidats</div></div><button class="btn btn-primary" onclick="go('new-candidate')">+ Nouveau candidat</button></div>
+  <div class="content">
+    <div style="display:flex;gap:12px;margin-bottom:20px">
+      <input type="text" id="cq" oninput="filterCRM()" placeholder="🔍 Rechercher…" style="flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:14px;background:#fff">
+      <select id="cfs" onchange="filterCRM()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:#fff">
+        <option value="">Tous statuts</option><option>Nouveau</option><option>Contact établi</option><option>RDV planifié</option><option>Qualifié</option><option>Recrutement en cours</option><option>Refusé</option>
+      </select>
+      <select id="cfsc" onchange="filterCRM()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:#fff">
+        <option value="">Toutes sources</option><option>LinkedIn</option><option>Instagram</option><option>Facebook</option><option>Salon franchise</option><option>Site web</option><option>Bouche à oreille</option>
+      </select>
+    </div>
+    <div class="card"><table><thead><tr><th>Candidat</th><th>Téléphone</th><th>Email</th><th>Source</th><th>Statut</th><th>Note</th><th>Progression</th></tr></thead><tbody id="crm-tb"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ADMIN: NEW CANDIDATE -->
+<div id="page-new-candidate" class="page" style="display:none">
+  <div class="topbar"><div><div class="topbar-title">Nouveau candidat</div><div class="topbar-sub">Créer un compte et une fiche candidat</div></div></div>
+  <div class="content"><div class="card" style="padding:32px;max-width:760px">
+    <div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:24px;border-left:4px solid var(--gold);font-size:13.5px">
+      🔐 <strong>Accès candidat :</strong> Le candidat pourra se connecter avec l'email et le mot de passe définis ici.
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>Prénom *</label><input type="text" id="nc-p" placeholder="Jean"></div>
+      <div class="fg"><label>Nom *</label><input type="text" id="nc-n" placeholder="Dupont"></div>
+      <div class="fg"><label>Email * (identifiant)</label><input type="email" id="nc-e" placeholder="jean.dupont@email.com"></div>
+      <div class="fg"><label>Mot de passe candidat *</label><input type="password" id="nc-pw" placeholder="Min. 6 caractères"></div>
+      <div class="fg"><label>Téléphone</label><input type="tel" id="nc-t" placeholder="06 12 34 56 78"></div>
+      <div class="fg"><label>Ville</label><input type="text" id="nc-v" placeholder="Paris"></div>
+      <div class="fg"><label>Code postal</label><input type="text" id="nc-cp" placeholder="75001"></div>
+      <div class="fg"><label>Budget (€)</label><input type="number" id="nc-b" placeholder="50000"></div>
+      <div class="fg"><label>Zone souhaitée</label><input type="text" id="nc-z" placeholder="Île-de-France"></div>
+      <div class="fg"><label>Source</label><select id="nc-src"><option value="">Sélectionner…</option><option>LinkedIn</option><option>Instagram</option><option>Facebook</option><option>Salon franchise</option><option>Site web</option><option>Bouche à oreille</option><option>Presse</option><option>Autre</option></select></div>
+      <div class="fg"><label>Statut</label><select id="nc-st"><option>Nouveau</option><option>Contact établi</option><option>RDV planifié</option><option>Qualifié</option><option>Recrutement en cours</option><option>Refusé</option></select></div>
+      <div class="fg"><label>Note initiale</label><div class="stars" id="nc-stars" style="margin-top:4px"><span class="off" onclick="setNcS(1)">★</span><span class="off" onclick="setNcS(2)">★</span><span class="off" onclick="setNcS(3)">★</span><span class="off" onclick="setNcS(4)">★</span><span class="off" onclick="setNcS(5)">★</span></div></div>
+      <div class="fg full"><label>Notes internes</label><textarea id="nc-notes" placeholder="Expérience, motivations, observations…"></textarea></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveNC()">💾 Créer le compte candidat</button>
+      <button class="btn btn-outline" onclick="go('crm')">Annuler</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- ADMIN: CANDIDATE DETAIL -->
+<div id="page-det" class="page" style="display:none">
+  <div class="topbar">
+    <div><div class="topbar-title" id="det-title">Fiche candidat</div><div class="topbar-sub">Dossier complet</div></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-outline btn-sm" onclick="go('crm')">← Retour</button><button class="btn btn-primary btn-sm" onclick="saveDet()">💾 Sauvegarder</button></div>
+  </div>
+  <div class="content">
+    <div class="tabs">
+      <div class="tab active" onclick="stab('dp',this)">👤 Profil</div>
+      <div class="tab" onclick="stab('dd',this)">📁 Documents</div>
+    </div>
+
+    <!-- TAB PROFIL -->
+    <div id="tc-dp" class="tc active">
+      <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:24px">
+        <div class="av" id="det-av">?</div>
+        <div style="flex:1">
+          <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:28px;color:var(--ink)" id="det-name">—</h2>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:8px;flex-wrap:wrap">
+            <div class="stars" id="det-stars"></div>
+            <div id="det-badge"></div>
+            <select id="det-st" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1.5px solid var(--border);font-family:'Archivo',sans-serif">
+              <option>Nouveau</option><option>Contact établi</option><option>RDV planifié</option><option>Qualifié</option><option>Recrutement en cours</option><option>Refusé</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="pgrid">
+        <div class="pcard"><h4>📞 Coordonnées</h4>
+          <div class="ir"><span class="il">Email</span><span id="det-email">—</span></div>
+          <div class="ir"><span class="il">Téléphone</span><span id="det-tel">—</span></div>
+          <div class="ir"><span class="il">Ville</span><span id="det-ville">—</span></div>
+          <div class="ir"><span class="il">Code postal</span><span id="det-cp">—</span></div>
+        </div>
+        <div class="pcard"><h4>📌 Qualification</h4>
+          <div class="ir"><span class="il">Source</span><span id="det-src">—</span></div>
+          <div class="ir"><span class="il">Budget</span><span id="det-budget">—</span></div>
+          <div class="ir"><span class="il">Zone</span><span id="det-zone">—</span></div>
+          <div class="ir"><span class="il">Inscrit le</span><span id="det-date">—</span></div>
+        </div>
+        <div class="pcard" style="grid-column:1/-1"><h4>📝 Notes internes</h4>
+          <textarea id="det-notes" style="width:100%;min-height:90px;border:none;background:transparent;font-family:'Archivo',sans-serif;font-size:13.5px;color:var(--text);resize:vertical;padding:4px 0" placeholder="Notes…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB DOCUMENTS -->
+    <div id="tc-dd" class="tc">
+      <div id="det-doc-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL: HOME -->
+<div id="page-portal-home" class="page" style="display:none">
+  <div class="topbar"><div><div class="topbar-title">Mon espace candidat</div><div class="topbar-sub">Votre dossier de candidature franchise</div></div></div>
+  <div class="content">
+    <div class="portal-hero">
+      <div class="av" id="p-av" style="width:68px;height:68px;font-size:26px">?</div>
+      <div class="ph-text"><h2 id="p-name">Bonjour !</h2><p>Complétez votre dossier pour avancer dans votre candidature.</p></div>
+    </div>
+    <div class="progress-steps" id="p-steps"></div>
+    <div class="portal-grid">
+      <div class="portal-card" onclick="go('portal-docs')"><div class="pc-icon">📁</div><div class="pc-title">Mon dossier complet</div><div class="pc-sub" id="p-doc-sub">Documents, test DISC, questionnaire</div></div>
+      <div class="portal-card" style="background:var(--sand);cursor:default"><div class="pc-icon">📬</div><div class="pc-title">Mon statut</div><div style="margin-top:8px" id="p-statut"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL: DOCS (full dossier for candidate) -->
+<div id="page-portal-docs" class="page" style="display:none">
+  <div class="topbar"><div><div class="topbar-title">Mon dossier</div><div class="topbar-sub">Documents, test DISC et questionnaire</div></div></div>
+  <div class="content">
+    <div class="tabs">
+      <div class="tab active" onclick="stab('pd-docs',this)">📁 Documents</div>
+    </div>
+    <div id="tc-pd-docs" class="tc active"><div id="portal-doc-body"></div></div>
+  </div>
+</div>
+
+</div></div></div><!-- end main / app / screen-app -->
+
+<!-- FILE VIEWER -->
+<div class="fv-overlay" id="fv-overlay">
+  <div class="fv-box">
+    <div class="fv-header">
+      <h3 id="fv-title">Aperçu du document</h3>
+      <div class="fv-header-btns">
+        <button class="btn btn-outline btn-sm" id="fv-dl-btn">⬇ Télécharger</button>
+        <button class="btn btn-danger btn-sm" onclick="closeFV()">✕ Fermer</button>
+      </div>
+    </div>
+    <div class="fv-body" id="fv-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const ADMIN_CREDS={email:'admin@maisons-naturea.fr',password:'admin123'};
+
+// Document categories
+const DOC_CATS = [
+  { cat:'📋 Documents candidat', docs:[
+    {k:'cv',i:'📄',l:'CV'},
+    {k:'lettre',i:'✉️',l:'Lettre de motivation'},
+    {k:'cni',i:'🪪',l:"Carte d'identité"},
+    {k:'budget',i:'📊',l:'Budget prévisionnel'},
+    {k:'__disc__',i:'🧠',l:'Test DISC',special:true},
+    {k:'__quest__',i:'📋',l:'Questionnaire',special:true},
+  ]},
+  { cat:'🤝 Documents franchise', docs:[
+    {k:'confidentialite',i:'🔏',l:'Accord de confidentialité'},
+    {k:'dip',i:'📘',l:'DIP (Document d\'Information Précontractuel)'},
+    {k:'presentation',i:'🏢',l:'Présentation du groupe'},
+    {k:'rapport_etonnement',i:'✨',l:'Rapport d\'étonnement'},
+    {k:'rapport_decouverte',i:'🔍',l:'Rapport de découverte'},
+    {k:'contrat_reservation',i:'📝',l:'Contrat de réservation'},
+    {k:'financement',i:'💰',l:'Plan de financement'},
+    {k:'contrat_franchise',i:'⚖️',l:'Contrat de franchise'},
+  ]}
+];
+const ALL_DOC_KEYS = DOC_CATS.flatMap(c=>c.docs.map(d=>d.k));
+const TOTAL_DOCS = ALL_DOC_KEYS.length; // for progress
+
+let DB = JSON.parse(localStorage.getItem('fhv3') || 'null') || [
+  {id:'d1',prenom:'Jean',nom:'Dupont',email:'jean.dupont@email.com',password:'candidat123',tel:'06 12 34 56 78',ville:'Lyon',cp:'69001',budget:'65000',zone:'Auvergne-Rhône-Alpes',source:'LinkedIn',statut:'RDV planifié',stars:4,date:'15/04/2026',notes:'8 ans en grande distribution. Très motivé.',documents:{},disc:null,questionnaire:null},
+  {id:'d2',prenom:'Marie',nom:'Martin',email:'marie.martin@email.com',password:'candidat456',tel:'07 23 45 67 89',ville:'Bordeaux',cp:'33000',budget:'80000',zone:'Nouvelle-Aquitaine',source:'Salon franchise',statut:'Qualifié',stars:5,date:'10/04/2026',notes:'Ancienne responsable réseau. Profil prioritaire.',documents:{cv:{name:'cv_marie_martin.pdf',dataUrl:null,type:'application/pdf'}},disc:null,questionnaire:null}
+];
+let me=null, detId=null, ncStars=0;
+let dAns={}, dQ=0, dCid=null, dPortal=false;
+// filestore: {cid_key: {name, dataUrl, type}}
+
+function save(){ localStorage.setItem('fhv3', JSON.stringify(DB)); }
+save();
+
+// ══════════════════════════════════════════
+// MODE / RÔLE (login désactivé temporairement — système d'auth à intégrer plus tard)
+// ══════════════════════════════════════════
+function setAdminMode(){
+  me={role:'admin',email:'admin@maisons-naturea.fr',name:'Franchiseur'};
+  applyMode();
+  go('dashboard');
+}
+function setCandidateMode(cid){
+  const c=DB.find(x=>x.id===cid); if(!c) return;
+  me={role:'candidate',email:c.email,name:c.prenom+' '+c.nom,id:c.id};
+  applyMode();
+  go('portal-home');
+}
+function applyMode(){
+  document.getElementById('sb-email').textContent=me.email;
+  const rt=document.getElementById('sb-rtag');
+  if(me.role==='admin'){
+    document.getElementById('sb-name').textContent='👑 Franchiseur';
+    rt.className='rtag admin'; rt.textContent='ADMIN';
+    document.getElementById('nav-admin').style.display='block';
+    document.getElementById('nav-cand').style.display='none';
+  } else {
+    document.getElementById('sb-name').textContent=me.name;
+    rt.className='rtag cand'; rt.textContent='CANDIDAT';
+    document.getElementById('nav-admin').style.display='none';
+    document.getElementById('nav-cand').style.display='block';
+  }
+}
+// Bascule mode candidat : ouvre une mini-modale pour choisir
+function switchToCandidate(){
+  if(!DB.length){ toast('Aucun candidat dans la base'); return; }
+  const html=`<div class="ov" onclick="closeMini()"></div>
+  <div class="mini-pick">
+    <h4 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);margin-bottom:14px">Voir l'espace de quel candidat ?</h4>
+    ${DB.map(c=>`<button class="mini-row" onclick="closeMini();setCandidateMode('${c.id}')"><span class="av" style="width:36px;height:36px;font-size:13px">${(c.prenom[0]||'')+(c.nom[0]||'')}</span><span><div style="font-weight:600;color:var(--ink)">${c.prenom} ${c.nom}</div><div style="font-size:11px;color:var(--muted)">${c.email}</div></span></button>`).join('')}
+    <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%" onclick="closeMini()">Annuler</button>
+  </div>`;
+  const w=document.createElement('div'); w.id='mini-wrap'; w.innerHTML=html; document.body.appendChild(w);
+}
+function closeMini(){ const w=document.getElementById('mini-wrap'); if(w) w.remove(); }
+function backToAdmin(){ setAdminMode(); }
+// Compat : doLogout/doLogin/ql conservés en stub pour ne rien casser
+function doLogin(){} function ql(){} function doLogout(){
+  if(me && me.role==='candidate') backToAdmin(); else switchToCandidate();
+}
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function go(pg){
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById('page-'+pg); if(el) el.style.display='block';
+  document.querySelectorAll('.nav-item').forEach(n=>{ if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+pg+"'")) n.classList.add('active'); });
+  if(pg==='dashboard') rdDash();
+  if(pg==='crm') rdCRM();
+  if(pg==='new-candidate') resetNC();
+  if(pg==='portal-home') rdPortalHome();
+  if(pg==='portal-docs'){ resetPortalTabs(); rdPortalDocs(); }
+  window.scrollTo(0,0);
+}
+
+function stab(id,el){
+  // find parent tc container
+  const parent=document.getElementById('tc-'+id);
+  if(!parent) return;
+  // reset all sibling tabs/tc in same parent page
+  const page=parent.closest('.page')||parent.parentElement;
+  page.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  page.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  parent.classList.add('active'); el.classList.add('active');
+  // lazy load
+  if(id==='dd') rdDetDocs();
+  if(id==='di') rdDetDisc();
+  if(id==='dq') rdDetQuest();
+  if(id==='pd-docs') rdPortalDocs();
+}
+
+function resetPortalTabs(){
+  const page=document.getElementById('page-portal-docs');
+  page.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  page.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tc-pd-docs').classList.add('active');
+  page.querySelectorAll('.tab')[0].classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3200); }
+function ini(p,n){ return ((p||'?')[0]+(n||'?')[0]).toUpperCase(); }
+function now(){ return new Date().toLocaleDateString('fr-FR'); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+function sbadge(s){
+  const m={Nouveau:'b-new','Contact établi':'b-contact','RDV planifié':'b-rdv','Recrutement en cours':'b-recr','Qualifié':'b-ok','Refusé':'b-no'};
+  return `<span class="badge ${m[s]||'b-new'}">${s}</span>`;
+}
+function shtml(n){ let s=''; for(let i=1;i<=5;i++) s+=`<span style="color:${i<=n?'var(--gold)':'var(--border)'}">★</span>`; return s; }
+function docCount(c){ return Object.keys(c.documents||{}).length; }
+function pctBar(c){ const p=Math.round((docCount(c)/TOTAL_DOCS)*100); const col=p>=80?'var(--green)':p>=40?'var(--gold)':'#ccc'; return `<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;background:var(--sand2);border-radius:10px;height:6px"><div style="width:${p}%;height:6px;background:${col};border-radius:10px"></div></div><span style="font-size:12px;color:var(--muted)">${p}%</span></div>`; }
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function rdDash(){
+  document.getElementById('st0').textContent=DB.length;
+  document.getElementById('st1').textContent=DB.filter(c=>c.statut==='Nouveau').length;
+  document.getElementById('st2').textContent=DB.filter(c=>c.statut==='RDV planifié').length;
+  document.getElementById('st3').textContent=DB.filter(c=>c.statut==='Qualifié').length;
+  const tb=document.getElementById('dash-tb');
+  const list=[...DB].reverse().slice(0,8);
+  if(!list.length){ tb.innerHTML='<tr><td colspan="5"><div class="empty"><div class="ei">👥</div><p>Aucun candidat</p></div></td></tr>'; return; }
+  tb.innerHTML=list.map(c=>`<tr onclick="openDet('${c.id}')">
+    <td><div style="display:flex;align-items:center;gap:10px"><div class="av" style="width:34px;height:34px;font-size:13px">${ini(c.prenom,c.nom)}</div><strong>${c.prenom} ${c.nom}</strong></div></td>
+    <td><span class="chip">${c.source||'—'}</span></td>
+    <td>${sbadge(c.statut)}</td>
+    <td>${shtml(c.stars||0)}</td>
+    <td style="min-width:130px">${pctBar(c)}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+// CRM — no Actions column
+// ══════════════════════════════════════════
+function rdCRM(list){
+  list=list||DB;
+  const tb=document.getElementById('crm-tb');
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="ei">👥</div><p>Aucun candidat</p></div></td></tr>'; return; }
+  tb.innerHTML=[...list].reverse().map(c=>`<tr onclick="openDet('${c.id}')">
+    <td><div style="display:flex;align-items:center;gap:10px"><div class="av" style="width:34px;height:34px;font-size:13px">${ini(c.prenom,c.nom)}</div><div><strong>${c.prenom} ${c.nom}</strong><br><span style="font-size:11.5px;color:var(--muted)">${c.ville||''}</span></div></div></td>
+    <td>${c.tel||'—'}</td>
+    <td style="font-size:12.5px">${c.email||'—'}</td>
+    <td><span class="chip">${c.source||'—'}</span></td>
+    <td>${sbadge(c.statut)}</td>
+    <td>${shtml(c.stars||0)}</td>
+    <td style="min-width:110px">${pctBar(c)}</td>
+  </tr>`).join('');
+}
+function filterCRM(){
+  const q=document.getElementById('cq').value.toLowerCase(),st=document.getElementById('cfs').value,src=document.getElementById('cfsc').value;
+  rdCRM(DB.filter(c=>{ const m=(c.prenom+' '+c.nom+' '+(c.email||'')+' '+(c.ville||'')).toLowerCase().includes(q); return m&&(!st||c.statut===st)&&(!src||c.source===src); }));
+}
+
+// ══════════════════════════════════════════
+// NEW CANDIDATE
+// ══════════════════════════════════════════
+function resetNC(){ ['nc-p','nc-n','nc-e','nc-pw','nc-t','nc-v','nc-cp','nc-b','nc-z','nc-notes'].forEach(i=>{ const el=document.getElementById(i); if(el)el.value=''; }); document.getElementById('nc-src').value=''; document.getElementById('nc-st').value='Nouveau'; ncStars=0; updNcS(); }
+function setNcS(n){ ncStars=n; updNcS(); }
+function updNcS(){ document.querySelectorAll('#nc-stars span').forEach((s,i)=>s.className=i<ncStars?'on':'off'); }
+function saveNC(){
+  const p=document.getElementById('nc-p').value.trim(),n=document.getElementById('nc-n').value.trim(),e=document.getElementById('nc-e').value.trim().toLowerCase(),pw=document.getElementById('nc-pw').value;
+  if(!p||!n){ alert('Prénom et nom requis.'); return; }
+  if(!e||!pw){ alert('Email et mot de passe requis.'); return; }
+  if(pw.length<6){ alert('Mot de passe min. 6 caractères.'); return; }
+  if(DB.find(c=>c.email.toLowerCase()===e)){ alert('Cet email est déjà utilisé.'); return; }
+  const c={id:uid(),prenom:p,nom:n,email:e,password:pw,tel:document.getElementById('nc-t').value,ville:document.getElementById('nc-v').value,cp:document.getElementById('nc-cp').value,budget:document.getElementById('nc-b').value,zone:document.getElementById('nc-z').value,source:document.getElementById('nc-src').value,statut:document.getElementById('nc-st').value,stars:ncStars,notes:document.getElementById('nc-notes').value,date:now(),documents:{},disc:null,questionnaire:null};
+  DB.push(c); save(); toast('✅ Compte candidat créé — '+e); go('crm');
+}
+
+// ══════════════════════════════════════════
+// CANDIDATE DETAIL
+// ══════════════════════════════════════════
+function openDet(id){
+  const c=DB.find(x=>x.id===id); if(!c) return;
+  detId=id;
+  document.getElementById('det-title').textContent=c.prenom+' '+c.nom;
+  document.getElementById('det-av').textContent=ini(c.prenom,c.nom);
+  document.getElementById('det-name').textContent=c.prenom+' '+c.nom;
+  document.getElementById('det-email').textContent=c.email||'—';
+  document.getElementById('det-tel').textContent=c.tel||'—';
+  document.getElementById('det-ville').textContent=c.ville||'—';
+  document.getElementById('det-cp').textContent=c.cp||'—';
+  document.getElementById('det-src').textContent=c.source||'—';
+  document.getElementById('det-budget').textContent=c.budget?c.budget+' €':'—';
+  document.getElementById('det-zone').textContent=c.zone||'—';
+  document.getElementById('det-date').textContent=c.date||'—';
+  document.getElementById('det-notes').value=c.notes||'';
+  document.getElementById('det-badge').innerHTML=sbadge(c.statut);
+  document.getElementById('det-st').value=c.statut;
+  const se=document.getElementById('det-stars'); se.innerHTML='';
+  for(let i=1;i<=5;i++){ const sp=document.createElement('span'); sp.textContent='★'; sp.className=i<=(c.stars||0)?'on':'off'; sp.addEventListener('click',(()=>{const v=i;return()=>setDetS(v)})()); se.appendChild(sp); }
+  // reset tabs
+  document.querySelectorAll('#page-det .tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-det .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tc-dp').classList.add('active');
+  document.querySelectorAll('#page-det .tab')[0].classList.add('active');
+  go('det');
+}
+function setDetS(n){ const c=DB.find(x=>x.id===detId); if(!c)return; c.stars=n; save(); document.querySelectorAll('#det-stars span').forEach((s,i)=>s.className=i<n?'on':'off'); }
+function saveDet(){ const c=DB.find(x=>x.id===detId); if(!c)return; c.notes=document.getElementById('det-notes').value; c.statut=document.getElementById('det-st').value; document.getElementById('det-badge').innerHTML=sbadge(c.statut); save(); toast('✅ Modifications sauvegardées'); }
+
+// ══════════════════════════════════════════
+// DOCUMENTS ENGINE
+// ══════════════════════════════════════════
+function buildDocList(containerId, cid, readOnly){
+  const c=DB.find(x=>x.id===cid); const docs=(c&&c.documents)||{};
+  const el=document.getElementById(containerId); if(!el)return; el.innerHTML='';
+
+  DOC_CATS.forEach(cat=>{
+    const sec=document.createElement('div'); sec.className='doc-section';
+    sec.innerHTML=`<div class="doc-section-title">${cat.cat}</div><div class="doc-list" id="dlist-${containerId}-${cat.cat.replace(/\W/g,'_')}"></div>`;
+    el.appendChild(sec);
+    const listEl=sec.querySelector('.doc-list');
+    cat.docs.forEach(dt=>{
+      // ── Special: DISC ──
+      if(dt.k==='__disc__'){
+        const c2=DB.find(x=>x.id===cid);
+        const isAdmin=(me&&me.role==='admin');
+        const wrapper=document.createElement('div');
+        wrapper.id='inline-disc-'+containerId;
+        const discDone=c2&&c2.disc;
+        let discActions='';
+        if(discDone){
+          discActions=`<button class="doc-btn view" onclick="toggleInlineDisc('${containerId}','${cid}')">👁 Voir résultats</button>`;
+          if(!isAdmin) discActions+=`<button class="doc-btn upload" onclick="startInlineDisc('${containerId}','${cid}')">♻ Refaire</button>`;
+        } else {
+          if(!isAdmin) discActions=`<button class="doc-btn upload" onclick="startInlineDisc('${containerId}','${cid}')">🧠 Lancer le test</button>`;
+          else discActions=`<span style="font-size:12px;color:var(--muted);font-style:italic">En attente du candidat</span>`;
+        }
+        wrapper.innerHTML=`
+          <div class="doc-row ${discDone?'has':''}" style="align-items:center;flex-wrap:wrap;gap:10px">
+            <div class="doc-row-icon">${dt.i}</div>
+            <div class="doc-row-info">
+              <div class="doc-row-name">${dt.l}</div>
+              <div class="doc-row-file ${discDone?'ok':'pend'}">${discDone?'✅ Test réalisé le '+c2.disc.date:'Non réalisé'}</div>
+            </div>
+            <div class="doc-row-actions">${discActions}</div>
+          </div>
+          <div id="inline-disc-panel-${containerId}" style="display:none;margin:8px 0 16px;padding:0 4px"></div>`;
+        listEl.appendChild(wrapper);
+        return;
+      }
+      // ── Special: Questionnaire ──
+      if(dt.k==='__quest__'){
+        const c2=DB.find(x=>x.id===cid);
+        const isAdmin=(me&&me.role==='admin');
+        const questDone=c2&&c2.questionnaire;
+        const wrapper=document.createElement('div');
+        wrapper.id='inline-quest-'+containerId;
+        let questActions='';
+        if(questDone){
+          questActions=`<button class="doc-btn view" onclick="toggleInlineQuest('${containerId}','${cid}')">👁 Voir réponses</button>`;
+          if(!isAdmin) questActions+=`<button class="doc-btn upload" onclick="editInlineQuest('${containerId}','${cid}')">✏️ Modifier</button>`;
+        } else {
+          if(!isAdmin) questActions=`<button class="doc-btn upload" onclick="editInlineQuest('${containerId}','${cid}')">📋 Remplir</button>`;
+          else questActions=`<span style="font-size:12px;color:var(--muted);font-style:italic">En attente du candidat</span>`;
+        }
+        wrapper.innerHTML=`
+          <div class="doc-row ${questDone?'has':''}" style="align-items:center;flex-wrap:wrap;gap:10px">
+            <div class="doc-row-icon">${dt.i}</div>
+            <div class="doc-row-info">
+              <div class="doc-row-name">${dt.l}</div>
+              <div class="doc-row-file ${questDone?'ok':'pend'}">${questDone?'✅ Complété le '+c2.questionnaire.date:'Non rempli'}</div>
+            </div>
+            <div class="doc-row-actions">${questActions}</div>
+          </div>
+          <div id="inline-quest-panel-${containerId}" style="display:none;margin:8px 0 16px;padding:0 4px"></div>`;
+        listEl.appendChild(wrapper);
+        return;
+      }
+      // ── Normal file doc ──
+      const file=docs[dt.k];
+      const row=document.createElement('div'); row.className='doc-row'+(file?' has':'');
+      row.innerHTML=`
+        <div class="doc-row-icon">${dt.i}</div>
+        <div class="doc-row-info">
+          <div class="doc-row-name">${dt.l}</div>
+          <div class="doc-row-file ${file?'ok':'pend'}">${file?'📎 '+file.name:'Aucun fichier déposé'}</div>
+        </div>
+        <div class="doc-row-actions" id="dra-${cid}-${dt.k}"></div>
+        ${readOnly?'':`<input type="file" style="display:none" id="df-${cid}-${dt.k}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onchange="hdoc('${dt.k}','${cid}','${containerId}',this)">`}
+      `;
+      listEl.appendChild(row);
+      const actEl=row.querySelector(`#dra-${cid}-${dt.k}`);
+      if(file){
+        const viewBtn=document.createElement('button'); viewBtn.className='doc-btn view'; viewBtn.textContent='👁 Voir';
+        viewBtn.onclick=()=>openFV(file,dt.l);
+        const dlBtn=document.createElement('button'); dlBtn.className='doc-btn dl'; dlBtn.textContent='⬇ Télécharger';
+        dlBtn.onclick=()=>dlFile(file);
+        actEl.appendChild(viewBtn); actEl.appendChild(dlBtn);
+        if(!readOnly){
+          const repBtn=document.createElement('button'); repBtn.className='doc-btn upload'; repBtn.textContent='♻ Remplacer';
+          repBtn.onclick=()=>document.getElementById(`df-${cid}-${dt.k}`).click();
+          const delBtn=document.createElement('button'); delBtn.className='doc-btn del'; delBtn.textContent='✕';
+          delBtn.onclick=()=>deleteDoc(dt.k,cid,containerId);
+          actEl.appendChild(repBtn); actEl.appendChild(delBtn);
+        }
+      } else if(!readOnly){
+        const upBtn=document.createElement('button'); upBtn.className='doc-btn upload'; upBtn.textContent='📤 Déposer';
+        upBtn.onclick=()=>document.getElementById(`df-${cid}-${dt.k}`).click();
+        actEl.appendChild(upBtn);
+      }
+    });
+  });
+}
+
+// ── Inline DISC helpers ──
+function toggleInlineDisc(containerId, cid){
+  const panel=document.getElementById('inline-disc-panel-'+containerId);
+  if(panel.style.display==='none'||!panel.style.display){
+    const c=DB.find(x=>x.id===cid);
+    panel.style.display='block';
+    panel.innerHTML=c&&c.disc?discResHTML(c.disc):'';
+  } else { panel.style.display='none'; }
+}
+function startInlineDisc(containerId, cid){
+  dCid=cid; dPortal=(me&&me.role==='candidate'); dAns={}; dQ=0;
+  const panel=document.getElementById('inline-disc-panel-'+containerId);
+  panel.style.display='block';
+  panel.innerHTML=`<div id="disc-inl-test-${containerId}"></div><div id="disc-inl-res-${containerId}" style="display:none"></div>`;
+  renderDQ('disc-inl-test-'+containerId,'disc-inl-res-'+containerId);
+}
+
+// ── Inline Questionnaire helpers ──
+function toggleInlineQuest(containerId, cid){
+  const panel=document.getElementById('inline-quest-panel-'+containerId);
+  if(panel.style.display==='none'||!panel.style.display){
+    const c=DB.find(x=>x.id===cid);
+    if(c&&c.questionnaire){
+      const q=c.questionnaire;
+      const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
+      panel.innerHTML=`<div class="pcard" style="margin-top:4px"><h4>📋 Réponses — ${q.date}</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`;
+      panel.style.display='block';
+    }
+  } else { panel.style.display='none'; }
+}
+function editInlineQuest(containerId, cid){
+  const panel=document.getElementById('inline-quest-panel-'+containerId);
+  panel.style.display='block';
+  panel.innerHTML=`<div style="margin-top:4px">${qHTML(cid)}</div>`;
+  // Override saveQ to refresh inline after save
+  window._inlineQuestCtx={containerId,cid};
+}
+
+
+function hdoc(k,cid,containerId,input){
+  const file=input.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const c=DB.find(x=>x.id===cid); if(!c)return;
+    if(!c.documents)c.documents={};
+    c.documents[k]={name:file.name,dataUrl:e.target.result,type:file.type};
+    save();
+    toast('📄 '+file.name+' ajouté');
+    buildDocList(containerId,cid,false);
+    rdPortalHome();
+  };
+  reader.readAsDataURL(file);
+}
+
+function deleteDoc(k,cid,containerId){
+  if(!confirm('Supprimer ce document ?'))return;
+  const c=DB.find(x=>x.id===cid); if(!c)return;
+  delete c.documents[k]; save();
+  toast('Document supprimé');
+  buildDocList(containerId,cid,false);
+  rdPortalHome();
+}
+
+function rdDetDocs(){ buildDocList('det-doc-body',detId,false); }
+function rdPortalDocs(){ buildDocList('portal-doc-body',me.id,false); }
+
+// ══════════════════════════════════════════
+// FILE VIEWER
+// ══════════════════════════════════════════
+let _currentFile=null;
+function openFV(file,label){
+  _currentFile=file;
+  document.getElementById('fv-title').textContent=label+' — '+file.name;
+  const body=document.getElementById('fv-body'); body.innerHTML='';
+  if(file.dataUrl){
+    if(file.type&&file.type.startsWith('image/')){
+      const img=document.createElement('img'); img.src=file.dataUrl; body.appendChild(img);
+    } else if(file.type==='application/pdf'){
+      const iframe=document.createElement('iframe'); iframe.src=file.dataUrl; body.appendChild(iframe);
+    } else {
+      body.innerHTML=`<div class="fv-placeholder"><div class="ei">📄</div><p><strong>${file.name}</strong></p><p style="margin-top:8px;font-size:13px">Aperçu non disponible pour ce type de fichier.</p><p style="margin-top:16px"><button class="btn btn-primary" onclick="dlFile(_currentFile)">⬇ Télécharger le fichier</button></p></div>`;
+    }
+  } else {
+    body.innerHTML=`<div class="fv-placeholder"><div class="ei">📄</div><p>Fichier non disponible en aperçu.</p></div>`;
+  }
+  document.getElementById('fv-overlay').classList.add('on');
+}
+function closeFV(){ document.getElementById('fv-overlay').classList.remove('on'); _currentFile=null; }
+function dlFile(file){
+  if(!file||!file.dataUrl)return;
+  const a=document.createElement('a'); a.href=file.dataUrl; a.download=file.name; a.click();
+}
+document.getElementById('fv-dl-btn').onclick=()=>{ if(_currentFile)dlFile(_currentFile); };
+
+// ══════════════════════════════════════════
+// DISC
+// ══════════════════════════════════════════
+const DQ=[
+  {q:"Face à un obstacle, vous avez tendance à :",opts:[{t:"Foncer directement pour le résoudre",d:"D"},{t:"Convaincre les autres de vous aider",d:"I"},{t:"Chercher un consensus et être patient",d:"S"},{t:"Analyser soigneusement avant d'agir",d:"C"}]},
+  {q:"En réunion d'équipe, vous êtes surtout perçu comme :",opts:[{t:"Celui qui prend les décisions rapidement",d:"D"},{t:"Celui qui motive et enthousiasme le groupe",d:"I"},{t:"Celui qui écoute et apaise les tensions",d:"S"},{t:"Celui qui vérifie les données et les faits",d:"C"}]},
+  {q:"Lorsque vous gérez un projet, votre priorité est :",opts:[{t:"Atteindre les résultats dans les délais",d:"D"},{t:"Créer une bonne ambiance dans l'équipe",d:"I"},{t:"Assurer la stabilité et le suivi régulier",d:"S"},{t:"Garantir la qualité et la précision",d:"C"}]},
+  {q:"Votre façon de prendre une décision importante :",opts:[{t:"Rapidement, sur la base de votre intuition",d:"D"},{t:"En consultant et en impliquant les autres",d:"I"},{t:"Prudemment, après réflexion collective",d:"S"},{t:"Après avoir rassemblé beaucoup d'informations",d:"C"}]},
+  {q:"Comment réagissez-vous à la pression ?",opts:[{t:"Vous aimez ça, ça vous stimule",d:"D"},{t:"Vous cherchez du soutien autour de vous",d:"I"},{t:"Vous restez calme et gérez méthodiquement",d:"S"},{t:"Vous analysez pour réduire l'incertitude",d:"C"}]},
+  {q:"Dans votre communication, vous êtes plutôt :",opts:[{t:"Direct et concis",d:"D"},{t:"Expressif et chaleureux",d:"I"},{t:"Attentif et à l'écoute",d:"S"},{t:"Précis et factuel",d:"C"}]},
+  {q:"Vous vous épanouissez surtout dans un environnement :",opts:[{t:"Compétitif et ambitieux",d:"D"},{t:"Dynamique et créatif",d:"I"},{t:"Stable, collaboratif et prévisible",d:"S"},{t:"Structuré, avec des règles claires",d:"C"}]},
+  {q:"Face à un désaccord, vous :",opts:[{t:"Défendez votre position avec vigueur",d:"D"},{t:"Cherchez à réconcilier les deux parties",d:"I"},{t:"Évitez le conflit et préférez la paix",d:"S"},{t:"Exposez les faits pour trouver la bonne solution",d:"C"}]},
+  {q:"Votre point fort en tant que manager serait :",opts:[{t:"Votre capacité à orienter et décider",d:"D"},{t:"Votre charisme et sens du collectif",d:"I"},{t:"Votre patience et loyauté envers l'équipe",d:"S"},{t:"Votre rigueur et souci du détail",d:"C"}]},
+  {q:"Ce qui vous motive le plus dans un projet :",opts:[{t:"Le défi à relever et la victoire",d:"D"},{t:"L'enthousiasme et la reconnaissance",d:"I"},{t:"La stabilité et la progression régulière",d:"S"},{t:"La maîtrise et la perfection du résultat",d:"C"}]},
+  {q:"Votre style de leadership :",opts:[{t:"Autoritaire et orienté résultats",d:"D"},{t:"Inspirant et fédérateur",d:"I"},{t:"Bienveillant et participatif",d:"S"},{t:"Analytique et méthodique",d:"C"}]},
+  {q:"Dans une négociation, vous :",opts:[{t:"Imposez vos conditions clairement",d:"D"},{t:"Utilisez votre charme pour convaincre",d:"I"},{t:"Cherchez un accord équitable pour tous",d:"S"},{t:"Préparez des arguments précis et documentés",d:"C"}]},
+  {q:"Face à un changement inattendu, vous :",opts:[{t:"Saisissez l'opportunité sans hésiter",d:"D"},{t:"Enthousiasmez les autres face au changement",d:"I"},{t:"Prenez le temps de vous adapter progressivement",d:"S"},{t:"Évaluez les risques avant tout",d:"C"}]},
+  {q:"Votre principale faiblesse en situation de stress :",opts:[{t:"Vous pouvez devenir trop directif",d:"D"},{t:"Vous pouvez manquer de rigueur ou de suivi",d:"I"},{t:"Vous pouvez résister au changement",d:"S"},{t:"Vous pouvez vous perdre dans les détails",d:"C"}]},
+  {q:"Quand vous gérez un point de vente, vous privilégiez :",opts:[{t:"La performance et les objectifs",d:"D"},{t:"L'ambiance et la satisfaction client",d:"I"},{t:"La régularité et la fidélisation",d:"S"},{t:"Les process et la conformité aux standards",d:"C"}]},
+  {q:"Votre rapport au risque professionnel :",opts:[{t:"Vous aimez prendre des risques calculés",d:"D"},{t:"Vous acceptez le risque si l'aventure est belle",d:"I"},{t:"Vous préférez la sécurité et la stabilité",d:"S"},{t:"Vous minimisez le risque par l'analyse",d:"C"}]},
+  {q:"Comment gérez-vous vos équipes ?",opts:[{t:"Par la performance et les objectifs chiffrés",d:"D"},{t:"Par la motivation et la dynamique de groupe",d:"I"},{t:"Par la confiance et le soutien au quotidien",d:"S"},{t:"Par les procédures et le respect des règles",d:"C"}]},
+  {q:"Votre rapport aux délais :",opts:[{t:"Vous êtes très exigeant sur les délais",d:"D"},{t:"Vous êtes flexible, l'important c'est le résultat",d:"I"},{t:"Vous planifiez soigneusement pour tenir les délais",d:"S"},{t:"Vous êtes précis sur les plannings et les étapes",d:"C"}]},
+  {q:"La réussite d'une franchise, c'est avant tout :",opts:[{t:"Dépasser les objectifs commerciaux",d:"D"},{t:"Créer une belle expérience client et collaborateur",d:"I"},{t:"Bâtir une activité pérenne et stable",d:"S"},{t:"Appliquer les standards du réseau à la perfection",d:"C"}]},
+  {q:"Dans 5 ans, vous vous voyez :",opts:[{t:"Leader dans le réseau, avec plusieurs unités",d:"D"},{t:"Ambassadeur de la marque, reconnu et influent",d:"I"},{t:"Franchisé solide, épanoui dans votre unité",d:"S"},{t:"Expert opérationnel, garant de la qualité réseau",d:"C"}]}
+];
+const DP={D:{name:'Dominant',desc:"Orienté résultats, décideur, compétitif. Direct et ambitieux, vous prenez des risques calculés pour atteindre vos objectifs."},I:{name:'Influent',desc:"Enthousiaste, communicatif et fédérateur. Votre charisme et sens des relations font de vous un excellent animateur d'équipe."},S:{name:'Stable',desc:"Fiable, loyal et orienté équipe. Patience et constance, vous valorisez les relations durables et la stabilité."},C:{name:'Consciencieux',desc:"Analytique, précis, soucieux de la qualité. Votre rigueur et respect des process garantissent la conformité réseau."}};
+
+function calcDisc(a){ const s={D:0,I:0,S:0,C:0}; Object.values(a).forEach(d=>s[d]++); const dom=Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0]; return {scores:s,dominant:dom,date:now()}; }
+function discResHTML(disc){
+  const total=DQ.length; const p=DP[disc.dominant];
+  return `<div class="disc-hero"><div class="disc-ltr">${disc.dominant}</div><div class="disc-pname">Profil ${p.name}</div><div class="disc-pdesc">${p.desc}</div></div>
+  <div class="card" style="padding:22px;margin-top:16px"><div class="disc-bars">${Object.entries(disc.scores).map(([k,v])=>`
+    <div class="dbi"><div class="dbi-lbl">${k} — ${DP[k].name}</div>
+    <div class="dbi-track"><div class="dbi-fill ${k}" style="height:${Math.round((v/total)*100)}%"></div></div>
+    <div class="dbi-score">${Math.round((v/total)*100)}%</div></div>`).join('')}</div></div>`;
+}
+
+function renderDQ(te,re){
+  const q=DQ[dQ]; const p=Math.round((dQ/DQ.length)*100);
+  document.getElementById(te).innerHTML=`<div class="card" style="padding:28px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12.5px;color:var(--muted)">Question ${dQ+1}/${DQ.length}</span><span style="font-size:12.5px;color:var(--gold);font-weight:600">${p}%</span></div>
+    <div class="pbar-bg" style="margin-bottom:20px"><div class="pbar-fill" style="width:${p}%"></div></div>
+    <div class="disc-qtext">${q.q}</div>
+    <div class="disc-opts">${q.opts.map((o,i)=>`<div class="disc-opt ${dAns[dQ]===o.d?'sel':''}" onclick="pickD('${o.d}','${te}','${re}')"><span class="ol">${String.fromCharCode(65+i)}</span><span>${o.t}</span></div>`).join('')}</div>
+    <div style="display:flex;justify-content:space-between;margin-top:16px">
+      <button class="btn btn-outline" onclick="prevD('${te}','${re}')" ${dQ===0?'disabled style="opacity:.4"':''}>← Précédent</button>
+      <button class="btn btn-primary" onclick="nextD('${te}','${re}')" ${dAns[dQ]?'':'disabled style="opacity:.5"'}>${dQ===DQ.length-1?'Voir résultats →':'Suivant →'}</button>
+    </div>
+  </div>`;
+}
+function pickD(d,te,re){ dAns[dQ]=d; renderDQ(te,re); }
+function nextD(te,re){ if(!dAns[dQ])return; if(dQ<DQ.length-1){dQ++;renderDQ(te,re);}else finishD(te,re); }
+function prevD(te,re){ if(dQ>0){dQ--;renderDQ(te,re);} }
+function finishD(te,re){
+  const result=calcDisc(dAns);
+  if(dCid){ const c=DB.find(x=>x.id===dCid); if(c){c.disc=result;save();} }
+  document.getElementById(te).style.display='none';
+  const rel=document.getElementById(re); rel.style.display='block';
+  rel.innerHTML=discResHTML(result)+'<p style="text-align:center;color:var(--green);font-size:13px;margin-top:14px">✅ Résultats enregistrés dans le dossier</p>'
+    +`<div style="text-align:center;margin-top:16px"><button class="btn btn-outline" onclick="resetD('${te}','${re}')">Refaire le test</button></div>`;
+  // Refresh doc lists so the DISC row status updates
+  if(dCid){ buildDocList('det-doc-body',dCid,false); buildDocList('portal-doc-body',dCid,false); }
+  rdPortalHome();
+}
+function resetD(te,re){ dAns={}; dQ=0; document.getElementById(te).style.display='none'; document.getElementById(re).style.display='none'; if(dPortal) rdPortalDisc(); else rdDetDisc(); }
+
+// Admin disc (in candidate detail tab)
+function rdDetDisc(){
+  const c=DB.find(x=>x.id===detId); const el=document.getElementById('det-disc-body');
+  if(!el) return;
+  if(c&&c.disc){
+    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Test réalisé</strong> le ${c.disc.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="startDetDisc()">Refaire le test</button></div>`+discResHTML(c.disc);
+  } else {
+    el.innerHTML=`<div class="disc-section"><p style="color:var(--muted);font-size:13.5px;margin-bottom:18px">Aucun test DISC réalisé pour ce candidat.</p><button class="btn btn-primary" onclick="startDetDisc()">🧠 Lancer le test DISC</button><div id="disc-det-test" style="display:none;margin-top:20px"></div><div id="disc-det-res" style="display:none;margin-top:20px"></div></div>`;
+  }
+}
+function startDetDisc(){
+  dCid=detId; dPortal=false; dAns={}; dQ=0;
+  const el=document.getElementById('det-disc-body');
+  el.innerHTML=`<div id="disc-det-test"></div><div id="disc-det-res" style="display:none"></div>`;
+  document.getElementById('disc-det-test').style.display='block';
+  renderDQ('disc-det-test','disc-det-res');
+}
+
+// Portal disc
+function rdPortalDisc(){
+  const c=DB.find(x=>x.id===me.id); const el=document.getElementById('portal-disc-body');
+  if(!el) return;
+  if(c&&c.disc){
+    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Test déjà réalisé</strong> le ${c.disc.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="startPortalDisc()">Refaire le test</button></div>`+discResHTML(c.disc);
+  } else {
+    el.innerHTML=`<div class="disc-section"><h3 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:20px;color:var(--ink);margin-bottom:10px">🧠 Test de personnalité DISC</h3><p style="color:var(--muted);font-size:13.5px;margin-bottom:18px">20 questions · ~10 minutes. Les résultats seront partagés avec le franchiseur.</p><button class="btn btn-primary" onclick="startPortalDisc()">Commencer le test →</button><div id="disc-portal-test" style="display:none;margin-top:20px"></div><div id="disc-portal-res" style="display:none;margin-top:20px"></div></div>`;
+  }
+}
+function startPortalDisc(){
+  dCid=me.id; dPortal=true; dAns={}; dQ=0;
+  const el=document.getElementById('portal-disc-body');
+  el.innerHTML=`<div id="disc-portal-test"></div><div id="disc-portal-res" style="display:none"></div>`;
+  document.getElementById('disc-portal-test').style.display='block';
+  renderDQ('disc-portal-test','disc-portal-res');
+}
+
+// ══════════════════════════════════════════
+// QUESTIONNAIRE
+// ══════════════════════════════════════════
+function qHTML(cid){
+  const c=cid?DB.find(x=>x.id===cid):null; const q=c&&c.questionnaire||{};
+  const sel=(id,opts)=>`<select id="${id}" style="padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:var(--sand);width:100%;max-width:400px">${['Sélectionner…',...opts].map(o=>`<option ${q[id]===o?'selected':''}>${o}</option>`).join('')}</select>`;
+  const rg=(name,opts)=>`<div class="rg">${opts.map(([v,l])=>`<label class="ro"><input type="radio" name="${name}" value="${v}" ${q[name]===v?'checked':''}> ${l}</label>`).join('')}</div>`;
+  return `
+  <div class="qs"><div class="qs-title">🏦 Situation financière</div>
+    <div class="qi"><label>Quel est votre apport personnel disponible ?</label>${sel('q1',['< 30 000 €','30 – 50 k€','50 – 80 k€','80 – 120 k€','> 120 k€'])}</div>
+    <div class="qi"><label>Avez-vous déjà obtenu un financement bancaire ?</label>${rg('q2',[['Oui','Oui'],['Non','Non'],['En cours','En cours']])}</div>
+    <div class="qi"><label>Votre situation financière est-elle assainie ?</label>${rg('q3',[['Oui','Oui'],['Non','Non'],['Partiel','Partiellement']])}</div>
+    <div class="qi"><label>Capacité mensuelle de remboursement ?</label>${sel('q4',['< 1 000 €/mois','1 000 – 2 000 €/mois','2 000 – 3 500 €/mois','> 3 500 €/mois'])}</div>
+  </div>
+  <div class="qs"><div class="qs-title">🏢 Expérience professionnelle</div>
+    <div class="qi"><label>Avez-vous déjà géré une équipe ou un point de vente ?</label>${rg('q5',[['Oui +5 ans','Oui, +5 ans'],['Oui 1-5 ans','Oui, 1–5 ans'],['Non','Non']])}</div>
+    <div class="qi"><label>Secteur d'activité principal ?</label>${sel('q6',['Commerce','Restauration','Services','Finance','Santé','BTP','Autre'])}</div>
+    <div class="qi"><label>Expérience en franchise ou dans notre secteur ?</label>${rg('q7',[['Oui franchise','Oui, en franchise'],['Oui secteur','Oui, dans le secteur'],['Non','Non']])}</div>
+  </div>
+  <div class="qs"><div class="qs-title">🛡️ Assurances & Couvertures</div>
+    <div class="qi"><label>Prêt à souscrire une RC Pro dès l'ouverture ?</label>${rg('q8',[['Oui','Oui'],['Non','Non'],['Selon coût','Selon le coût']])}</div>
+    <div class="qi"><label>Disposez-vous d'une protection juridique ?</label>${rg('q9',[['Perso','Oui, personnelle'],['Pro','Oui, professionnelle'],['Non','Non']])}</div>
+    <div class="qi"><label>Assurance multirisque professionnelle actuelle ?</label>${rg('q10',[['Oui','Oui'],['Non','Non']])}</div>
+    <div class="qi"><label>Franchise sinistre acceptable ?</label>${sel('q11',['< 500 €','500 – 1 500 €','1 500 – 3 000 €','> 3 000 €'])}</div>
+  </div>
+  <div class="qs"><div class="qs-title">🎯 Motivation & Projet</div>
+    <div class="qi"><label>Principale motivation pour rejoindre le réseau ?</label>${sel('q12',['Indépendance','Notoriété marque','ROI','Accompagnement réseau','Reconversion','Autre'])}</div>
+    <div class="qi"><label>Délai d'ouverture envisagé ?</label>${rg('q13',[['< 6 mois','< 6 mois'],['6-12 mois','6 à 12 mois'],['> 12 mois','> 12 mois']])}</div>
+    <div class="qi"><label>Local ou zone identifié(e) ?</label>${rg('q14',[['Local précis','Oui, local précis'],['Zone','Oui, zone géographique'],['Non','Non, pas encore']])}</div>
+    <div class="qi"><label>Accord familial sur le projet ?</label>${rg('q15',[['Total','Oui, totalement'],['Partiel','Partiellement'],['Non','Non / N/A']])}</div>
+  </div>
+  <div style="display:flex;gap:12px">
+    <button class="btn btn-primary" onclick="saveQ('${cid||''}')">💾 Enregistrer</button>
+    <button class="btn btn-outline" onclick="resetQ()">Réinitialiser</button>
+  </div>`;
+}
+
+function rdDetQuest(){
+  const c=DB.find(x=>x.id===detId); const el=document.getElementById('det-quest-body');
+  if(!el)return;
+  if(c&&c.questionnaire){
+    const q=c.questionnaire;
+    const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
+    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Questionnaire complété</strong> le ${q.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="rdDetQuestEdit()">Modifier</button></div>
+    <div class="pgrid"><div class="pcard" style="grid-column:1/-1"><h4>📋 Réponses</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div></div>`;
+  } else {
+    el.innerHTML=`<div style="margin-bottom:18px;background:var(--sand);border-radius:10px;padding:14px 18px;border-left:4px solid var(--gold);font-size:13.5px">📋 Questionnaire non encore rempli par ce candidat.</div><div>${qHTML(detId)}</div>`;
+  }
+}
+function rdDetQuestEdit(){ const el=document.getElementById('det-quest-body'); if(!el)return; el.innerHTML=qHTML(detId); }
+
+function rdPortalQuest(){
+  const c=DB.find(x=>x.id===me.id); const el=document.getElementById('portal-quest-body');
+  if(!el)return;
+  if(c&&c.questionnaire){
+    const q=c.questionnaire;
+    const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
+    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Questionnaire complété</strong> le ${q.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="rdPortalQuestEdit()">Modifier mes réponses</button></div>
+    <div class="pgrid"><div class="pcard" style="grid-column:1/-1"><h4>📋 Mes réponses</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div></div>`;
+  } else {
+    el.innerHTML=qHTML(me.id);
+  }
+}
+function rdPortalQuestEdit(){ const el=document.getElementById('portal-quest-body'); if(!el)return; el.innerHTML=qHTML(me.id); }
+
+function gQ(){ return {q1:document.getElementById('q1')?.value||'',q2:document.querySelector('input[name="q2"]:checked')?.value||'',q3:document.querySelector('input[name="q3"]:checked')?.value||'',q4:document.getElementById('q4')?.value||'',q5:document.querySelector('input[name="q5"]:checked')?.value||'',q6:document.getElementById('q6')?.value||'',q7:document.querySelector('input[name="q7"]:checked')?.value||'',q8:document.querySelector('input[name="q8"]:checked')?.value||'',q9:document.querySelector('input[name="q9"]:checked')?.value||'',q10:document.querySelector('input[name="q10"]:checked')?.value||'',q11:document.getElementById('q11')?.value||'',q12:document.getElementById('q12')?.value||'',q13:document.querySelector('input[name="q13"]:checked')?.value||'',q14:document.querySelector('input[name="q14"]:checked')?.value||'',q15:document.querySelector('input[name="q15"]:checked')?.value||'',date:now()}; }
+function saveQ(cid){
+  const data=gQ();
+  if(cid){ const c=DB.find(x=>x.id===cid); if(c){ c.questionnaire=data; save(); toast('✅ Questionnaire enregistré'); buildDocList('det-doc-body',cid,false); buildDocList('portal-doc-body',cid,false); rdPortalHome(); return; } }
+  toast('✅ Réponses enregistrées');
+}
+function resetQ(){ ['q1','q4','q6','q11','q12'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); document.querySelectorAll('input[type="radio"]').forEach(r=>r.checked=false); }
+
+// ══════════════════════════════════════════
+// PORTAL HOME
+// ══════════════════════════════════════════
+function rdPortalHome(){
+  const c=DB.find(x=>x.id===me.id); if(!c)return;
+  document.getElementById('p-av').textContent=ini(c.prenom,c.nom);
+  document.getElementById('p-name').textContent='Bonjour, '+c.prenom+' !';
+  document.getElementById('p-statut').innerHTML=sbadge(c.statut);
+  const dc=docCount(c);
+  const steps=[
+    {i:'📝',l:'Inscrit',done:true},
+    {i:'📁',l:`Documents (${dc}/${TOTAL_DOCS})`,done:dc>=TOTAL_DOCS},
+    {i:'🧠',l:'Test DISC',done:!!c.disc},
+    {i:'📋',l:'Questionnaire',done:!!c.questionnaire},
+    {i:'✅',l:'Dossier complet',done:dc>=TOTAL_DOCS&&!!c.disc&&!!c.questionnaire}
+  ];
+  document.getElementById('p-steps').innerHTML=steps.map(s=>`<div class="ps ${s.done?'done':''}"><span class="ps-icon">${s.done?'✅':s.i}</span><span class="ps-lbl">${s.l}</span></div>`).join('');
+  const pct=Math.round((dc/TOTAL_DOCS)*100);
+  document.getElementById('p-doc-sub').textContent=dc>0?`${dc}/${TOTAL_DOCS} documents déposés (${pct}%)`:'Déposez vos pièces justificatives';
+}
+
+// ══════════════════════════════════════════
+// BOOT — ouverture directe en mode franchiseur (login désactivé)
+// ══════════════════════════════════════════
+setAdminMode();
+</script>
+</body>
+</html>

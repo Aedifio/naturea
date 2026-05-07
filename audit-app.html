@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Audit Chantier – Maisons Naturea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87..125,300..900&family=Archivo+Black&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* Fonds — palette crème/naturelle */
+  --bg:#f7f4ec;          /* crème principal (papier kraft clair) */
+  --bg2:#ffffff;         /* cartes — blanc pur */
+  --bg3:#f0ebdf;         /* zones secondaires (inputs, hovers) */
+  --bg4:#e6dfce;         /* zones actives, accents subtils */
+  --border:#e3dccc;      /* bordures douces */
+  --border2:#cfc6b2;     /* bordures hover */
+
+  /* Textes */
+  --text:#1f2e25;        /* vert très foncé (presque noir, naturel) */
+  --text2:#4f5f56;       /* texte secondaire */
+  --text3:#8a948c;       /* texte tertiaire / labels */
+
+  /* Vert Naturéa — couleur signature OFFICIELLE */
+  --primary:#355222;     /* vert sapin Naturéa (couleur officielle du logo) */
+  --primary-d:#243919;   /* vert plus profond (hover) */
+  --primary-l:#4a6e34;   /* vert plus clair (secondaire) */
+  --primary-soft:#e2e8da;/* vert très doux (fond actif) */
+
+  /* Bois & accents — terracotta Naturéa officiel */
+  --wood:#d69362;        /* terracotta Naturéa (couleur du toit) */
+  --wood-d:#b87648;      /* terracotta foncé */
+  --wood-l:#e6b18a;      /* terracotta clair */
+  --sage:#a8bca0;        /* vert sauge complémentaire */
+
+  /* Sémantique — accordée à la charte */
+  --green:#2f8557;       /* validé / excellent */
+  --amber:#c98f37;       /* attention / mineur */
+  --red:#b8453d;         /* urgent / critique */
+  --blue:#3d6b8a;        /* info / conseil */
+  --orange:#c5703d;      /* alerte */
+
+  /* Typo — Archivo (la police du logo Naturéa) partout */
+  --mono:'Archivo', system-ui, sans-serif;        /* avec font-feature-settings tnum pour chiffres alignés */
+  --sans:'Archivo', system-ui, -apple-system, sans-serif;
+  --display:'Archivo Black', 'Archivo', sans-serif; /* pour les gros titres en mode logo */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--primary-l)}
+input,textarea,select{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-family:var(--sans);font-size:13px;width:100%;outline:none;transition:border-color .15s, box-shadow .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(53,82,34,.12)}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+button{cursor:pointer;font-family:var(--sans);border:none;background:none;transition:all .15s}
+.mono{font-family:var(--sans);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'lnum' 1;font-weight:600}
+[style*="var(--mono)"]{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+
+/* LAYOUT */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:relative}
+.sidebar-logo{padding:0;border-bottom:1px solid var(--border);background:#355222;display:block}
+.sidebar-logo .brand-banner{width:100%;height:auto;display:block}
+.sidebar-subtitle{padding:14px 22px 12px;font-size:10px;color:var(--text3);font-family:var(--sans);letter-spacing:1.6px;text-transform:uppercase;font-weight:800;border-bottom:1px solid var(--border);background:#fff}
+.sidebar-logo h1{font-family:var(--display);font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.4px;line-height:1.05;font-style:normal}
+.sidebar-logo h1 em{font-style:italic;font-weight:500;color:var(--primary)}
+.sidebar-logo p{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono);letter-spacing:1.2px;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:14px 12px;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1.6px;text-transform:uppercase;padding:10px 10px 6px;font-family:var(--sans)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:var(--text2);font-size:13px;width:100%;text-align:left;cursor:pointer;border:none;background:none;transition:all .15s;margin-bottom:1px;font-weight:500}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--primary-soft);color:var(--primary-d);font-weight:700}
+.nav-item .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-item .score-badge{margin-left:auto;font-family:var(--sans);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;font-variant-numeric:tabular-nums}
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* TOPBAR */
+.topbar{padding:22px 32px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.topbar h2{font-family:var(--display);font-size:24px;font-weight:900;color:var(--text);letter-spacing:-.3px;line-height:1.15;text-transform:uppercase}
+.topbar-actions{display:flex;gap:10px}
+.btn{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;letter-spacing:.2px;display:inline-flex;align-items:center;gap:6px;text-transform:uppercase;font-size:11.5px}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 4px 10px -4px rgba(53,82,34,.5)}
+.btn-primary:hover{background:var(--primary-d);transform:translateY(-1px)}
+.btn-ghost{background:#fff;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);background:var(--bg3)}
+.btn-danger{background:rgba(184,69,61,.08);color:var(--red);border:1px solid rgba(184,69,61,.25)}
+.btn-danger:hover{background:rgba(184,69,61,.15)}
+
+/* CONTENT */
+.content{padding:0 32px 48px}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px 24px;box-shadow:0 1px 2px rgba(31,46,37,.03)}
+.card-sm{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+
+/* GRID */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* METRIC CARD */
+.metric{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-l));opacity:.6}
+.metric-label{font-size:10px;color:var(--text3);font-family:var(--sans);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+.metric-value{font-family:var(--display);font-size:34px;font-weight:900;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.metric-sub{font-size:12px;color:var(--text2);margin-top:8px;font-weight:500}
+
+/* TABLE */
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:10px;font-weight:800;color:var(--text2);letter-spacing:1.2px;text-transform:uppercase;padding:11px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);font-family:var(--sans)}
+.table td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+.table tr:last-child td{border-bottom:none}
+.table tbody tr{transition:background .12s}
+.table tbody tr:hover td{background:var(--bg3)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.2px;font-variant-numeric:tabular-nums}
+.badge-red{background:rgba(184,69,61,.1);color:var(--red);border:1px solid rgba(184,69,61,.25)}
+.badge-amber{background:rgba(201,143,55,.1);color:var(--amber);border:1px solid rgba(201,143,55,.25)}
+.badge-green{background:rgba(47,133,87,.1);color:var(--green);border:1px solid rgba(47,133,87,.25)}
+.badge-blue{background:rgba(61,107,138,.1);color:var(--blue);border:1px solid rgba(61,107,138,.25)}
+.badge-gray{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+
+/* SCORE PILL */
+.score-pill{display:inline-flex;align-items:center;font-family:var(--sans);font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;font-variant-numeric:tabular-nums}
+
+/* RING SVG */
+.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+
+/* ÉCART URGENTS TABLE */
+.urgent-row{display:grid;grid-template-columns:1fr 160px 160px 140px;gap:0;border-bottom:1px solid var(--border)}
+.urgent-row:last-child{border-bottom:none}
+.urgent-cell{padding:14px 16px;font-size:13px}
+
+/* FORM */
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.form-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;font-family:var(--sans)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* SECTION TITLE */
+.section-title{font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1.6px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-family:var(--sans)}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* PROGRESS BAR */
+.progress{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ANIM */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .25s ease forwards}
+
+/* RECTIF STATUS */
+.rectif-select{padding:5px 10px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--border);background:#fff;color:var(--text);width:auto;min-width:140px}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:13px;font-style:italic}
+
+/* MOBILE TOGGLE */
+.menu-toggle{display:none;position:fixed;top:14px;left:14px;z-index:60;width:42px;height:42px;background:#fff;border:1px solid var(--border);border-radius:10px;align-items:center;justify-content:center;color:var(--primary);box-shadow:0 4px 12px -4px rgba(31,46,37,.15)}
+.menu-toggle svg{width:20px;height:20px}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(31,46,37,.4);z-index:40;backdrop-filter:blur(2px)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .urgent-row{grid-template-columns:1fr 130px 130px 120px}
+}
+@media(max-width:900px){
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:50;transform:translateX(-100%);transition:transform .25s ease;width:260px;box-shadow:0 0 32px rgba(31,46,37,.15)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-backdrop.show{display:block}
+  .menu-toggle{display:inline-flex}
+  .topbar{padding:18px 20px 0 70px;margin-bottom:18px}
+  .topbar h2{font-size:22px}
+  .content{padding:0 20px 32px}
+  .grid-3{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr!important}
+}
+@media(max-width:640px){
+  .grid-4{grid-template-columns:1fr 1fr;gap:10px}
+  .metric{padding:16px 16px}
+  .metric-value{font-size:26px}
+  .card{padding:18px 16px;border-radius:12px}
+  .form-grid{grid-template-columns:1fr}
+  .topbar h2{font-size:19px}
+  .table th,.table td{padding:9px 10px;font-size:12px}
+  .urgent-row{grid-template-columns:1fr}
+  .btn{padding:9px 13px;font-size:12.5px}
+}
+
+/* ============================================================
+   HARMONISATION CHARTE GRAPHIQUE NATURÉA
+   Injection automatique — peut être retirée d'un bloc
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* === HARMONISATION CHARTE NATURÉA === */
+:root {
+  --bg: #FBFAF5 !important;
+  --text: #1E2D10 !important;
+  --border: #DDD5BF !important;
+  --primary: #2B4A1A !important;
+  --primary-d: #1E3611 !important;
+  --primary-l: #5A7A3A !important;
+  --primary-soft: #E8EFDD !important;
+  --wood: #E07840 !important;
+  --wood-d: #C4632A !important;
+  --wood-l: #FAEAD9 !important;
+  --sage: #B0C49A !important;
+  --green: #5A7A3A !important;
+  --amber: #C68B2C !important;
+  --red: #B8453D !important;
+  --orange: #E07840 !important;
+  --blue: #4A6E8A !important;
+}
+
+
+/* Force fonts harmonisées */
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div {
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif !important;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cormorant Garamond", Georgia, serif !important;
+  letter-spacing: -0.3px;
+}
+code, pre, .mono, [class*="mono"] {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace !important;
+}
+
+/* === FIN HARMONISATION === */
+</style>
+</head>
+<body>
+<button class="menu-toggle" id="menu-toggle" aria-label="Ouvrir le menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<div class="shell" id="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main-content"></main>
+</div>
+
+<!-- PANEL -->
+<div id="panel-overlay" style="display:none"></div>
+
+<script>
+/* ── DATA ── */
+const CORPS=[{id:1,code:"01",label:"Implantation / Terrassement"},{id:2,code:"02",label:"Maçonnerie Infrastructure"},{id:3,code:"03",label:"MOB (Murs Ossature Bois)"},{id:4,code:"04",label:"Fermettes Industrielles"},{id:5,code:"05",label:"Charpente Trad. & Bois Ext."},{id:6,code:"06",label:"Couverture / Zinguerie"},{id:7,code:"07",label:"Fumisterie"},{id:8,code:"08",label:"Menuiseries Extérieures"},{id:9,code:"09",label:"Plâtrerie / Isolation"},{id:10,code:"10",label:"Ventilation"},{id:11,code:"11",label:"Menuiseries Intérieures"},{id:12,code:"12",label:"Carrelages / Faïences"},{id:13,code:"13",label:"Plomberie / Chauffage / Élec."},{id:14,code:"14",label:"ECTIS / Ravalement"},{id:15,code:"15",label:"Branchements / Assainissement"},{id:16,code:"16",label:"Conception Générale & Divers"}];
+const ECARTS=[{value:"urgent",label:"Écart urgent",color:"#b8453d"},{value:"mineur",label:"Écart mineur",color:"#c98f37"},{value:"corrige",label:"Corrigé ✓",color:"#2f8557"},{value:"conseil",label:"Conseil",color:"#3d6b8a"},{value:"nvu",label:"Non vu",color:"#8a948c"}];
+const RECTIF_STATUS=[{value:"en_attente",label:"En attente",color:"#c98f37"},{value:"en_cours",label:"En cours",color:"#3d6b8a"},{value:"corrige",label:"Corrigé",color:"#2f8557"},{value:"reporte",label:"Reporté",color:"#8a948c"}];
+const AGENCES_DEF=[{id:1,nom:"BOISILIA CONSTRUCTION",ville:"VILLEFRANCHE SUR SAÔNE",adresse:"277 rue d'Anse, 69400"},{id:2,nom:"TARN MAISON OSSATURE BOIS",ville:"ALBI",adresse:"4 rue du Foyer, 81600 BRENS"},{id:3,nom:"GP-MEOB",ville:"ANNECY / CHAMBÉRY",adresse:"2 rue Antoine Berthod, 74960"},{id:4,nom:"SARL LBROS",ville:"ARRAS",adresse:"Za Carrefour de l'Artois, 62490"},{id:5,nom:"ECOHOME 84",ville:"AVIGNON / REMOULINS",adresse:"31 rue des Portes de la Tapy, 84170"},{id:6,nom:"BUGEY BRESSE CONSTRUCTIONS",ville:"BOURG EN BRESSE",adresse:"Le centre village, 01250"},{id:7,nom:"ACVR HOME",ville:"CAEN",adresse:"ZA Calix rue Pasteur, 14120"},{id:8,nom:"LDPCA CONSTRUCTIONS",ville:"CAHORS",adresse:"15 bis Bd Gambetta, 46000"},{id:9,nom:"E.M.A CONSTRUCTION",ville:"CHOLET / LA ROCHE SUR YON",adresse:"50 rue Eugène Bremond, 49300"},{id:10,nom:"MGCE",ville:"ÉVRY",adresse:"85 route de Corbeil, 91700"},{id:11,nom:"CABINET APJ",ville:"MONTPELLIER",adresse:""},{id:12,nom:"SAS BERTRAND CONSTRUCTIONS",ville:"RENNES",adresse:"Za du Haut Danté, 35520"},{id:13,nom:"OB CONCEPT",ville:"RODEZ",adresse:"18 avenue de Bourran, 12000"},{id:14,nom:"EVABOIS",ville:"SALON DE PROVENCE",adresse:"46 chemin des Bastides, 13450"},{id:15,nom:"NATI BRETAGNE NORD",ville:"ST BRIEUC",adresse:"23 rue de l'Ic, 22590"},{id:16,nom:"NOGOT CONCEPT",ville:"TOURS",adresse:"ZA le Pilori, 37360"},{id:17,nom:"MO2B",ville:"VAR / TOULON",adresse:"210 rue de l'innovation, 83110"}];
+
+/* ── STATE ── */
+let STATE=loadState();
+let VIEW={page:'dashboard',agenceId:null,auditId:null,panel:null,panelData:null};
+
+function loadState(){
+  try{const d=localStorage.getItem('naturea_pc_v1');if(d)return JSON.parse(d);}catch(e){}
+  return{agences:AGENCES_DEF.map(a=>({...a,audits:[]}))};
+}
+function save(){try{localStorage.setItem('naturea_pc_v1',JSON.stringify(STATE));}catch(e){}}
+
+/* ── HELPERS ── */
+function sc(s){if(s===null||s===undefined)return'#8a948c';if(s>=4)return'#2f8557';if(s>=3)return'#c98f37';if(s>=2)return'#c5703d';return'#b8453d';}
+function sl(s){if(s===null||s===undefined)return'—';if(s>=4)return'Excellent';if(s>=3)return'Satisfaisant';if(s>=2)return'À améliorer';return'Critique';}
+function avgA(audits){if(!audits||!audits.length)return null;const sc2=audits.map(a=>{const it=a.corps.filter(c=>c.note!==null);if(!it.length)return null;return it.reduce((s,c)=>s+c.note,0)/it.length;}).filter(s=>s!==null);if(!sc2.length)return null;return sc2.reduce((a,b)=>a+b,0)/sc2.length;}
+function auditAvg(a){const it=a.corps.filter(c=>c.note!==null);if(!it.length)return null;return it.reduce((s,c)=>s+c.note,0)/it.length;}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function ring(score,size){
+  size=size||48;const r=size*.36,cx=size/2,circ=2*Math.PI*r,pct=score!==null?score/5:0,col=sc(score);
+  return`<svg width="${size}" height="${size}"><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="#e6dfce" stroke-width="${(size*.1).toFixed(0)}"/>${score!==null?`<circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="${col}" stroke-width="${(size*.1).toFixed(0)}" stroke-dasharray="${(pct*circ).toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center"/>`:''}<text x="${cx}" y="${cx+1}" text-anchor="middle" dominant-baseline="middle" fill="${score!==null?col:'#8a948c'}" font-size="${(size*.28).toFixed(0)}" font-weight="900" font-family="'Archivo Black','Archivo',sans-serif" font-variant-numeric="tabular-nums">${score!==null?score.toFixed(1):'—'}</text></svg>`;
+}
+function scorePill(s){const col=sc(s);return`<span class="score-pill" style="background:${col}18;color:${col};border:1px solid ${col}30">${s!==null?s.toFixed(1)+'/5':'—'}</span>`;}
+
+/* all urgent écarts across network */
+function getAllUrgents(){
+  const res=[];
+  STATE.agences.forEach(ag=>{
+    ag.audits.forEach(au=>{
+      au.corps.forEach(c=>{
+        if(c.ecart==='urgent'){
+          res.push({agenceId:ag.id,agenceNom:ag.nom,agenceVille:ag.ville,auditId:au.id,auditDate:au.date,corpsId:c.id,corpsCode:c.code,corpsLabel:c.label,commentaire:c.commentaire,rectifStatus:c.rectifStatus||'en_attente',rectifNote:c.rectifNote||'',photos:c.photos||[]});
+        }
+      });
+    });
+  });
+  return res.sort((a,b)=>b.auditDate.localeCompare(a.auditDate));
+}
+
+function updateRectif(agId,auditId,corpsId,field,val){
+  const ag=STATE.agences.find(x=>x.id===agId);
+  const au=ag.audits.find(x=>x.id===auditId);
+  const c=au.corps.find(x=>x.id===corpsId);
+  c[field]=val;
+  save();
+}
+
+/* ── NAV ── */
+function nav(updates){Object.assign(VIEW,updates);renderAll();}
+function renderAll(){renderSidebar();renderMain();}
+
+/* ── SIDEBAR ── */
+function renderSidebar(){
+  const ag=[...STATE.agences].map(a=>({...a,score:avgA(a.audits)})).sort((a,b)=>(b.score??-1)-(a.score??-1));
+  document.getElementById('sidebar').innerHTML=`
+<div class="sidebar-logo">
+  <img class="brand-banner" src="data:image/webp;base64,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" alt="Maisons Naturéa — Construction de maisons à ossature bois"/>
+</div>
+<div class="sidebar-subtitle">Audit réseau</div>
+<div class="sidebar-nav">
+  <div class="nav-section">Vue globale</div>
+  <button class="nav-item ${VIEW.page==='dashboard'?'active':''}" onclick="nav({page:'dashboard',agenceId:null})"><span class="dot"></span>Tableau de bord</button>
+  <button class="nav-item ${VIEW.page==='urgents'?'active':''}" onclick="nav({page:'urgents',agenceId:null})">
+    <span class="dot"></span>Écarts urgents
+    ${getAllUrgents().filter(u=>u.rectifStatus!=='corrige').length?`<span class="score-badge badge-red" style="background:rgba(184,69,61,.12);color:#b8453d;border:1px solid rgba(184,69,61,.3);font-size:10px;padding:1px 6px;border-radius:10px;margin-left:auto">${getAllUrgents().filter(u=>u.rectifStatus!=='corrige').length}</span>`:''}
+  </button>
+  <button class="nav-item ${VIEW.page==='classement'?'active':''}" onclick="nav({page:'classement',agenceId:null})"><span class="dot"></span>Classement</button>
+
+  <div class="nav-section" style="margin-top:8px">Agences</div>
+  ${ag.map(a=>`<button class="nav-item ${VIEW.agenceId===a.id?'active':''}" onclick="nav({page:'agence',agenceId:${a.id}})">
+    <span style="width:7px;height:7px;border-radius:50%;background:${sc(a.score)};flex-shrink:0"></span>
+    <span style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px">${a.nom}</span>
+    ${a.score!==null?`<span style="font-family:var(--mono);font-size:10px;color:${sc(a.score)};flex-shrink:0">${a.score.toFixed(1)}</span>`:''}
+  </button>`).join('')}
+</div>`;
+}
+
+/* ── MAIN ROUTER ── */
+function renderMain(){
+  const mc=document.getElementById('main-content');
+  if(VIEW.page==='dashboard') mc.innerHTML=renderDashboard();
+  else if(VIEW.page==='urgents') mc.innerHTML=renderUrgents();
+  else if(VIEW.page==='classement') mc.innerHTML=renderClassement();
+  else if(VIEW.page==='agence') mc.innerHTML=renderAgence();
+  else if(VIEW.page==='audit') mc.innerHTML=renderAuditDetail();
+  else if(VIEW.page==='newAudit') mc.innerHTML=renderNewAudit();
+  bindMain();
+}
+
+/* ── DASHBOARD ── */
+function renderDashboard(){
+  const all=STATE.agences.flatMap(a=>a.audits);
+  const gs=avgA(all);
+  const audited=STATE.agences.filter(a=>avgA(a.audits)!==null);
+  const urgents=getAllUrgents();
+  const open=urgents.filter(u=>u.rectifStatus!=='corrige');
+
+  // Last 3 audited agences (by most recent audit date)
+  const recentAg=[...STATE.agences]
+    .filter(a=>a.audits.length>0)
+    .map(a=>({...a,lastDate:a.audits.map(x=>x.date).sort().reverse()[0],score:avgA(a.audits)}))
+    .sort((a,b)=>b.lastDate.localeCompare(a.lastDate))
+    .slice(0,3);
+
+  // Corps weaknesses
+  const cmScores=CORPS.map(cm=>{const sc2=all.flatMap(a=>a.corps.filter(c=>c.id===cm.id&&c.note!==null).map(c=>c.note));return{...cm,avg:sc2.length?sc2.reduce((a,b)=>a+b,0)/sc2.length:null};}).filter(c=>c.avg!==null).sort((a,b)=>a.avg-b.avg);
+
+  return`
+<div class="topbar">
+  <h2>Tableau de bord</h2>
+  <div style="font-family:var(--mono);font-size:11px;color:var(--text3)">${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+</div>
+<div class="content fade-up">
+
+  <!-- KPIs -->
+  <div class="grid-4" style="margin-bottom:24px">
+    <div class="metric">
+      <div class="metric-label">Score réseau</div>
+      <div class="metric-value" style="color:${sc(gs)}">${gs?gs.toFixed(2):'—'}</div>
+      <div class="metric-sub">${gs?sl(gs):'Aucun audit réalisé'}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Agences auditées</div>
+      <div class="metric-value" style="color:var(--primary)">${audited.length}<span style="font-size:18px;color:var(--text3)">/${STATE.agences.length}</span></div>
+      <div class="metric-sub">${STATE.agences.length-audited.length} agences non auditées</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Audits total</div>
+      <div class="metric-value" style="color:var(--text)">${all.length}</div>
+      <div class="metric-sub">${all.length?'Dernier : '+fmtDate(all.map(a=>a.date).sort().reverse()[0]):'—'}</div>
+    </div>
+    <div class="metric" style="border-color:${open.length?'rgba(184,69,61,.35)':'var(--border)'}">
+      <div class="metric-label">Écarts urgents ouverts</div>
+      <div class="metric-value" style="color:${open.length?'var(--red)':'var(--green)'}">${open.length}</div>
+      <div class="metric-sub">${urgents.length-open.length} corrigé${urgents.length-open.length>1?'s':''} sur ${urgents.length}</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px;grid-template-columns:2fr 1fr">
+
+    <!-- 3 dernières agences auditées -->
+    <div class="card">
+      <div class="section-title">3 dernières agences auditées</div>
+      ${recentAg.length===0?`<div class="empty">Aucun audit réalisé</div>`:recentAg.map(a=>`
+      <div style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)">
+        ${ring(a.score,52)}
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <p style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nom}</p>
+            ${scorePill(a.score)}
+          </div>
+          <p style="font-size:12px;color:var(--text2)">${a.ville} · Dernier audit : ${fmtDate(a.lastDate)}</p>
+          <div style="margin-top:8px"><div class="progress"><div class="progress-fill" style="width:${a.score?((a.score/5)*100).toFixed(0):0}%;background:${sc(a.score)}"></div></div></div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:12px" onclick="nav({page:'agence',agenceId:${a.id}})">Voir →</button>
+      </div>`).join('')}
+    </div>
+
+    <!-- Points faibles réseau -->
+    <div class="card">
+      <div class="section-title">Points faibles réseau</div>
+      ${cmScores.length===0?`<div class="empty">Pas de données</div>`:cmScores.slice(0,6).map(cm=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);width:22px;flex-shrink:0">${cm.code}</span>
+        <span style="flex:1;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cm.label}</span>
+        <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:${sc(cm.avg)};flex-shrink:0">${cm.avg.toFixed(1)}</span>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Écarts urgents ouverts -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:0">Écarts urgents — suivi rectificatif</div>
+      ${open.length?`<button class="btn btn-ghost" style="font-size:12px" onclick="nav({page:'urgents'})">Voir tout →</button>`:''}
+    </div>
+    ${open.length===0?`<div class="empty" style="color:var(--green)">✓ Aucun écart urgent en attente</div>`:renderUrgentsTable(open.slice(0,6),true)}
+  </div>
+
+</div>`;
+}
+
+/* ── URGENTS PAGE ── */
+function renderUrgents(){
+  const urgents=getAllUrgents();
+  const open=urgents.filter(u=>u.rectifStatus!=='corrige');
+  const closed=urgents.filter(u=>u.rectifStatus==='corrige');
+  return`
+<div class="topbar">
+  <h2>Écarts urgents & suivi rectificatif</h2>
+  <div style="display:flex;gap:8px">
+    <span class="badge badge-red">${open.length} ouvert${open.length>1?'s':''}</span>
+    <span class="badge badge-green">${closed.length} corrigé${closed.length>1?'s':''}</span>
+  </div>
+</div>
+<div class="content fade-up">
+  ${open.length>0?`<div class="card" style="margin-bottom:20px">
+    <div class="section-title">En attente / en cours</div>
+    ${renderUrgentsTable(open,false)}
+  </div>`:''}
+  ${closed.length>0?`<div class="card">
+    <div class="section-title" style="color:var(--green)">Corrigés</div>
+    ${renderUrgentsTable(closed,false,true)}
+  </div>`:''}
+  ${urgents.length===0?`<div class="card"><div class="empty">Aucun écart urgent enregistré dans le réseau.</div></div>`:''}
+</div>`;
+}
+
+function renderUrgentsTable(items,compact,greyed){
+  return`
+<div style="overflow-x:auto">
+<table class="table" style="${greyed?'opacity:.6':''}">
+  <thead><tr>
+    <th>Corps de métier</th>
+    <th>Agence</th>
+    <th>Audit</th>
+    <th>Commentaire</th>
+    <th>Statut rectificatif</th>
+    <th>Note de suivi</th>
+  </tr></thead>
+  <tbody>
+  ${items.map(u=>{
+    const rs=RECTIF_STATUS.find(r=>r.value===u.rectifStatus)||RECTIF_STATUS[0];
+    return`<tr data-agid="${u.agenceId}" data-auid="${u.auditId}" data-cid="${u.corpsId}">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${u.corpsCode}</span>
+          <span style="color:var(--text);font-weight:500">${u.corpsLabel}</span>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:12px;font-weight:500;color:var(--text)">${u.agenceNom}</div>
+        <div style="font-size:11px;color:var(--text3)">${u.agenceVille}</div>
+      </td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--text2)">${fmtDate(u.auditDate)}</span></td>
+      <td style="max-width:200px"><span style="font-size:12px;color:var(--text2);white-space:pre-wrap">${u.commentaire||'—'}</span></td>
+      <td>
+        <select class="rectif-status-sel" data-agid="${u.agenceId}" data-auid="${u.auditId}" data-cid="${u.corpsId}" style="background:${rs.color}18;color:${rs.color};border-color:${rs.color}40;border-radius:6px;padding:4px 10px;font-size:12px;width:auto;min-width:130px">
+          ${RECTIF_STATUS.map(r=>`<option value="${r.value}" ${u.rectifStatus===r.value?'selected':''}>${r.label}</option>`).join('')}
+        </select>
+      </td>
+      <td style="min-width:180px">
+        <input type="text" class="rectif-note-inp" data-agid="${u.agenceId}" data-auid="${u.auditId}" data-cid="${u.corpsId}" value="${u.rectifNote||''}" placeholder="Ajouter une note…" style="font-size:12px;padding:5px 10px"/>
+      </td>
+    </tr>`;
+  }).join('')}
+  </tbody>
+</table>
+</div>`;
+}
+
+/* ── CLASSEMENT ── */
+function renderClassement(){
+  const all=STATE.agences.flatMap(a=>a.audits);
+  const sorted=[...STATE.agences].map(a=>({...a,score:avgA(a.audits)})).sort((a,b)=>(b.score??-1)-(a.score??-1));
+  const cmScores=CORPS.map(cm=>{const sc2=all.flatMap(a=>a.corps.filter(c=>c.id===cm.id&&c.note!==null).map(c=>c.note));return{...cm,avg:sc2.length?sc2.reduce((a,b)=>a+b,0)/sc2.length:null};}).filter(c=>c.avg!==null);
+  return`
+<div class="topbar"><h2>Classement du réseau</h2></div>
+<div class="content fade-up">
+  <div class="grid-2" style="grid-template-columns:3fr 2fr">
+    <div class="card">
+      <div class="section-title">Classement agences</div>
+      <table class="table">
+        <thead><tr><th>#</th><th>Agence</th><th>Audits</th><th>Score moyen</th><th>Tendance</th></tr></thead>
+        <tbody>
+        ${sorted.map((a,i)=>`<tr style="cursor:pointer" onclick="nav({page:'agence',agenceId:${a.id}})">
+          <td><span style="font-family:var(--mono);font-size:14px;color:${i===0?'#c9a23a':i===1?'#9ca39e':i===2?'#a87341':'var(--text3)'};font-weight:700">${i+1}</span></td>
+          <td>
+            <div style="font-weight:500;color:var(--text)">${a.nom}</div>
+            <div style="font-size:11px;color:var(--text3)">${a.ville}</div>
+          </td>
+          <td><span style="font-family:var(--mono);color:var(--text2)">${a.audits.length}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              ${ring(a.score,36)}
+              ${scorePill(a.score)}
+            </div>
+          </td>
+          <td>
+            <div class="progress" style="width:90px"><div class="progress-fill" style="width:${a.score?(a.score/5*100).toFixed(0):0}%;background:${sc(a.score)}"></div></div>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="section-title">Score moyen par corps de métier</div>
+      ${cmScores.length===0?`<div class="empty">Pas de données</div>`:cmScores.map(cm=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);width:22px;flex-shrink:0">${cm.code}</span>
+        <span style="flex:1;font-size:12px;color:var(--text2)">${cm.label}</span>
+        <div class="progress" style="width:60px"><div class="progress-fill" style="width:${(cm.avg/5*100).toFixed(0)}%;background:${sc(cm.avg)}"></div></div>
+        <span style="font-family:var(--mono);font-size:12px;color:${sc(cm.avg)};font-weight:500;min-width:28px;text-align:right">${cm.avg.toFixed(1)}</span>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>`;
+}
+
+/* ── AGENCE ── */
+function renderAgence(){
+  const a=STATE.agences.find(x=>x.id===VIEW.agenceId);
+  const score=avgA(a.audits);
+  const sortedAudits=[...a.audits].sort((a,b)=>b.date.localeCompare(a.date));
+  return`
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:16px">
+    ${ring(score,52)}
+    <div>
+      <div style="font-size:12px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px">${a.ville}</div>
+      <h2 style="margin-bottom:2px">${a.nom}</h2>
+      ${a.adresse?`<div style="font-size:12px;color:var(--text3)">${a.adresse}</div>`:''}
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="startNewAudit(${a.id})">+ Nouvel audit</button>
+</div>
+<div class="content fade-up">
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="metric">
+      <div class="metric-label">Score moyen</div>
+      <div class="metric-value" style="color:${sc(score)}">${score?score.toFixed(2):'—'}</div>
+      <div class="metric-sub">${sl(score)}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Nombre d'audits</div>
+      <div class="metric-value" style="color:var(--primary)">${a.audits.length}</div>
+      <div class="metric-sub">${a.audits.length?'Dernier : '+fmtDate(sortedAudits[0].date):'Aucun audit'}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Écarts urgents</div>
+      <div class="metric-value" style="color:${a.audits.flatMap(au=>au.corps).filter(c=>c.ecart==='urgent').length?'var(--red)':'var(--green)'}">${a.audits.flatMap(au=>au.corps).filter(c=>c.ecart==='urgent').length}</div>
+      <div class="metric-sub">sur l'ensemble des audits</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Historique des audits</div>
+    ${sortedAudits.length===0?`<div class="empty">Aucun audit réalisé. <button class="btn btn-primary" style="margin-left:10px" onclick="startNewAudit(${a.id})">Créer le premier audit</button></div>`:
+    `<table class="table">
+      <thead><tr><th>Date</th><th>Auditeur</th><th>Corps notés</th><th>Score</th><th>Écarts</th><th></th></tr></thead>
+      <tbody>
+      ${sortedAudits.map(au=>{
+        const s=auditAvg(au);
+        const urg=au.corps.filter(c=>c.ecart==='urgent').length;
+        const min=au.corps.filter(c=>c.ecart==='mineur').length;
+        return`<tr style="cursor:pointer" onclick="nav({page:'audit',auditId:${au.id},agenceId:${a.id}})">
+          <td><span class="mono" style="color:var(--text2)">${fmtDate(au.date)}</span></td>
+          <td style="color:var(--text2)">${au.auditeur||'—'}</td>
+          <td><span class="mono">${au.corps.filter(c=>c.note!==null).length}/${CORPS.length}</span></td>
+          <td>${scorePill(s)}</td>
+          <td>
+            ${urg?`<span class="badge badge-red" style="margin-right:4px">⚠ ${urg} urgent${urg>1?'s':''}</span>`:''}
+            ${min?`<span class="badge badge-amber">${min} mineur${min>1?'s':''}</span>`:''}
+            ${!urg&&!min?`<span class="badge badge-green">OK</span>`:''}
+          </td>
+          <td><button class="btn btn-ghost" style="font-size:12px" onclick="event.stopPropagation();nav({page:'audit',auditId:${au.id},agenceId:${a.id}})">Voir →</button></td>
+        </tr>`;}).join('')}
+      </tbody>
+    </table>`}
+  </div>
+</div>`;
+}
+
+/* ── AUDIT DETAIL ── */
+function renderAuditDetail(){
+  const ag=STATE.agences.find(x=>x.id===VIEW.agenceId);
+  const au=ag.audits.find(x=>x.id===VIEW.auditId);
+  const s=auditAvg(au);
+  const relevant=au.corps.filter(c=>c.note!==null||c.commentaire||c.photos.length>0);
+  const urgents=au.corps.filter(c=>c.ecart==='urgent');
+  return`
+<div class="topbar">
+  <div>
+    <button class="btn btn-ghost" style="margin-bottom:8px;font-size:12px" onclick="nav({page:'agence',agenceId:${ag.id}})">← ${ag.nom}</button>
+    <div style="display:flex;align-items:center;gap:14px">
+      ${ring(s,52)}
+      <div>
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);text-transform:uppercase">Rapport d'audit</div>
+        <h2>${fmtDate(au.date)}</h2>
+        ${au.auditeur?`<div style="font-size:12px;color:var(--text2)">Auditeur : ${au.auditeur}</div>`:''}
+      </div>
+    </div>
+  </div>
+  <button id="del-audit-btn" class="btn btn-danger">Supprimer</button>
+</div>
+<div class="content fade-up">
+  ${au.chantiers||au.participants?`<div class="card-sm" style="margin-bottom:20px;display:flex;gap:32px">
+    ${au.chantiers?`<div><div class="form-label" style="margin-bottom:4px">Chantiers</div><div style="font-size:13px;color:var(--text2)">${au.chantiers}</div></div>`:''}
+    ${au.participants?`<div><div class="form-label" style="margin-bottom:4px">Participants</div><div style="font-size:13px;color:var(--text2)">${au.participants}</div></div>`:''}
+  </div>`:''}
+  ${urgents.length?`<div class="card" style="margin-bottom:20px;border-color:rgba(184,69,61,.3)">
+    <div class="section-title" style="color:var(--red)">Écarts urgents (${urgents.length})</div>
+    ${urgents.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="badge badge-red">${c.code} ${c.label}</span>
+      </div>
+      ${c.commentaire?`<p style="font-size:13px;color:var(--text2);margin-top:4px">${c.commentaire}</p>`:''}
+    </div>`).join('')}
+  </div>`:''}
+  <div class="card">
+    <div class="section-title">Corps de métier évalués</div>
+    ${relevant.length===0?`<div class="empty">Aucun corps évalué</div>`:
+    `<table class="table">
+      <thead><tr><th>#</th><th>Corps de métier</th><th>Note</th><th>Écart</th><th>Commentaire</th></tr></thead>
+      <tbody>
+      ${relevant.map(c=>{const ec=ECARTS.find(e=>e.value===c.ecart);
+      return`<tr>
+        <td><span class="mono" style="color:var(--text3)">${c.code}</span></td>
+        <td style="font-weight:500">${c.label}</td>
+        <td>${c.note!==null?`<span style="font-family:var(--mono);font-weight:600;color:${sc(c.note)}">${c.note}/5</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+        <td>${ec?`<span class="badge" style="background:${ec.color}18;color:${ec.color};border-color:${ec.color}30">${ec.label}</span>`:'—'}</td>
+        <td style="font-size:12px;color:var(--text2);max-width:300px">${c.commentaire||'—'}</td>
+      </tr>`;}).join('')}
+      </tbody>
+    </table>`}
+  </div>
+  ${au.commentaires?`<div class="card" style="margin-top:20px">
+    <div class="section-title">Commentaires généraux</div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.7">${au.commentaires}</p>
+  </div>`:''}
+</div>`;
+}
+
+/* ── NEW AUDIT (multi-step) ── */
+let DRAFT={step:0,data:null};
+function startNewAudit(agId){
+  DRAFT={step:0,data:{id:Date.now(),date:new Date().toISOString().slice(0,10),auditeur:'',chantiers:'',participants:'',commentaires:'',corps:CORPS.map(cm=>({id:cm.id,code:cm.code,label:cm.label,note:null,ecart:null,commentaire:'',photos:[],rectifStatus:'en_attente',rectifNote:''}))}};
+  VIEW.page='newAudit';VIEW.agenceId=agId;
+  renderMain();
+}
+
+let ACTIVE_CORPS=null;
+
+function renderNewAudit(){
+  const ag=STATE.agences.find(x=>x.id===VIEW.agenceId);
+  const d=DRAFT.data;
+  const score=(()=>{const it=d.corps.filter(c=>c.note!==null);if(!it.length)return null;return it.reduce((s,c)=>s+c.note,0)/it.length;})();
+  const steps=['Informations générales','Évaluation corps de métier','Résumé & validation'];
+
+  if(ACTIVE_CORPS!==null){
+    const c=d.corps.find(x=>x.id===ACTIVE_CORPS);
+    return renderCorpsEditor(ag,c,score);
+  }
+
+  return`
+<div class="topbar">
+  <div>
+    <button class="btn btn-ghost" style="margin-bottom:8px;font-size:12px" id="cancel-new">← Annuler</button>
+    <h2>Nouvel audit — ${ag.nom}</h2>
+  </div>
+  ${ring(score,48)}
+</div>
+<div class="content fade-up">
+  <!-- Steps indicator -->
+  <div style="display:flex;gap:0;margin-bottom:28px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff">
+    ${steps.map((s,i)=>`<div style="flex:1;padding:14px 16px;background:${i===DRAFT.step?'var(--primary-soft)':'#fff'};border-right:${i<2?'1px solid var(--border)':'none'};display:flex;align-items:center;gap:9px">
+      <span style="width:22px;height:22px;border-radius:50%;background:${i<DRAFT.step?'var(--green)':i===DRAFT.step?'var(--primary)':'var(--bg4)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${i<DRAFT.step?'✓':i+1}</span>
+      <span style="font-size:13px;color:${i===DRAFT.step?'var(--primary-d)':'var(--text2)'};font-weight:${i===DRAFT.step?600:500}">${s}</span>
+    </div>`).join('')}
+  </div>
+
+  ${DRAFT.step===0?renderStep0Form(d):''}
+  ${DRAFT.step===1?renderStep1List(d):''}
+  ${DRAFT.step===2?renderStep2Summary(d,score):''}
+
+  <div style="display:flex;justify-content:space-between;margin-top:24px">
+    ${DRAFT.step>0?`<button class="btn btn-ghost" id="prev-step">← Étape précédente</button>`:`<div></div>`}
+    ${DRAFT.step<2?`<button class="btn btn-primary" id="next-step">Étape suivante →</button>`:
+    `<button class="btn btn-primary" id="save-audit" style="background:var(--green);color:#fff;font-weight:600">✓ Enregistrer l'audit</button>`}
+  </div>
+</div>`;
+}
+
+function renderCorpsEditor(ag,c,score){
+  return`
+<div class="topbar">
+  <div>
+    <button class="btn btn-ghost" style="margin-bottom:8px;font-size:12px" id="back-corps">← Corps de métier</button>
+    <h2 style="font-size:18px">${c.code} — ${c.label}</h2>
+  </div>
+  ${ring(score,48)}
+</div>
+<div class="content fade-up">
+  <div class="grid-2">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">Note (/5)</div>
+        <div style="display:flex;gap:8px">
+          ${[null,1,2,3,4,5].map(n=>`<button data-note="${n??'null'}" style="flex:1;padding:14px 0;border-radius:9px;background:${c.note===n?(n===null?'var(--bg4)':sc(n)):'#fff'};border:1px solid ${c.note===n?(n===null?'var(--border2)':sc(n)):'var(--border)'};color:${c.note===n?(n===null?'var(--text)':'#fff'):'var(--text2)'};font-size:16px;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .15s">${n??'—'}</button>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Type d'écart</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${ECARTS.map(e=>`<button data-ecart="${e.value}" style="background:${c.ecart===e.value?e.color+'1a':'#fff'};border:1px solid ${c.ecart===e.value?e.color:' var(--border)'};border-radius:9px;padding:11px 14px;color:${c.ecart===e.value?e.color:'var(--text2)'};font-size:13px;font-weight:500;text-align:left;display:flex;align-items:center;gap:9px;cursor:pointer;transition:all .15s">
+            <span style="width:8px;height:8px;border-radius:50%;background:${e.color};flex-shrink:0"></span>${e.label}
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">Commentaire & observations</div>
+        <textarea id="corps-comment" placeholder="Décrire les écarts constatés, observations, recommandations…" style="min-height:140px">${c.commentaire}</textarea>
+      </div>
+      <div class="card">
+        <div class="section-title">Photos</div>
+        <button id="add-photo" style="width:100%;background:var(--bg3);border:1.5px dashed var(--border2);border-radius:10px;padding:18px;color:var(--text2);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .15s">📷 Ajouter une photo</button>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" multiple/>
+        ${c.photos&&c.photos.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${c.photos.map((p,i)=>`<div style="position:relative"><img src="${p}" style="width:90px;height:90px;border-radius:8px;object-fit:cover;border:1px solid var(--border)"/><button data-dphoto="${i}" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:var(--red);border-radius:50%;color:#fff;font-size:11px;line-height:20px;text-align:center">×</button></div>`).join('')}</div>`:''}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:20px">
+    <button class="btn btn-primary" id="back-corps">Retour à la liste →</button>
+  </div>
+</div>`;
+}
+
+function renderStep0Form(d){return`
+<div class="card">
+  <div class="form-grid">
+    <div class="form-row"><label class="form-label">Date de l'audit</label><input type="date" id="f-date" value="${d.date}"/></div>
+    <div class="form-row"><label class="form-label">Auditeur</label><input type="text" id="f-auditeur" placeholder="Nom de l'auditeur" value="${d.auditeur}"/></div>
+  </div>
+  <div class="form-row"><label class="form-label">Chantiers visités</label><input type="text" id="f-chantiers" placeholder="Noms / références des chantiers visités" value="${d.chantiers}"/></div>
+  <div class="form-row"><label class="form-label">Participants</label><input type="text" id="f-participants" placeholder="Personnes présentes lors de l'audit" value="${d.participants}"/></div>
+  <div class="form-row" style="margin-bottom:0"><label class="form-label">Commentaires généraux</label><textarea id="f-commentaires" placeholder="Appréciation générale du chantier…">${d.commentaires}</textarea></div>
+</div>`;}
+
+function renderStep1List(d){
+  return`<div class="card">
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+  ${d.corps.map(c=>{const col=sc(c.note);const ec=ECARTS.find(e=>e.value===c.ecart);
+  return`<button data-corps="${c.id}" style="background:#fff;border:1px solid ${c.note!==null?col+'66':'var(--border)'};border-radius:10px;padding:13px 14px;display:flex;align-items:center;gap:10px;text-align:left;width:100%;transition:all .15s;cursor:pointer">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3);min-width:22px;font-weight:600">${c.code}</span>
+    <span style="flex:1;font-size:13px;color:var(--text);font-weight:500">${c.label}</span>
+    ${ec?`<span style="width:7px;height:7px;border-radius:50%;background:${ec.color};flex-shrink:0"></span>`:''}
+    ${c.note!==null?`<span style="font-family:var(--mono);font-size:12px;font-weight:600;color:${col}">${c.note}/5</span>`:''}
+    <span style="color:var(--text3);font-size:14px">›</span>
+  </button>`;}).join('')}
+  </div></div>`;}
+
+function renderStep2Summary(d,score){
+  const col=sc(score);
+  const nc=d.corps.filter(c=>c.note!==null).length;
+  const uc=d.corps.filter(c=>c.ecart==='urgent').length;
+  const mc=d.corps.filter(c=>c.ecart==='mineur').length;
+  return`
+<div class="grid-2">
+  <div class="card">
+    <div class="section-title">Score final</div>
+    <div style="display:flex;align-items:center;gap:20px;padding:10px 0">
+      ${ring(score,72)}
+      <div>
+        <div style="font-family:var(--display);font-size:28px;font-weight:800;color:${col}">${score?score.toFixed(2):'—'}</div>
+        <div style="font-size:14px;color:${col};margin-top:2px">${sl(score)}</div>
+        <div style="display:flex;gap:12px;margin-top:10px">
+          <div><div style="font-size:18px;font-weight:700">${nc}</div><div style="font-size:11px;color:var(--text3)">Corps notés</div></div>
+          ${uc?`<div><div style="font-size:18px;font-weight:700;color:var(--red)">${uc}</div><div style="font-size:11px;color:var(--text3)">Urgents</div></div>`:''}
+          ${mc?`<div><div style="font-size:18px;font-weight:700;color:var(--amber)">${mc}</div><div style="font-size:11px;color:var(--text3)">Mineurs</div></div>`:''}
+        </div>
+      </div>
+    </div>
+    ${uc?`<div style="background:rgba(184,69,61,.06);border:1px solid rgba(184,69,61,.25);border-radius:10px;padding:14px;margin-top:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:8px;text-transform:uppercase;letter-spacing:1.2px">Écarts urgents</div>
+      ${d.corps.filter(c=>c.ecart==='urgent').map(c=>`<div style="padding:6px 0;border-bottom:1px solid rgba(184,69,61,.15)"><span style="font-size:12px;color:var(--red);font-weight:500">${c.label}</span>${c.commentaire?`<p style="font-size:11px;color:var(--text2);margin-top:3px">${c.commentaire}</p>`:''}</div>`).join('')}
+    </div>`:''}
+  </div>
+  <div class="card">
+    <div class="section-title">Récapitulatif</div>
+    ${d.commentaires?`<div style="margin-bottom:12px"><div class="form-label" style="margin-bottom:4px">Commentaires généraux</div><p style="font-size:13px;color:var(--text2);line-height:1.6">${d.commentaires}</p></div>`:''}
+    <div class="form-label" style="margin-bottom:8px">Corps évalués</div>
+    ${d.corps.filter(c=>c.note!==null).map(c=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);min-width:22px">${c.code}</span>
+      <span style="flex:1;font-size:12px;color:var(--text2)">${c.label}</span>
+      <span style="font-family:var(--mono);font-size:12px;font-weight:600;color:${sc(c.note)}">${c.note}/5</span>
+    </div>`).join('')}
+  </div>
+</div>`;}
+
+/* ── BIND MAIN ── */
+function bindMain(){
+  const el=id=>document.getElementById(id);
+  const all=sel=>document.querySelectorAll(sel);
+
+  // Corps editor navigation
+  const bc=el('back-corps');
+  if(bc){bc.addEventListener('click',()=>{
+    saveCorpsTxt();ACTIVE_CORPS=null;renderMain();
+  });}
+
+  const cn=el('cancel-new');
+  if(cn)cn.addEventListener('click',()=>{ACTIVE_CORPS=null;nav({page:'agence'});});
+
+  // Rectif status selects (urgents table)
+  all('.rectif-status-sel').forEach(s=>{
+    s.addEventListener('change',e=>{
+      const{agid,auid,cid}=e.target.dataset;
+      updateRectif(+agid,+auid,+cid,'rectifStatus',e.target.value);
+      s.style.background=RECTIF_STATUS.find(r=>r.value===e.target.value)?.color+'18';
+      s.style.color=RECTIF_STATUS.find(r=>r.value===e.target.value)?.color;
+    });
+  });
+
+  // Rectif note inputs
+  all('.rectif-note-inp').forEach(inp=>{
+    inp.addEventListener('change',e=>{
+      const{agid,auid,cid}=e.target.dataset;
+      updateRectif(+agid,+auid,+cid,'rectifNote',e.target.value);
+    });
+  });
+
+  // Agence audit list
+  all('[data-audit]').forEach(e=>e.addEventListener('click',()=>nav({page:'audit',auditId:+e.dataset.audit})));
+  all('[data-agence]').forEach(e=>e.addEventListener('click',()=>nav({page:'agence',agenceId:+e.dataset.agence})));
+
+  // Delete audit
+  const da=el('del-audit-btn');
+  if(da)da.addEventListener('click',()=>{
+    if(!confirm('Supprimer cet audit ?'))return;
+    const ag=STATE.agences.find(x=>x.id===VIEW.agenceId);
+    ag.audits=ag.audits.filter(a=>a.id!==VIEW.auditId);
+    save();nav({page:'agence'});
+  });
+
+  // New audit steps
+  const ns=el('next-step');
+  if(ns)ns.addEventListener('click',()=>{saveStep0Form();DRAFT.step++;renderMain();});
+  const ps=el('prev-step');
+  if(ps)ps.addEventListener('click',()=>{saveStep0Form();DRAFT.step--;renderMain();});
+  const sv=el('save-audit');
+  if(sv)sv.addEventListener('click',()=>{
+    const ag=STATE.agences.find(x=>x.id===VIEW.agenceId);
+    ag.audits.push(DRAFT.data);
+    save();ACTIVE_CORPS=null;nav({page:'agence'});
+  });
+
+  // Corps list click
+  all('[data-corps]').forEach(e=>e.addEventListener('click',()=>{ACTIVE_CORPS=+e.dataset.corps;renderMain();}));
+
+  // Note buttons
+  all('[data-note]').forEach(e=>e.addEventListener('click',()=>{
+    const v=e.dataset.note==='null'?null:+e.dataset.note;
+    DRAFT.data.corps=DRAFT.data.corps.map(c=>c.id===ACTIVE_CORPS?{...c,note:v}:c);
+    renderMain();
+  }));
+
+  // Ecart buttons
+  all('[data-ecart]').forEach(e=>e.addEventListener('click',()=>{
+    const c=DRAFT.data.corps.find(x=>x.id===ACTIVE_CORPS);
+    DRAFT.data.corps=DRAFT.data.corps.map(x=>x.id===ACTIVE_CORPS?{...x,ecart:x.ecart===e.dataset.ecart?null:e.dataset.ecart}:x);
+    renderMain();
+  }));
+
+  // Photos
+  const ap=el('add-photo'),pi=el('photo-input');
+  if(ap&&pi){
+    ap.addEventListener('click',()=>pi.click());
+    pi.addEventListener('change',e=>{
+      Array.from(e.target.files).forEach(file=>{
+        const reader=new FileReader();
+        reader.onload=ev=>{DRAFT.data.corps=DRAFT.data.corps.map(c=>c.id===ACTIVE_CORPS?{...c,photos:[...c.photos,ev.target.result]}:c);renderMain();};
+        reader.readAsDataURL(file);
+      });
+    });
+  }
+  all('[data-dphoto]').forEach(e=>e.addEventListener('click',ev=>{
+    ev.stopPropagation();const idx=+e.dataset.dphoto;
+    DRAFT.data.corps=DRAFT.data.corps.map(c=>c.id===ACTIVE_CORPS?{...c,photos:c.photos.filter((_,i)=>i!==idx)}:c);renderMain();
+  }));
+}
+
+function saveCorpsTxt(){
+  const el=document.getElementById('corps-comment');
+  if(el&&ACTIVE_CORPS!==null)DRAFT.data.corps=DRAFT.data.corps.map(c=>c.id===ACTIVE_CORPS?{...c,commentaire:el.value}:c);
+}
+function saveStep0Form(){
+  ['date','auditeur','chantiers','participants','commentaires'].forEach(f=>{const e=document.getElementById('f-'+f);if(e)DRAFT.data[f]=e.value;});
+}
+
+/* ── MOBILE MENU ── */
+function setupMobileMenu(){
+  const sb=document.getElementById('sidebar');
+  const bd=document.getElementById('sidebar-backdrop');
+  const tg=document.getElementById('menu-toggle');
+  const close=()=>{sb.classList.remove('open');bd.classList.remove('show')};
+  tg.addEventListener('click',()=>{sb.classList.toggle('open');bd.classList.toggle('show')});
+  bd.addEventListener('click',close);
+  // Close on nav item click (mobile)
+  sb.addEventListener('click',e=>{if(e.target.closest('.nav-item')&&window.innerWidth<=900)close();});
+}
+
+/* ── BOOT ── */
+setupMobileMenu();
+renderAll();
+</script>
+</body>
+</html>

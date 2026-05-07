@@ -1,0 +1,2693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Chiffrage Naturéa — Estimateur multi-usines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#2B4A1A;--forest2:#3A6125;--sage:#5A7A3A;--sage2:#76925C;
+  --sand:#F6F1E6;--sand2:#EDE5D2;--cream:#FBFAF5;--white:#FFFFFF;
+  --terra:#C4632A;--terra2:#D67841;
+  --ink:#1F2E15;--muted:#5C6755;--faint:#8A9580;--border:#D8D2C2;
+  --ok:#3A6125;--warn:#C68B2C;--danger:#C0392B;
+  --shadow-sm:0 1px 3px rgba(43,74,26,.08);--shadow:0 4px 14px rgba(43,74,26,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:"DM Sans",sans-serif;color:var(--ink);background:var(--cream);font-size:14px;line-height:1.5}
+button{cursor:pointer;font-family:inherit}
+a{color:var(--terra);text-decoration:none;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:var(--white);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sage)}
+input[type=number]{font-family:"JetBrains Mono",monospace;font-size:13px}
+.mono{font-family:"JetBrains Mono",monospace}
+.serif{font-family:"Cormorant Garamond",serif}
+
+header{background:var(--forest);color:#fff;box-shadow:var(--shadow)}
+.head-in{max-width:1380px;margin:0 auto;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{width:42px;height:42px;background:rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-name{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:600;letter-spacing:.5px}
+.brand-tag{font-size:10px;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
+.head-stats{display:flex;gap:32px}
+.head-stat{text-align:right}
+.head-stat-n{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:700;line-height:1}
+.head-stat-l{font-size:10px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px;font-weight:500}
+
+.tabs{background:var(--sand);border-bottom:1px solid var(--border)}
+.tabs-in{max-width:1380px;margin:0 auto;padding:0 28px;display:flex;gap:0;overflow-x:auto}
+.tab{background:none;border:none;padding:14px 22px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;letter-spacing:.3px;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--forest);border-bottom-color:var(--terra);background:var(--cream)}
+.tab .badge{background:var(--terra);color:#fff;font-size:10px;padding:1px 7px;border-radius:8px;font-weight:700;font-family:"JetBrains Mono",monospace}
+
+main{max-width:1380px;margin:0 auto;padding:32px 28px}
+.view{display:none;animation:fadein .25s ease-out}
+.view.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.page-head{margin-bottom:28px}
+.page-kicker{font-size:11px;color:var(--terra);text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:6px}
+.page-title{font-family:"Cormorant Garamond",serif;font-size:36px;color:var(--ink);font-weight:600;line-height:1.1;margin-bottom:6px}
+.page-title em{font-style:italic;color:var(--sage)}
+.page-sub{font-size:14px;color:var(--muted);max-width:680px}
+
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:980px){.est-grid{grid-template-columns:1fr}}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+.card-h{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card-h-l{display:flex;align-items:center;gap:10px}
+.card-h-l .ico{width:32px;height:32px;border-radius:8px;background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.card-h-l h3{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;color:var(--ink)}
+.card-b{padding:20px 22px}
+
+.usine-pick{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.usine-btn{flex:1;min-width:160px;background:var(--white);border:2px solid var(--border);border-radius:10px;padding:14px 16px;text-align:left;transition:all .15s;display:flex;flex-direction:column;gap:4px}
+.usine-btn:hover{border-color:var(--sage);background:var(--cream)}
+.usine-btn.on{border-color:var(--forest);background:var(--sand);box-shadow:0 0 0 3px rgba(43,74,26,.08)}
+.usine-btn-name{font-family:"Cormorant Garamond",serif;font-size:18px;font-weight:600;color:var(--ink)}
+.usine-btn-meta{font-size:11px;color:var(--muted);font-weight:500}
+.fiabilite{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fiabilite.haute{background:#E5EFD9;color:var(--ok)}
+.fiabilite.moyenne{background:#FAF0E0;color:var(--warn)}
+.fiabilite.faible{background:#F8E1DC;color:var(--danger)}
+
+.fld{margin-bottom:14px}
+.fld-l{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.fld label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.2px}
+.fld-hint{font-size:10px;color:var(--faint);font-family:"JetBrains Mono",monospace}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.section-label{font-size:11px;color:var(--terra);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px dashed var(--border);display:flex;align-items:center;gap:8px}
+.section-label:first-child{margin-top:0}
+
+.recap-card{position:sticky;top:20px}
+.recap-total{background:var(--forest);color:#fff;padding:24px;text-align:center;margin:-20px -22px 18px;border-radius:0}
+.recap-total-k{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:4px}
+.recap-total-n{font-family:"Cormorant Garamond",serif;font-size:46px;font-weight:700;line-height:1}
+.recap-total-tva{font-size:11px;color:rgba(255,255,255,.6);margin-top:6px;font-family:"JetBrains Mono",monospace}
+
+.recap-line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.recap-line:last-of-type{border-bottom:none}
+.recap-line-l{color:var(--muted);display:flex;align-items:center;gap:8px}
+.recap-line-l .det{font-size:10px;color:var(--faint);font-family:"JetBrains Mono",monospace}
+.recap-line-v{font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--ink)}
+.recap-line.subtotal{font-weight:700;border-top:2px solid var(--ink);border-bottom:none;padding-top:11px;margin-top:6px}
+.recap-line.subtotal .recap-line-l{color:var(--ink)}
+.recap-empty{text-align:center;padding:30px 10px;color:var(--faint);font-size:13px;font-style:italic}
+
+.fiab-banner{background:var(--sand);border-left:3px solid var(--sage);padding:11px 14px;border-radius:6px;font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:flex-start;gap:8px}
+.fiab-banner.warn{background:#FAF0E0;border-left-color:var(--warn);color:#7A5612}
+.fiab-banner .ico{font-size:14px;flex-shrink:0}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:9px;font-weight:600;font-size:13px;border:none;transition:all .15s}
+.btn-primary{background:var(--forest);color:#fff}
+.btn-primary:hover{background:var(--forest2)}
+.btn-secondary{background:var(--white);color:var(--ink);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--sage)}
+.btn-terra{background:var(--terra);color:#fff}
+.btn-terra:hover{background:var(--terra2)}
+.btn-ghost{background:transparent;color:var(--muted)}
+.btn-ghost:hover{color:var(--ink);background:var(--sand)}
+.btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:24px}
+.ref-card .card-h{background:var(--sand)}
+.ref-postes{display:flex;flex-direction:column}
+.ref-poste{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:11px 0;border-bottom:1px dashed var(--border);align-items:center;font-size:13px}
+.ref-poste:last-child{border-bottom:none}
+.ref-poste-name{color:var(--ink);font-weight:500}
+.ref-poste-name .unite{display:block;font-size:10px;color:var(--faint);font-family:"JetBrains Mono",monospace;margin-top:2px}
+.ref-poste-val{font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--ink);text-align:right}
+.ref-poste-range{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);text-align:right;margin-top:2px}
+.ref-meta{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--cream);border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.ref-meta-n{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:700;color:var(--forest);line-height:1}
+
+.hist-table{width:100%;border-collapse:collapse;font-size:13px}
+.hist-table th{text-align:left;padding:10px 12px;background:var(--sand);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border)}
+.hist-table td{padding:11px 12px;border-bottom:1px dashed var(--border)}
+.hist-table tr:hover td{background:var(--cream)}
+.hist-table .num{font-family:"JetBrains Mono",monospace;text-align:right;font-weight:500}
+.hist-pill{display:inline-flex;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.hist-pill.boisboreal{background:#E5EFD9;color:var(--forest)}
+.hist-pill.cobs{background:#EAE5F5;color:#5C3A8B}
+.hist-pill.sicob{background:#F5E6D5;color:#8B4513}
+.hist-pill.imaj{background:#D6E4F0;color:#1A5276}
+.hist-pill.savare{background:#FADBD8;color:#C0392B}
+
+.add-grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+@media(max-width:980px){.add-grid{grid-template-columns:1fr}}
+
+.note{background:var(--sand);border-radius:10px;padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.55;margin-top:18px;border-left:3px solid var(--sage)}
+.note strong{color:var(--ink)}
+
+/* Banner charpente externe */
+.charpente-ext-banner{background:#FEF3E2;border:1.5px dashed var(--terra);border-radius:10px;padding:13px 16px;font-size:12px;color:#7A4010;display:flex;align-items:flex-start;gap:10px;margin-bottom:4px}
+.charpente-ext-banner .ceb-ico{font-size:18px;flex-shrink:0;margin-top:1px}
+.charpente-ext-banner strong{color:#5A2D00;display:block;margin-bottom:4px;font-size:13px}
+.charpente-ext-banner p{color:#7A4010;margin:0 0 10px;line-height:1.45}
+/* Mini-estimateur charpente ext */
+.cext-form{background:rgba(255,255,255,.65);border:1px solid #E8C998;border-radius:9px;padding:14px 16px;margin-top:4px}
+.cext-form-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5A2D00;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.cext-row-main{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.cext-fld label{display:block;font-size:11px;color:#7A4010;font-weight:600;margin-bottom:4px}
+.cext-fld select,.cext-fld input{background:#fff;border:1.5px solid #E8C998;border-radius:7px;padding:7px 10px;font-size:12px;width:100%;color:var(--ink)}
+.cext-fld select:focus,.cext-fld input:focus{outline:none;border-color:var(--terra)}
+.cext-acc-title{font-size:11px;color:#7A4010;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin:8px 0 6px}
+.cext-acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cext-acc-line{display:flex;align-items:center;gap:6px;font-size:12px;color:#5A2D00}
+.cext-acc-line input{width:65px;flex-shrink:0;background:#fff;border:1.5px solid #E8C998;border-radius:6px;padding:5px 8px;font-size:12px;font-family:"JetBrains Mono",monospace}
+.cext-acc-line input:focus{outline:none;border-color:var(--terra)}
+.cext-acc-line .acc-label{flex:1;min-width:0}
+.cext-acc-line .acc-pu{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);white-space:nowrap}
+.cext-subtotal{margin-top:10px;padding:9px 14px;background:#5A2D00;color:#fff;border-radius:7px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.cext-subtotal .cext-st-amount{font-family:"JetBrains Mono",monospace;font-size:16px}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--forest);color:#fff;padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:13px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:100}
+.toast.on{opacity:1;transform:none}
+
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--sand2);color:var(--muted);font-size:10px;cursor:help;margin-left:4px;vertical-align:middle;font-style:normal;font-weight:600;border:1px solid var(--border);transition:all .15s}
+.info-i:hover{background:var(--terra);color:#fff;border-color:var(--terra)}
+.auto-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:3px;padding:1px 5px;margin-left:6px;vertical-align:middle;transition:all .2s}
+.tip-pop{position:absolute;background:var(--ink);color:#fff;padding:9px 12px;border-radius:7px;font-size:12px;line-height:1.45;max-width:320px;z-index:200;opacity:0;transform:translateY(-4px);transition:all .15s;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.18);font-weight:400}
+.tip-pop.on{opacity:1;transform:none}
+.tip-pop::before{content:"";position:absolute;top:-5px;left:14px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:5px solid var(--ink)}
+
+/* Paramètres */
+.param-actions{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.param-card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:24px}
+.param-card-h{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--sand);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.param-card-h h3{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:10px}
+.param-card-h .ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.param-poste{padding:18px 22px;border-bottom:1px solid var(--border)}
+.param-poste:last-child{border-bottom:none}
+.param-poste-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:780px){.param-poste-grid{grid-template-columns:1fr}}
+.param-fld{margin-bottom:11px}
+.param-fld label{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.param-fld label .reset-btn{background:none;border:none;color:var(--terra);font-size:10px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0}
+.param-fld label .reset-btn:hover{text-decoration:underline}
+.param-fld input,.param-fld textarea,.param-fld select{font-family:inherit;font-size:13px}
+.param-fld textarea{resize:vertical;min-height:60px;line-height:1.45}
+.param-fld .pdf-source{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--cream);border:1px dashed var(--border);border-radius:7px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.param-fld .pdf-source .lock{font-size:11px;color:var(--faint)}
+.param-toggle{display:flex;align-items:center;gap:10px;padding-top:6px;font-size:12px;color:var(--muted)}
+.param-toggle input[type=checkbox]{width:auto;cursor:pointer}
+.param-toggle label{display:inline;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;color:var(--muted);margin:0;font-size:12px}
+.param-poste-code{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);background:var(--cream);padding:2px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px;margin-left:8px}
+.param-modified{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:5px;background:#FAF0E0;color:var(--warn);font-size:10px;font-weight:600;margin-left:8px;text-transform:uppercase;letter-spacing:.4px}
+
+/* Prix unitaire section */
+.prix-section{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:10px}
+.prix-section-title{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.prix-mode-btns{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.prix-mode-btn{background:var(--white);border:1.5px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.prix-mode-btn:hover{border-color:var(--sage);color:var(--ink)}
+.prix-mode-btn.on{background:var(--forest);border-color:var(--forest);color:#fff}
+.prix-fixe-row{display:flex;align-items:center;gap:8px}
+.prix-fixe-row input{width:120px;flex-shrink:0}
+.prix-fixe-row .prix-unite{font-size:11px;color:var(--muted);font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.prix-ratio-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.prix-ratio-row select{flex:1;min-width:180px}
+.prix-ratio-row input{width:80px;flex-shrink:0}
+.prix-ratio-row .ratio-sep{font-size:13px;color:var(--muted);font-weight:600}
+.prix-preview{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--forest);font-weight:700;background:var(--sand);padding:4px 10px;border-radius:6px;white-space:nowrap}
+.prix-auto-display{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);background:var(--sand);padding:4px 10px;border-radius:6px}
+.prix-modifie-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;background:#E3F2FD;color:#1565C0;font-size:10px;font-weight:600;margin-left:6px}
+
+/* ── Module IMPORT DEVIS USINE ── */
+.import-dropzone{border:2px dashed var(--border);border-radius:12px;padding:40px 24px;text-align:center;background:var(--cream);cursor:pointer;transition:all .15s;margin-bottom:24px}
+.import-dropzone:hover,.import-dropzone.dragover{border-color:var(--terra);background:#FEF3E2}
+.import-dropzone.has-files{padding:18px 22px;text-align:left;background:var(--white)}
+.import-dropzone .ico{font-size:42px;margin-bottom:8px;display:block;opacity:.6}
+.import-dropzone .lbl{font-size:14px;color:var(--ink);font-weight:500;margin-bottom:4px}
+.import-dropzone .hint{font-size:11px;color:var(--faint);font-family:"JetBrains Mono",monospace}
+.import-files{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.import-file{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border:1px solid var(--border);border-radius:8px;font-size:13px}
+.import-file .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.import-file .status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.import-file .status.parsing{background:#FAF0E0;color:var(--warn)}
+.import-file .status.ok{background:#E5EFD9;color:var(--ok)}
+.import-file .status.err{background:#F8E1DC;color:var(--danger)}
+.import-file .status.scan{background:#EAE5F5;color:#5C3A8B}
+.import-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:14px 18px;background:var(--cream);border-radius:9px;margin-bottom:16px;border-left:3px solid var(--terra)}
+.import-meta-fld{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.import-meta-val{font-size:13px;color:var(--ink);font-weight:600;font-family:"JetBrains Mono",monospace}
+.import-meta-val select{font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:6px}
+.import-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px}
+.import-table th{text-align:left;padding:10px 8px;background:var(--sand);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:1}
+.import-table td{padding:9px 8px;border-bottom:1px dashed var(--border);vertical-align:middle}
+.import-table tr.unmapped td{background:#FFF7ED}
+.import-table tr.applied td{background:#F1F8F1}
+.import-table .col-num{font-family:"JetBrains Mono",monospace;text-align:right;white-space:nowrap}
+.import-table select{font-size:11.5px;padding:4px 7px;border:1px solid var(--border);border-radius:5px;background:var(--white);max-width:200px}
+.import-table input[type=number]{width:88px;padding:4px 7px;font-size:11.5px;text-align:right}
+.import-table input[type=checkbox]{width:auto;cursor:pointer}
+.delta-pill{display:inline-flex;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.delta-pill.up{background:#F8E1DC;color:var(--danger)}
+.delta-pill.up-mid{background:#FAF0E0;color:var(--warn)}
+.delta-pill.down{background:#E5EFD9;color:var(--ok)}
+.delta-pill.same{background:var(--cream);color:var(--faint)}
+.delta-pill.new{background:#EAE5F5;color:#5C3A8B}
+.delta-pill.unmap{background:var(--sand);color:var(--faint);font-style:italic}
+.import-actions{display:flex;gap:10px;margin-top:12px;padding-top:14px;border-top:1px dashed var(--border);flex-wrap:wrap;align-items:center}
+.import-actions .summary{flex:1;min-width:0;font-size:12px;color:var(--muted)}
+.history-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+.history-item{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:14px;align-items:center;padding:11px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;font-size:12.5px;cursor:pointer;transition:all .15s}
+.history-item:hover{border-color:var(--sage);background:var(--cream)}
+.history-item .h-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+.history-item .h-info{min-width:0}
+.history-item .h-num{font-weight:600;color:var(--ink)}
+.history-item .h-meta{font-size:11px;color:var(--faint);margin-top:2px}
+.history-item .h-delta{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;text-align:right}
+.history-item .h-applied{font-size:10px;color:var(--muted);text-align:right}
+.history-item .h-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:4px}
+.history-item .h-del:hover{color:var(--danger)}
+.history-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:14px 16px;background:var(--cream);border-radius:9px;margin-bottom:16px}
+.history-stat-l{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;margin-bottom:3px}
+.history-stat-v{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:700;color:var(--ink);line-height:1}
+.history-stat-v.up{color:var(--danger)}
+.history-stat-v.down{color:var(--ok)}
+.import-pdfjs-warn{padding:14px 18px;background:#FFF3CD;border:1px solid #FFB300;border-radius:8px;color:#7A4F00;font-size:13px;margin-bottom:18px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="head-in">
+    <div class="brand">
+      <div class="brand-icon">🧮</div>
+      <div class="brand-text">
+        <div class="brand-name">Chiffrage Naturéa</div>
+        <div class="brand-tag">Estimateur multi-usines · v8 · import PDF</div>
+      </div>
+    </div>
+    <div class="head-stats">
+      <div class="head-stat">
+        <div class="head-stat-n" id="hs-usines">5</div>
+        <div class="head-stat-l">Usines</div>
+      </div>
+      <div class="head-stat">
+        <div class="head-stat-n" id="hs-devis">60</div>
+        <div class="head-stat-l">Devis sources</div>
+      </div>
+      <div class="head-stat">
+        <div class="head-stat-n" id="hs-postes">18</div>
+        <div class="head-stat-l">Postes référencés</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-in">
+    <button class="tab on" data-view="estimer">🧮 Chiffrer un projet</button>
+    <button class="tab" data-view="mesprojets">📁 Mes projets <span class="badge" id="badge-mes">0</span></button>
+    <button class="tab" data-view="referentiel">📊 Référentiels usines</button>
+    <button class="tab" data-view="historique">📋 Historique des devis <span class="badge" id="badge-hist">60</span></button>
+    <button class="tab" data-view="parametres">⚙️ Paramètres</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- VUE 1 : CHIFFRER -->
+<section class="view on" id="v-estimer">
+  <div class="page-head">
+    <div class="page-kicker">Estimateur</div>
+    <h1 class="page-title">Chiffrer <em>un projet</em></h1>
+    <p class="page-sub">Choisis une usine, saisis les métrés, l'estimation se calcule en temps réel à partir des prix de référence (modifiables dans Paramètres).</p>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">📝</div><h3>Identification du projet</h3></div>
+    </div>
+    <div class="card-b" style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Nom du client / projet *</label>
+        <input type="text" id="projet-nom" placeholder="Ex: DUPONT (Nantes) — maison contemporaine 4 ch."
+               style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:13.5px;color:var(--ink);background:var(--white)" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Référence interne</label>
+        <input type="text" id="projet-ref" placeholder="(facultatif)"
+               style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:13.5px;color:var(--ink);background:var(--white)" />
+      </div>
+    </div>
+  </div>
+  <div class="est-grid">
+    <div class="card">
+      <div class="card-h">
+        <div class="card-h-l"><div class="ico">📐</div><h3>Saisie du projet</h3></div>
+      </div>
+      <div class="card-b">
+        <div class="section-label">▸ Choix de l'usine</div>
+        <div class="usine-pick" id="usine-pick"></div>
+        <div id="form-usine"></div>
+      </div>
+    </div>
+    <div class="card recap-card">
+      <div class="recap-total">
+        <div class="recap-total-k">Total HT estimé</div>
+        <div class="recap-total-n mono" id="recap-total">—</div>
+        <div class="recap-total-tva" id="recap-tva">—</div>
+      </div>
+      <div class="card-b" style="padding:0 22px 22px">
+        <div id="recap-fiab"></div>
+        <div id="recap-lines">
+          <div class="recap-empty">Saisis les métrés pour voir l'estimation</div>
+        </div>
+        <div class="btn-row" id="recap-actions" style="display:none">
+          <button class="btn btn-primary" id="btn-save">💾 Sauvegarder</button>
+          <button class="btn btn-secondary" id="btn-export">📄 Exporter PDF</button>
+          <button class="btn btn-ghost" id="btn-reset">🔄 Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note">
+    <strong>💡 À savoir.</strong> Les prix SICOB ont été mis à jour avec les tarifs 2026 (110,06 €/m² vs 103,91 €/m² en 2025, +5,9%). Dans <strong>Paramètres</strong>, tu peux modifier manuellement n'importe quel prix unitaire ou le définir comme ratio d'un autre poste.
+  </div>
+</section>
+
+<!-- VUE : MES PROJETS (devis créés par l'utilisateur) -->
+<section class="view" id="v-mesprojets">
+  <div class="page-head">
+    <div class="page-kicker">Mes projets</div>
+    <h1 class="page-title">Devis <em>enregistrés</em></h1>
+    <p class="page-sub">Tous les devis que tu as sauvegardés. Clique pour rouvrir, dupliquer ou supprimer un projet.</p>
+  </div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">📁</div><h3>Liste des projets sauvegardés</h3></div>
+      <div style="font-size:11.5px;color:var(--muted)" id="mesprojets-count">0 projet</div>
+    </div>
+    <div class="card-b">
+      <div id="mesprojets-empty" style="text-align:center;padding:40px 20px;color:var(--muted);display:none">
+        <div style="font-size:42px;margin-bottom:10px;opacity:.4">📁</div>
+        <div style="font-size:13.5px;line-height:1.6;max-width:420px;margin:0 auto">
+          Aucun projet enregistré pour le moment.<br/>
+          Va sur <strong>Chiffrer un projet</strong>, saisis un nom de client, fais ton estimation, puis clique sur <strong>💾 Sauvegarder</strong>.
+        </div>
+      </div>
+      <table class="hist-table" id="mesprojets-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nom du projet / client</th>
+            <th>Référence</th>
+            <th>Usine</th>
+            <th class="num">Total HT</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="mesprojets-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="note">
+    <strong>💾 Stockage local.</strong> Les projets sont enregistrés dans ton navigateur uniquement. En production, ils seront partagés via une base de données pour que toute la franchise y accède.
+  </div>
+</section>
+
+<!-- VUE 2 : RÉFÉRENTIEL -->
+<section class="view" id="v-referentiel">
+  <div class="page-head">
+    <div class="page-kicker">Référentiel</div>
+    <h1 class="page-title">Tarifs <em>moyens</em> par usine</h1>
+    <p class="page-sub">Prix unitaires observés sur les devis intégrés. Un 💶 indique un prix personnalisé (Paramètres). Min / Max / Moyenne pour chaque poste.</p>
+  </div>
+  <div class="ref-grid" id="ref-grid"></div>
+  <div class="note">
+    <strong>📥 Mise à jour des tarifs.</strong> Les prix SICOB 2026 (10 nouveaux devis intégrés) montrent une hausse de +5,9% sur le MOB habitation (103,91 → 110,06 €/m²) et une forte hausse sur les pignons (94,80 → 128,39 €/m²).
+  </div>
+</section>
+
+<!-- VUE 3 : HISTORIQUE & IMPORT DEVIS USINE -->
+<section class="view" id="v-historique">
+  <div class="page-head">
+    <div class="page-kicker">Historique des devis · mise à jour des tarifs réseau</div>
+    <h1 class="page-title">Devis <em>sources & imports</em></h1>
+    <p class="page-sub">Charge des PDF de devis usine pour comparer aux tarifs de référence et appliquer les variations ligne par ligne. La base des 60 devis sources reste accessible plus bas.</p>
+  </div>
+
+  <div id="import-pdfjs-status"></div>
+
+  <div class="card" style="margin-bottom:18px;border:2px solid var(--terra)">
+    <div class="card-h" style="background:#FEF3E2">
+      <div class="card-h-l"><div class="ico" style="background:#F5E6D5;color:var(--terra)">📥</div><h3 style="color:var(--terra)">Importer un nouveau devis usine</h3></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-terra" id="import-btn-main" type="button">📥 Choisir un PDF</button>
+        <span style="font-size:11px;color:var(--muted)">Réservé coordinateur</span>
+      </div>
+    </div>
+    <div class="card-b">
+      <div class="import-dropzone" id="import-dropzone">
+        <div class="ico">📥</div>
+        <div class="lbl">Glisse-dépose ici un ou plusieurs PDF de devis usine</div>
+        <div class="hint">ou clique pour choisir · formats acceptés : .pdf</div>
+        <input type="file" id="import-file-input" accept=".pdf" multiple style="display:none">
+      </div>
+      <div class="import-files" id="import-files"></div>
+    </div>
+  </div>
+
+  <div id="import-preview" style="display:none"></div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">📊</div><h3>Historique des imports</h3></div>
+      <div style="font-size:11.5px;color:var(--muted)" id="history-count">0 import</div>
+    </div>
+    <div class="card-b">
+      <div class="history-stats" id="history-stats"></div>
+      <div id="history-empty" style="text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;font-style:italic;display:none">
+        Aucun import pour le moment. Charge un premier PDF ci-dessus pour démarrer le suivi des tarifs.
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">📋</div><h3>Devis sources de la base de référence</h3></div>
+      <div style="font-size:11.5px;color:var(--muted)">60 devis</div>
+    </div>
+    <div class="card-b">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Usine</th>
+            <th>N° devis</th>
+            <th>Date</th>
+            <th class="num">Surface MOB</th>
+            <th class="num">Prix MOB €/m²</th>
+            <th class="num">Total HT</th>
+          </tr>
+        </thead>
+        <tbody id="hist-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>💡 Comment ça marche.</strong> 1) Tu télécharges les PDF de devis usine depuis Ossature/Track. 2) Tu les glisses ici. 3) Le parser extrait les postes et compare avec ton référentiel actuel. 4) Pour chaque ligne, tu décides d'appliquer ou pas le nouveau tarif. 5) L'historique conserve tous les imports pour suivre la dérive des tarifs sur le temps. Les PDF scannés (sans texte sélectionnable) ne peuvent pas être lus automatiquement — saisie manuelle à venir.
+  </div>
+</section>
+
+<!-- VUE 4 : PARAMÈTRES -->
+<section class="view" id="v-parametres">
+  <div class="page-head">
+    <div class="page-kicker">Paramètres · réservé coordinateur</div>
+    <h1 class="page-title">Personnaliser <em>les libellés & prix</em></h1>
+    <p class="page-sub">Renomme chaque poste, ajoute un tooltip d'aide, masque un poste dans le formulaire. <strong>Nouveau :</strong> surcharge le prix unitaire de référence (prix fixe ou ratio d'un autre poste).</p>
+  </div>
+  <div class="param-actions">
+    <button class="btn btn-secondary" id="btn-export-overrides">📤 Exporter mes personnalisations (JSON)</button>
+    <button class="btn btn-secondary" id="btn-import-overrides">📥 Importer un fichier de personnalisations</button>
+    <input type="file" id="file-import-overrides" accept=".json" style="display:none">
+    <button class="btn btn-ghost" id="btn-reset-all">🔄 Tout réinitialiser</button>
+  </div>
+  <div id="param-grid"></div>
+  <div class="note">
+    <strong>💡 Architecture 3 couches + prix.</strong> Identifiant technique (verrouillé) · texte PDF reconnu par le parser (verrouillé) · libellé affiché aux franchisés (modifiable). <strong>Nouveau :</strong> le prix unitaire de référence peut être remplacé par un prix fixe ou calculé comme ratio d'un autre poste (ex. pignon = 85% × MOB habitation). Les modifications sont sauvegardées localement dans ton navigateur.
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DONNÉES
+// ═══════════════════════════════════════════════════════════
+const REFS = {
+  boisboreal: {
+    nom:"BoisBoréal",couleur:"#2B4A1A",devis_count:15,derniere_maj:"2026-04-29",
+    description:"Fabricant Vendée — agences Ouest et Sud",
+    postes:{
+      etude:        {label_user:"Bureau d'étude",label_pdf:"Bureau d'étude",tooltip:"Carnet de détail, plan EXE, mise en fabrication, plan de pose. Forfait quasi figé.",unite:"forfait",moyen:1930.40,min:1824,max:1938,n:15,fiabilite:"haute",visible:true},
+      mob:          {label_user:"Murs ossature bois",label_pdf:"Fourniture Murs Ossature Bois extérieur",tooltip:"Montant + lisse 45×120 épicéa CL2, lisse d'ancrage CL3, EPDM, voile OSB3 12mm, bracon, quincaillerie de pose.",unite:"€/m²",moyen:42.95,min:35.34,max:52.69,n:15,fiabilite:"haute",visible:true},
+      ite100:       {label_user:"ITE PSE 100mm + tableaux de menuiserie",label_pdf:"Fourniture et pose ITE isolation PSE",tooltip:"PRB FACADE TH38 100mm, R=2,60. Pose en préfabrication atelier. Inclut tableaux de menuiserie.",unite:"€/m²",moyen:39.36,min:34.19,max:40.57,n:15,fiabilite:"haute",visible:true},
+      laine120:     {label_user:"Laine de verre 120mm (isolation MOB)",label_pdf:"Fourniture et Pose de laine de verre",tooltip:"KI FIT 032, R=3,75. Intégrée dans l'ossature bois en atelier.",unite:"€/m²",moyen:14.97,min:12.12,max:16.51,n:15,fiabilite:"haute",visible:true},
+      pv:           {label_user:"Pare-vapeur SD100",label_pdf:"Fourniture et pose Pare Vapeur SD100",tooltip:"Pare-vapeur SD100 intégré au MOB.",unite:"€/m²",moyen:8.41,min:7.58,max:9.18,n:15,fiabilite:"haute",visible:true},
+      protection_tete:{label_user:"Protection en tête de MOB",label_pdf:"Protection tête de MOB",tooltip:"Protection horizontale en tête de murs. Auto-calculé = MOB −30% (en ML). Prix catalogue : 4,60 €/ML.",unite:"€/ML",moyen:4.60,min:4.60,max:4.60,n:15,fiabilite:"haute",visible:true},
+      appuis_seuil: {label_user:"Appuis et seuil PSE",label_pdf:"Appuis et seuils PSE",tooltip:"Appuis de fenêtre et seuils en PSE préfabriqués. Prix unitaire : 59,29 €/u.",unite:"€/u",moyen:59.29,min:59.29,max:59.29,n:15,fiabilite:"haute",visible:true},
+      transport:    {label_user:"Transport (auto)",label_pdf:"Prestation de transport MOB",tooltip:"1 forfait si MOB < 141m² sans plancher. 2 forfaits si MOB ≥ 141m², ou MOB < 141m² avec plancher. Prix forfait : 1 268 €.",unite:"€",moyen:1268,min:0,max:3140,n:15,fiabilite:"haute",visible:true},
+      chargement:   {label_user:"Chargement atelier (5,17 €/m²)",label_pdf:"Chargement MOB",tooltip:"Coût de chargement atelier. Forfait fixe de 5,17 €/m² de MOB. Auto-calculé depuis le m² de murs ossature bois.",unite:"€/m²",moyen:5.17,min:5.17,max:5.17,n:15,fiabilite:"haute",visible:true},
+      plancher_clt: {label_user:"Plancher CLT 140 5L",label_pdf:"Fourniture planchers CLT",tooltip:"Plancher 5 plis lamellé-croisé 140mm. Traitements PARKA + CT2 incolore.",unite:"€/m²",moyen:197.83,min:178.02,max:220.86,n:4,fiabilite:"faible",visible:true},
+      fermette:     {label_user:"Charpente fermette (ensemble)",label_pdf:"Fourniture de Fermettes",tooltip:"Fermettes industrielles. Inclut équerres, vis bois, sablière, contreventement, AFA.",unite:"forfait",moyen:3500,min:2237,max:4536,n:8,fiabilite:"moyenne",visible:true},
+      coffre_vr:    {label_user:"Coffre volet roulant",label_pdf:"Intégration des Coffres Volet-Roulants dans MOB",tooltip:"Coffrelite. Fourniture par tes soins, pose en atelier intégrée au MOB.",unite:"€/u",moyen:42.10,min:32.30,max:48.45,n:12,fiabilite:"haute",visible:true}
+    }
+  },
+  cobs: {
+    nom:"COBS / GIPEN",couleur:"#5A7A3A",devis_count:6,derniere_maj:"2026-03-06",
+    description:"Fabricant Savoie — agences Est et Sud-Est",
+    postes:{
+      etude:            {label_user:"Étude complète",label_pdf:"Etude complète",tooltip:"Étude complète d'exécution.",unite:"forfait",moyen:1000,min:750,max:1500,n:6,fiabilite:"moyenne",visible:true},
+      mob:              {label_user:"Paroi ossature bois",label_pdf:"Paroi ossature bois maison",tooltip:"Lisses CLIV 45×95 et 45×120, ossature épicéa 45×120 + voile contreventement 15mm.",unite:"€/m²",moyen:54.00,min:48.86,max:61.18,n:6,fiabilite:"moyenne",visible:true},
+      isolation:        {label_user:"Isolation MOB (laine 120mm + pare-vapeur)",label_pdf:"Isolation de la structure",tooltip:"Laine de verre GR 32 120mm (pose atelier) + gestion étanchéité à l'air en pied + pare-vapeur intégré.",unite:"€/m²",moyen:19.99,min:18.69,max:21.18,n:6,fiabilite:"moyenne",visible:true},
+      ite100:           {label_user:"ITE polystyrène 100mm",label_pdf:"Finition extérieure pour pose d'enduit sur ITE",tooltip:"Polystyrène 100mm posé en atelier. Pour réception d'enduit. Très stable sur 6 devis : 27,00 à 27,81€/m².",unite:"€/m²",moyen:27.60,min:26.78,max:28.62,n:6,fiabilite:"moyenne",visible:true},
+      appui:            {label_user:"Pièce d'appui béton préfa",label_pdf:"Pièce d'appui passage",tooltip:"Pièce d'appui béton préfabriqué pour passages de menuiseries. Valeur moyenne par ouverture (mix passage + fenêtre). Dispersion élevée selon projet.",unite:"€/u",moyen:92.76,min:41.20,max:166.40,n:6,fiabilite:"moyenne",visible:true},
+      pose_menui:       {label_user:"Pose menuiserie en atelier",label_pdf:"POSE DE MENUISERIE",tooltip:"Pose en atelier, compris gestion de l'étanchéité à l'air. Volet roulant ou BSO si présents.",unite:"€/u",moyen:70,min:70,max:70,n:2,fiabilite:"faible",visible:true},
+      pose_coffre:      {label_user:"Pose de coffre",label_pdf:"POSE DE COFFRE",tooltip:"Pose de coffre volet roulant en atelier. 10 €/u.",unite:"€/u",moyen:10,min:10,max:10,n:1,fiabilite:"faible",visible:true},
+      charpente_indus:  {label_user:"Charpente industrielle (fermettes)",label_pdf:"Charpente industrielle",tooltip:"Fermettes, pannes, chevrons en débord de toiture, contreventement. Dispersion élevée (23 à 49€/m²) selon complexité.",unite:"€/m²",moyen:33.36,min:23.74,max:48.81,n:6,fiabilite:"moyenne",visible:true},
+      plancher_solivage:{label_user:"Plancher solivage BLC",label_pdf:"Solivage plancher",tooltip:"Solivage porteur épicéa BMA + CC C24, LC GL24 traité CL2. Charge 150 kg/m² + exploitation 150 kg/m².",unite:"€/m²",moyen:96.89,min:67.07,max:112.99,n:4,fiabilite:"faible",visible:true},
+      livraison:        {label_user:"Livraison (forfait)",label_pdf:"Livraison",tooltip:"Transport sans levage. 110 €/h si levage demandé. Accès stabilisé requis.",unite:"forfait",moyen:2205,min:1360,max:3560,n:6,fiabilite:"moyenne",visible:true}
+    }
+  },
+  sicob: {
+    nom:"SICOB",couleur:"#8B4513",devis_count:32,derniere_maj:"2026-04-17",
+    description:"Charpentier-couvreur Aveyron (12240 Rieupeyroux) — agences Midi-Pyrénées, Occitanie, PACA",
+    postes:{
+      mob_complet:    {label_user:"MOB 45×120 tout compris (ossature + ITE PSE 100 + laine 120 + FV)",label_pdf:"MURS OSSATURE BOIS",tooltip:"TARIF 2026 : 110,06 €/m² (vs 103,91 €/m² en 2025, +5,9%). Inclut : lisse 42×120 CL3, ossature 45×120 C24 CL2, OSB 12mm, ITE PSE 100mm (R=2.60), laine verre 120mm (R=3.40), frein vapeur, scotch, appuis allège, coffres VR.",unite:"€/m²",moyen:110.06,min:103.91,max:110.06,n:32,fiabilite:"haute",visible:true},
+      mob_etage:      {label_user:"MOB étage (tarif légèrement réduit)",label_pdf:"MURS OSSATURE BOIS ETAGE",tooltip:"Même composition que MOB standard. Présent sur 4 devis 2025 à 102,41 €/m². Données 2026 sur R+1 utilisent le tarif habitation standard.",unite:"€/m²",moyen:102.41,min:102.41,max:102.41,n:4,fiabilite:"faible",visible:true},
+      mob_pignon:     {label_user:"Mur pignon (sans laine ni FV — ITE seule)",label_pdf:"MURS OSSATURE BOIS PIGNON",tooltip:"TARIF 2026 : 128,39 à 130,65 €/m² (vs 94,80 €/m² en 2025, +35%). Ossature 45×120 + OSB + ITE PSE 100mm, SANS laine de verre ni frein vapeur. Pour murs pignons sous combles perdus.",unite:"€/m²",moyen:128.39,min:94.80,max:130.65,n:16,fiabilite:"haute",visible:true},
+      mob_rehausse:   {label_user:"Rehausse ossature bois (pignon intermédiaire R+1)",label_pdf:"REHAUSSE OSSATURE BOIS",tooltip:"Mur pignon non isolé type 2026. Varie selon devis : 105,52 à 122,96 €/m². Sans laine de verre ni frein vapeur, avec ITE PSE 100mm. Présent sur les projets R+1 et projets publics.",unite:"€/m²",moyen:109.00,min:105.52,max:122.96,n:6,fiabilite:"moyenne",visible:true},
+      mob_garage:     {label_user:"Mur garage (non isolé — ITE seule)",label_pdf:"MUR OSSATURE BOIS GARAGE",tooltip:"Ossature 45×120 + OSB + ITE, SANS isolation thermique. Tarif 2025-2026 : 91,28 à 95,20 €/m².",unite:"€/m²",moyen:93.83,min:91.28,max:95.20,n:4,fiabilite:"faible",visible:true},
+      mob_95mm:       {label_user:"MOB 45×95 sans ITE (cloison/refend int.)",label_pdf:"FOURNITURE MURS OSSATURE BOIS 95 MM COMPRIS ISOLATION",tooltip:"Ossature 45×95 + OSB 12mm, sans ITE. Pour cloisons intérieures ou refends. Tarif : 45,51 €/m² (1 seul devis — faible fiabilité).",unite:"€/m²",moyen:45.51,min:45.51,max:45.51,n:1,fiabilite:"faible",visible:true},
+      fermettes:      {label_user:"Charpente fermette (forfait ensemble)",label_pdf:"FERMETTES",tooltip:"Fermettes épicéa C24 CL2, entraxe 60 cm. Très variable : 2 pentes tuile ≈ 1 600-2 900€ / 6 pentes ardoise/croupes ≈ 4 300-10 000€. 32 devis disponibles.",unite:"forfait",moyen:3350,min:1003,max:9956,n:32,fiabilite:"haute",visible:true},
+      solivage:       {label_user:"Solivage lamellé-collé (plancher R+1)",label_pdf:"SOLIVAGE",tooltip:"Plancher inter-niveaux en épicéa lamellé-collé : porteurs, porteur périphérique, poteaux, ceinture, plancher CLT 100mm ou CTBH. 4 devis R+1 disponibles.",unite:"forfait",moyen:9743,min:9530,max:9910,n:4,fiabilite:"faible",visible:true},
+      poutres_vent:   {label_user:"Poutres au vent",label_pdf:"POUTRES AU VENT",tooltip:"Poutres au vent ML + appliques 36×97 TC2 + boulons 12×140. Montant variable selon portée. Présent sur 50% des devis.",unite:"€",moyen:650,min:211,max:2195,n:16,fiabilite:"haute",visible:true},
+      charpente_trad: {label_user:"Charpente traditionnelle annexe (terrasse / toit plat)",label_pdf:"FOURNITURE TRADITIONNEL EPICEA",tooltip:"Pannes, poteaux, chevrons, solives épicéa traité. Terrasses, carports, toits-terrasses.",unite:"€",moyen:950,min:372,max:1628,n:10,fiabilite:"haute",visible:true},
+      bandeau:        {label_user:"Bandeau façade (PVC blanc ou anthracite)",label_pdf:"BANDEAU 20 PVC BLANC",tooltip:"RIVECEL L9 h.175-200mm en PVC blanc ou anthracite. Prix variable selon longueur de façade.",unite:"€",moyen:380,min:144,max:617,n:22,fiabilite:"haute",visible:true},
+      lambris:        {label_user:"Lambris auvent / débord de toit (PVC ou bois)",label_pdf:"LAMBRIS PVC BLANC",tooltip:"Lambris alvéolaire PVC 0.25m×4ml blanc ou anthracite, ou lambris épicéa CL3M.",unite:"€",moyen:390,min:100,max:767,n:22,fiabilite:"haute",visible:true},
+      liteaux:        {label_user:"Liteaux + pare-pluie (support bardage)",label_pdf:"LITEAUX / PARE PLUIE",tooltip:"Liteaux 18×47 et 27×38 TC2 + rouleau pare-pluie HPV R2. Présent sur ~60% des devis. Absent quand bardage non prévu.",unite:"€",moyen:570,min:341,max:1025,n:14,fiabilite:"haute",visible:true},
+      transport:      {label_user:"Transport (selon zone)",label_pdf:"TRANSPORT",tooltip:"Z1 (12,15,46,81 proche) : 1 009 € (2×504,50€). Z2 (11,19,24,31,32,47,48,82) : 1 251 €. Z3 (30,34 éloigné) : ~2 270 € (2×1 135€). Z4 (zone très éloignée) : ~3 316 € (3×1 105€). Non compris déchargement.",unite:"€",moyen:1200,min:326,max:3316,n:32,fiabilite:"haute",visible:true}
+    }
+  },
+  imaj: {
+    nom:"IMAJ",couleur:"#1A5276",devis_count:5,derniere_maj:"2026-03-04",
+    description:"Fabricant MOB Lot-et-Garonne (47200 Marmande) — agences Sud-Ouest",
+    postes:{
+      mob_complet:    {label_user:"MOB tout compris (ossature + ITE + laine + FV)",label_pdf:"Mur ossature 45x120, OSB 12mm, laine de verre GR35, pare-vapeur Sd>90, ITE PSE 100mm",tooltip:"Prix FIXE 95,37 €/m² sur tous les devis. Inclut : ossature 45×120, OSB 12mm, laine GR35, pare-vapeur Sd>90, ITE PSE 100mm.",unite:"€/m²",moyen:95.37,min:95.37,max:95.37,n:5,fiabilite:"moyenne",visible:true},
+      mob_pignon:     {label_user:"Mur pignon (non isolé + ITE PSE 100mm)",label_pdf:"Mur pignon ossature 45x120, OSB 12mm, non isolé, ITE PSE 100mm",tooltip:"Ossature 45×120 + OSB 12mm + ITE PSE 100mm, sans laine de verre ni pare-vapeur. 1 seul point de données.",unite:"€/m²",moyen:83.26,min:83.26,max:83.26,n:1,fiabilite:"faible",visible:true},
+      mob_refend:     {label_user:"Mur de refend intérieur (ossature 45×95, OSB)",label_pdf:"Mur de refend 45x95, OSB 12mm",tooltip:"Cloison porteuse intérieure. Ossature 45×95 + voile OSB 12mm. Sans isolation ni ITE. 1 seul point.",unite:"€/m²",moyen:33.96,min:33.96,max:33.96,n:1,fiabilite:"faible",visible:true},
+      fermettes:      {label_user:"Fermettes industrielles (forfait)",label_pdf:"Fermettes industrielles",tooltip:"Charpente industrielle complète. Prix très variable selon la forme de toiture.",unite:"forfait",moyen:5592,min:2605,max:9766,n:5,fiabilite:"moyenne",visible:true},
+      plancher_clt:   {label_user:"Plancher CLT 120mm (forfait)",label_pdf:"Plancher CLT 120mm",tooltip:"Plancher lamellé-croisé 120mm pour maisons à étage. Seulement 2 devis disponibles.",unite:"forfait",moyen:11900,min:9239,max:14561,n:2,fiabilite:"faible",visible:true},
+      toit_terrasse:  {label_user:"Toit terrasse (solives 45×220, OSB 18mm)",label_pdf:"Toit terrasse - solives 45x220, OSB 18mm dalle, ligneuls",tooltip:"Structure toit terrasse : solives 45×220, dalle OSB 18mm, ligneuls. 1 seul devis disponible (SONZOGNY).",unite:"€/m²",moyen:51.79,min:51.79,max:51.79,n:1,fiabilite:"faible",visible:true},
+      structure_bois: {label_user:"Structure bois annexe (poteaux + sommiers)",label_pdf:"Structure plancher - poteaux 180x180",tooltip:"Structure bois inter-niveaux ou extérieure : poteaux 180×180 + sommiers LC ou cl.2.",unite:"€",moyen:1589,min:926,max:2252,n:2,fiabilite:"faible",visible:true},
+      charpente_trad: {label_user:"Charpente traditionnelle (pannes, chevrons, arrêtier)",label_pdf:"Charpente tradi",tooltip:"Charpente bois traditionnelle : pannes, chevrons, abouts de chevrons, arrêtier.",unite:"€",moyen:4056,min:4056,max:4056,n:1,fiabilite:"faible",visible:true},
+      quincaillerie:  {label_user:"Quincaillerie chantier (forfait)",label_pdf:"Quincaillerie chantier",tooltip:"Joint 15×15, équerres AKRX3, E5, ABR100, vis béton 12×120, adhésif Riwega Tape Green, bande d'arase. Toujours facturée séparément chez IMAJ.",unite:"forfait",moyen:896,min:685,max:1219,n:5,fiabilite:"moyenne",visible:true},
+      etude:          {label_user:"Bureau d'études (plans EXE et PAC)",label_pdf:"Prestation Bureau d'études",tooltip:"Plans d'exécution et PAC. Pas systématique — vérifier sur le devis.",unite:"forfait",moyen:1589,min:1549,max:1629,n:2,fiabilite:"faible",visible:true},
+      transport:      {label_user:"Transport semi-remorque (sans grue)",label_pdf:"Transport - semi-remorque",tooltip:"Semi-remorque sans grue. 550€/semi (courte distance) à 2050€/semi (longue distance). Nombre de semis variable selon projet.",unite:"€",moyen:2120,min:550,max:4100,n:5,fiabilite:"moyenne",visible:true}
+    }
+  },
+  savare: {
+    nom:"SAVARE (Eiffage)",couleur:"#C0392B",devis_count:5,derniere_maj:"2025-04-08",
+    description:"Fabricant MOB Normandie (Lessay 50 / Moult 14) — agences Normandie, Grand Ouest, Nord",
+    postes:{
+      mob_composite:  {label_user:"Ossature bois tout compris (MOB + ITE + laine + pare-vapeur)",label_pdf:"Total OSSATURE BOIS",tooltip:"Taux composite = Total section Ossature Bois / m² MOB principal. Inclut : ossature 45×120, OSB 12mm, laine 120mm + pare-vapeur, ITE PSE 100mm, profil socle, isolation ouvertures, pare-pluie si bardage.",unite:"€/m²",moyen:110.30,min:97.61,max:120.09,n:5,fiabilite:"moyenne",visible:true},
+      fermettes:      {label_user:"Charpente industrielle (ensemble section)",label_pdf:"Total CHARPENTE INDUSTRIELLE",tooltip:"Total de la section Charpente Industrielle : fermettes connectées/agrafées, accessoires, contreventement, quincaillerie, chevalets de renfort, débords PVC.",unite:"forfait",moyen:4203,min:2167,max:8439,n:5,fiabilite:"moyenne",visible:true},
+      plancher_clt:   {label_user:"Plancher CLT 120mm (solivage porteur)",label_pdf:"SOLIVAGE PORTEUR CLT",tooltip:"Panneaux CLT Hexapli 120mm 3L + OSB dalle 22mm. Pour R+1. 3 devis disponibles.",unite:"€/m²",moyen:147.10,min:141.71,max:157.44,n:3,fiabilite:"faible",visible:true},
+      charpente_trad: {label_user:"Charpente traditionnelle (pannes, chevrons, muralières)",label_pdf:"CHARPENTE TRADITIONNELLE",tooltip:"Pannes, chevrons, muralières, sablières épicéa C24. Pour espaces déplafonnés ou volumes spéciaux.",unite:"€",moyen:915,min:414,max:1415,n:2,fiabilite:"faible",visible:true},
+      structure_bois: {label_user:"Structure poteau-poutre (poteaux 140×140 + poutres GL24H)",label_pdf:"ENSEMBLE POTEAU - POUTRE",tooltip:"Poteaux épicéa C24 140×140 + poutres GL24H 140×360 + sabots GLE + équerres.",unite:"€",moyen:1048,min:467,max:1628,n:2,fiabilite:"faible",visible:true},
+      etude:          {label_user:"Études techniques (systématique SAVARE)",label_pdf:"ETUDES TECHNIQUES",tooltip:"Études de conception et d'exécution. Toujours présentes chez SAVARE. Moy. 1745€.",unite:"forfait",moyen:1745,min:1418,max:2100,n:5,fiabilite:"moyenne",visible:true},
+      transport:      {label_user:"Transport MOB (depuis Normandie)",label_pdf:"TRANSPORT MOB",tooltip:"Transport depuis usine SAVARE (Normandie). Prix variable selon distance et nombre de camions.",unite:"€",moyen:2606,min:2100,max:3861,n:5,fiabilite:"moyenne",visible:true}
+    }
+  },
+  lowall: {
+    nom:"LOWALL",couleur:"#2E7D7D",devis_count:12,derniere_maj:"2026-04-17",
+    description:"Fabricant panneaux MOB Bouches-du-Rhône (Gardanne 13) — agences PACA. Pas de charpente.",
+    postes:{
+      mob:          {label_user:"MOB isolé 45x120 (ITE PSE 100mm)",label_pdf:"Murs Ossature Bois Isolé 45x120",tooltip:"Ossature 45x120, OSB3 13mm, laine de roche/verre 120mm, pare-vapeur, ITE PSE 100+40mm. Tarif standard : 110€/m² (Avignon/84) · 113€/m² (Salon/Toulon). Moy. pondérée 11 devis : 110,82€/m².",unite:"€/m²",moyen:110.82,min:110,max:113,n:11,fiabilite:"haute",visible:true},
+      mob_biosource:{label_user:"MOB isolé bio-sourcé (laine de bois + ITE fibre)",label_pdf:"Murs Ossature Bois Isolé 45x120 bio-sourcé",tooltip:"Ossature 45x120, OSB3, laine de bois 120mm, pare-vapeur, ITE fibre de bois 100+40mm (assemblage knapp). Tarif : 132€/m² — 1 seul devis TORDOIR (Avignon). Sur demande spécifique.",unite:"€/m²",moyen:132,min:132,max:132,n:1,fiabilite:"faible",visible:true},
+      mob_ouvert:   {label_user:"MOB non isolé 45x120 (ITE PSE seule)",label_pdf:"Murs Ossature Bois non isolé 45x120",tooltip:"Ossature 45x120, OSB3 13mm, ITE PSE 100+40mm uniquement. Sans laine ni pare-vapeur. Pour garages, locaux techniques ou murs non chauffés. Tarif fixe : 85€/m² sur 5 devis.",unite:"€/m²",moyen:85,min:85,max:85,n:5,fiabilite:"moyenne",visible:true},
+      quincaillerie:{label_user:"Kit quincaillerie",label_pdf:"Kit Quincaillerie",tooltip:"Bandes d'arase 2 joints mousses, équerres E8/2.5 ou AH (sismique), E5/1.5, fixation (tiges+tamis+résine), colle PU+vis mibois, profilé mâle/femelle. 10€/m² d'ossature — fixe sur 12 devis.",unite:"€/m²",moyen:10,min:10,max:10,n:12,fiabilite:"haute",visible:true},
+      fermettes:    {label_user:"Charpente fermette",label_pdf:"",tooltip:"LOWALL ne fabrique pas de charpente. Prévoir charpentier externe.",unite:"forfait",moyen:0,min:0,max:0,n:0,fiabilite:"faible",visible:false},
+      transport:    {label_user:"Transport plateau 13m",label_pdf:"Transport en plateau 13m",tooltip:"Transport depuis Gardanne (13). 1 100€ constaté pour Salon-de-Provence (~45km). Absent des devis Avignon — vérifier selon chantier.",unite:"€",moyen:1100,min:1100,max:1100,n:1,fiabilite:"faible",visible:true}
+    }
+  }
+};
+
+const DEVIS_HIST = [
+  {usine:"boisboreal",n:"1308",date:"2025-01-08",total:23420.12,mob_m2:134,mob_pu:40.60,client:"VICTOOR (St-Malo)"},
+  {usine:"boisboreal",n:"1361",date:"2025-02-27",total:24464.76,mob_m2:168.5,mob_pu:41.46,client:"TIFFOIN (Cholet)"},
+  {usine:"boisboreal",n:"1370",date:"2025-03-07",total:29674.57,mob_m2:208,mob_pu:41.68,client:"THOMAS (Toutlemonde)"},
+  {usine:"boisboreal",n:"1371",date:"2025-03-07",total:20714.91,mob_m2:153.5,mob_pu:39.90,client:"RICHEUX (Villeneuve-en-Retz)"},
+  {usine:"boisboreal",n:"1399",date:"2025-04-08",total:38607.41,mob_m2:223.8,mob_pu:35.34,client:"COLLETER & GOBBI"},
+  {usine:"boisboreal",n:"1432",date:"2025-05-21",total:52205.82,mob_m2:296.5,mob_pu:36.84,client:"LECLERC (St-Malo)"},
+  {usine:"boisboreal",n:"1441",date:"2025-06-04",total:48052.78,mob_m2:243.15,mob_pu:44.66,client:"BOURBIER & GUENAEN"},
+  {usine:"boisboreal",n:"1478",date:"2025-07-07",total:23408.77,mob_m2:207.5,mob_pu:39.29,client:"CRECHE Quertier-Vasseur"},
+  {usine:"boisboreal",n:"1508",date:"2025-09-01",total:24191.46,mob_m2:140,mob_pu:49.93,client:"BOISSEL"},
+  {usine:"boisboreal",n:"1509",date:"2025-09-01",total:27975.60,mob_m2:155,mob_pu:52.69,client:"TUDOT"},
+  {usine:"boisboreal",n:"1593",date:"2025-12-02",total:31701.29,mob_m2:207,mob_pu:44.45,client:"LE BELL"},
+  {usine:"boisboreal",n:"1608",date:"2025-12-23",total:26013.01,mob_m2:168.95,mob_pu:38.80,client:"BARRE"},
+  {usine:"boisboreal",n:"1619",date:"2026-01-12",total:24557.23,mob_m2:175.5,mob_pu:50.98,client:"LAGRANGE"},
+  {usine:"boisboreal",n:"1685",date:"2026-03-13",total:25399.19,mob_m2:145,mob_pu:49.93,client:"LEPELETIER"},
+  {usine:"boisboreal",n:"1720",date:"2026-04-14",total:42211.34,mob_m2:223,mob_pu:36.26,client:"OLIVIO"},
+  {usine:"cobs",n:"MICRO-CRECHE",date:"2025-02-20",total:28168.22,mob_m2:154,mob_pu:53.48,client:"Micro-crèche Val-de-Virieu"},
+  {usine:"cobs",n:"SIMONET",date:"2025-02-17",total:26422.85,mob_m2:178,mob_pu:48.86,client:"SIMONET (St-Pierre-de-Chandieu)"},
+  {usine:"cobs",n:"RAVE-SUAU",date:"2025-03-13",total:38643.97,mob_m2:225,mob_pu:50.31,client:"RAVE SUAU (Cuvat)"},
+  {usine:"cobs",n:"BERGIER-LAPLANTE",date:"2025-10-01",total:42428.60,mob_m2:188,mob_pu:61.18,client:"BERGIER-LAPLANTE (Changy-71)"},
+  {usine:"cobs",n:"HAMIEUX",date:"2025-11-19",total:43067.03,mob_m2:191,mob_pu:56.14,client:"HAMIEUX (Chatillon-sur-Chalaronne-01)"},
+  {usine:"cobs",n:"BELOUZE",date:"2026-03-06",total:31165.71,mob_m2:154,mob_pu:53.98,client:"BELOUZE (Saint-Chamond-42)"},
+  // SICOB 2025 (22 devis — tarif 103,91 €/m²)
+  {usine:"sicob",n:"1094",date:"2025-01-31",total:21714.04,mob_m2:137,mob_pu:103.91,client:"GIRBAL (St-Côme-d'Olt)"},
+  {usine:"sicob",n:"1106",date:"2025-02-03",total:29972.11,mob_m2:180,mob_pu:103.91,client:"DUWIME (Muret-le-Château)"},
+  {usine:"sicob",n:"1164",date:"2025-02-11",total:21865.61,mob_m2:143,mob_pu:103.91,client:"GUILLAUD-CORBINEAU (Vauvert-30)"},
+  {usine:"sicob",n:"1198",date:"2025-02-17",total:24050.29,mob_m2:154,mob_pu:106.41,client:"JOLY-DE LA POIX (Lacapelle-Cabanac)"},
+  {usine:"sicob",n:"1199",date:"2025-02-17",total:17968.45,mob_m2:113,mob_pu:103.91,client:"LE NAOURES (Cahors-46)"},
+  {usine:"sicob",n:"1336",date:"2025-03-07",total:38542.11,mob_m2:216,mob_pu:103.91,client:"MIQUEL (St-Côme-d'Olt-12) R+1"},
+  {usine:"sicob",n:"1416",date:"2025-03-21",total:7267.82,mob_m2:47,mob_pu:124.56,client:"FOISSAC-BENEZECH — MOB 140mm ITE PRB"},
+  {usine:"sicob",n:"1421",date:"2025-03-21",total:34560.46,mob_m2:212,mob_pu:103.91,client:"ROMAN-CAUSSE (Le Triadou-34) R+1"},
+  {usine:"sicob",n:"1422",date:"2025-03-21",total:20689.63,mob_m2:130,mob_pu:103.91,client:"LE GOURRIEREC (Langlade-30)"},
+  {usine:"sicob",n:"1481",date:"2025-03-28",total:21709.15,mob_m2:140,mob_pu:103.91,client:"COURTEL-GROLEJAC (Grolejac-24)"},
+  {usine:"sicob",n:"1482",date:"2025-03-28",total:29091.80,mob_m2:187,mob_pu:103.91,client:"MOLES EYROLLE (Arcambal-46)"},
+  {usine:"sicob",n:"1634",date:"2025-04-18",total:21229.58,mob_m2:130,mob_pu:103.91,client:"LE GOURRIEREC 2 (Langlade-30)"},
+  {usine:"sicob",n:"1647",date:"2025-04-22",total:23063.52,mob_m2:134,mob_pu:103.91,client:"MICRO CRECHE VYV3 (Puygouzon-81)"},
+  {usine:"sicob",n:"1692",date:"2025-04-25",total:34500.00,mob_m2:212,mob_pu:103.91,client:"ROMAN-CAUSSE 2 (Le Triadou-34) R+1"},
+  {usine:"sicob",n:"1746",date:"2025-05-12",total:15339.78,mob_m2:101,mob_pu:103.91,client:"BRUEL (Sonnac-12)"},
+  {usine:"sicob",n:"1747",date:"2025-05-12",total:43265.96,mob_m2:267,mob_pu:103.91,client:"CALVENTUS (St-Aunès-34) R+1"},
+  {usine:"sicob",n:"1801",date:"2025-05-19",total:18179.41,mob_m2:100,mob_pu:103.91,client:"IOP-LAUTIER (Brens-81)"},
+  {usine:"sicob",n:"2082",date:"2025-07-15",total:26174.85,mob_m2:178,mob_pu:103.91,client:"NITZE-COSTEROSTE (Lescure-81)"},
+  {usine:"sicob",n:"2083",date:"2025-07-15",total:24845.60,mob_m2:178,mob_pu:103.91,client:"ASNAR (Francoules-46)"},
+  {usine:"sicob",n:"2096",date:"2025-07-15",total:28931.78,mob_m2:165,mob_pu:106.69,client:"LA MORLAIX OB 140mm (Rodez-12)"},
+  {usine:"sicob",n:"2101",date:"2025-07-16",total:29177.05,mob_m2:178,mob_pu:103.91,client:"PANISSIE-TARDIEU (Muret-le-Château-12)"},
+  // SICOB 2026 (10 nouveaux devis — tarif 110,06 €/m²)
+  {usine:"sicob",n:"3096",date:"2026-02-02",total:58624.71,mob_m2:242,mob_pu:110.06,client:"MAIRIE DE VIANE (Viane-81) — projet public"},
+  {usine:"sicob",n:"3123",date:"2026-02-05",total:21398.98,mob_m2:125,mob_pu:110.06,client:"CAVALIE (Montbazens-12)"},
+  {usine:"sicob",n:"3162",date:"2026-02-12",total:59649.57,mob_m2:242,mob_pu:110.06,client:"MAIRIE DE VIANE v2 (Viane-81) — avenant"},
+  {usine:"sicob",n:"3165",date:"2026-02-13",total:21684.71,mob_m2:92,mob_pu:110.06,client:"VALLERENT (Montgesty-46)"},
+  {usine:"sicob",n:"3277",date:"2026-03-02",total:19689.55,mob_m2:103,mob_pu:110.06,client:"LAUBIES (Villefranche-de-Rouergue-12)"},
+  {usine:"sicob",n:"3455",date:"2026-03-27",total:18374.35,mob_m2:105,mob_pu:108.29,client:"JEANNOLLE (Camboulazet-12)"},
+  {usine:"sicob",n:"3456",date:"2026-03-27",total:15866.65,mob_m2:100,mob_pu:110.06,client:"BOUAT (Lasgraisses-81)"},
+  {usine:"sicob",n:"3457",date:"2026-03-27",total:59278.40,mob_m2:310,mob_pu:110.06,client:"MISTRAL (Laudun-l'Ardoise-30) R+1"},
+  {usine:"sicob",n:"3554",date:"2026-04-15",total:18921.52,mob_m2:77,mob_pu:110.06,client:"BOUAT v2 (Lasgraisses-81)"},
+  {usine:"sicob",n:"3568",date:"2026-04-17",total:17659.26,mob_m2:108,mob_pu:110.06,client:"FUMEL-FOUCRAS (Valady-12)"},
+  // IMAJ
+  {usine:"imaj",n:"20260109",date:"2026-02-16",total:28509.05,mob_m2:174.47,mob_pu:95.37,client:"SCI LUBERON VENTOUX (Mazan)"},
+  {usine:"imaj",n:"20260215",date:"2026-02-25",total:40448.69,mob_m2:227.50,mob_pu:95.37,client:"SONZOGNY (Balaruc-le-Vieux)"},
+  {usine:"imaj",n:"20260216",date:"2026-02-25",total:56497.44,mob_m2:276.42,mob_pu:95.37,client:"RANSON (Pérols)"},
+  {usine:"imaj",n:"20260217",date:"2026-03-03",total:28169.17,mob_m2:162.89,mob_pu:95.37,client:"BATTY V2 (Montcuq-en-Quercy)"},
+  {usine:"imaj",n:"20260303",date:"2026-03-04",total:21573.25,mob_m2:143.43,mob_pu:95.37,client:"VALLERENT (Montgesty)"},
+  // SAVARE
+  {usine:"savare",n:"DC25-00201",date:"2025-01-27",total:42444.95,mob_m2:230,mob_pu:110.32,client:"HOLLOCOU-BRIANTAIS (Baulon-35)"},
+  {usine:"savare",n:"DC25-00282",date:"2025-02-06",total:43589.51,mob_m2:270,mob_pu:112.72,client:"BOUHALLIER SCI JCB (Beaussais-sur-Mer-22)"},
+  {usine:"savare",n:"DC25-00316",date:"2025-02-12",total:39345.89,mob_m2:193,mob_pu:120.09,client:"CORRE-RAOUL (Hédé-Bazouges-35)"},
+  {usine:"savare",n:"DC25-00384",date:"2025-02-25",total:21442.59,mob_m2:124,mob_pu:110.74,client:"CHAPELET (Quiéry-la-Motte-62)"},
+  {usine:"savare",n:"DC25-00661",date:"2025-04-08",total:49121.22,mob_m2:301,mob_pu:97.61,client:"LECLERC (Plouër-sur-Rance-22)"},
+  // LOWALL
+  {usine:"lowall",n:"D2026-18",date:"2026-01-14",total:23760,mob_m2:198,mob_pu:110,client:"Magne (Avignon — ECOHOME84)"},
+  {usine:"lowall",n:"D2026-19",date:"2026-01-16",total:19710,mob_m2:150,mob_pu:110,client:"SCI Luberon (Avignon)"},
+  {usine:"lowall",n:"D2026-20",date:"2026-01-16",total:16725,mob_m2:118,mob_pu:110,client:"SOBEIRAJ (Avignon)"},
+  {usine:"lowall",n:"D2026-31",date:"2026-02-02",total:23117,mob_m2:179,mob_pu:113,client:"Roux Bressi (Salon-de-Provence)"},
+  {usine:"lowall",n:"D2026-32",date:"2026-02-02",total:7732,mob_m2:59,mob_pu:113,client:"PELEN (Salon-de-Provence)"},
+  {usine:"lowall",n:"D2026-33",date:"2026-02-02",total:15621,mob_m2:127,mob_pu:113,client:"BIOSSAT (Toulon — MO2B)"},
+  {usine:"lowall",n:"D2026-39",date:"2026-02-06",total:24850,mob_m2:175,mob_pu:132,client:"TORDOIR (Avignon — bio-sourcé)"},
+  {usine:"lowall",n:"D2026-40",date:"2026-02-06",total:17250,mob_m2:101,mob_pu:110,client:"LYX (Avignon)"},
+  {usine:"lowall",n:"D2026-52",date:"2026-02-17",total:14760,mob_m2:123,mob_pu:110,client:"KIHN (Avignon — ECOHOME84)"},
+  {usine:"lowall",n:"D2026-62",date:"2026-03-09",total:51755,mob_m2:307,mob_pu:110,client:"MISTRAL (Avignon — ECOHOME84)"},
+  {usine:"lowall",n:"D2026-86",date:"2026-04-07",total:14040,mob_m2:117,mob_pu:110,client:"STRAPP (Avignon — ECOHOME84)"},
+  {usine:"lowall",n:"D2026-91",date:"2026-04-17",total:15120,mob_m2:126,mob_pu:110,client:"GUIHARD (Avignon — ECOHOME84)"}
+];
+
+// ═══════════════════════════════════════════════════════════
+// SCHÉMAS DE FORMULAIRE PAR USINE
+// ═══════════════════════════════════════════════════════════
+const FORM_SCHEMAS = {
+  boisboreal: [
+    {section:"📐 Métrés principaux"},
+    {id:"mob_m2",label:"Surface MOB (murs ossature bois)",unit:"m²",hint:"Toutes faces extérieures"},
+    {id:"ite_m2",label:"Surface ITE PSE 100mm",unit:"m²",hint:"Façade enduite (souvent ≈ MOB) — tableaux inclus"},
+    {id:"laine_m2",label:"Surface laine de verre 120mm",unit:"m²",hint:"= MOB −10% auto"},
+    {id:"pv_m2",label:"Surface pare-vapeur SD100",unit:"m²",hint:"Généralement = MOB"},
+    {id:"protection_tete_ml",label:"Protection en tête de MOB",unit:"ML",hint:"= MOB −30% auto (4,60 €/ML)"},
+    {section:"🏗️ Plancher (optionnel)"},
+    {id:"plancher_clt",label:"Plancher CLT 140 5L",unit:"m²",hint:"Laisser 0 si pas de plancher bois"},
+    {section:"🏠 Charpente"},
+    {id:"fermette_qty",label:"Ensemble charpente fermette",unit:"forfait",hint:"1 = inclure, 0 = sans"},
+    {section:"🚪 Ouvrages annexes"},
+    {id:"vr_qty",label:"Coffres volet roulant",unit:"u",hint:"Nombre de baies à VR"},
+    {id:"appuis_seuil_qty",label:"Appuis et seuils PSE",unit:"u",hint:"59,29 €/u"},
+    {section:"🚚 Logistique"},
+    {id:"chargement_m2",label:"Chargement atelier",unit:"m²",hint:"= MOB auto (5,17 €/m²)"},
+    {id:"transport",label:"Transport",unit:"€",hint:"Auto : 1 ou 2 forfaits × 1 268 €"},
+    {section:"📋 Frais fixes"},
+    {id:"etude",label:"Bureau d'étude",unit:"forfait",hint:"Quasi-figé à 1 938 €",default:1938}
+  ],
+  cobs: [
+    {section:"📐 Parois"},
+    {id:"mob_m2",label:"Surface paroi ossature bois",unit:"m²",hint:"Surface totale MOB"},
+    {id:"isolation_m2",label:"Isolation laine 120mm + pare-vapeur",unit:"m²",hint:"Surface isolée"},
+    {id:"ite_m2",label:"ITE polystyrène 100mm",unit:"m²",hint:"Pour pose enduit"},
+    {section:"🔲 Pièces d'appui & menuiseries"},
+    {id:"appui_qty",label:"Pièces d'appui béton préfa",unit:"u",hint:"Coffrelite ou équivalent"},
+    {id:"pose_menui_qty",label:"Pose de menuiserie en atelier",unit:"u",hint:"Nombre de menuiseries posées"},
+    {id:"pose_coffre_qty",label:"Pose de coffre",unit:"u",hint:"10 €/u"},
+    {section:"🏠 Toiture & couverture"},
+    {id:"charpente_m2",label:"Charpente industrielle (fermettes)",unit:"m²",hint:"Surface de toiture"},
+    {section:"🪵 Plancher (optionnel)"},
+    {id:"plancher_m2",label:"Plancher solivage BLC",unit:"m²",hint:"Laisser 0 si pas de R+1"},
+    {section:"🚚 Logistique"},
+    {id:"livraison",label:"Livraison (forfait €)",unit:"€",hint:"Moy. 1 556 €"},
+    {section:"📋 Frais fixes"},
+    {id:"etude",label:"Étude complète",unit:"forfait",hint:"Moy. 833 €",default:833}
+  ],
+  sicob: [
+    {section:"📐 Murs ossature bois"},
+    {id:"mob_m2",label:"Surface MOB habitation (tout compris)",unit:"m²",hint:"Ossature + ITE PSE 100mm + laine 120mm + FV — 110,06 €/m² (tarif 2026)"},
+    {id:"mob_etage_m2",label:"Surface MOB étage",unit:"m²",hint:"Même composition, tarif 102,41 €/m² — laisser 0 si plain-pied"},
+    {id:"mob_pignon_m2",label:"Surface murs pignon (sans isolation)",unit:"m²",hint:"Ossature + OSB + ITE seule, sans laine — 128,39 €/m²"},
+    {id:"mob_rehausse_m2",label:"Rehausse ossature bois (pignon R+1)",unit:"m²",hint:"Pignon intermédiaire non isolé — moy. 109 €/m²"},
+    {id:"mob_garage_m2",label:"Surface murs garage (non isolés)",unit:"m²",hint:"Ossature + OSB + ITE — ~93,83 €/m²"},
+    {id:"mob_95mm_m2",label:"MOB 45×95 sans ITE (cloison/refend)",unit:"m²",hint:"45,51 €/m² — 1 seul devis (faible fiabilité)"},
+    {section:"🏠 Charpente"},
+    {id:"charpente_ensemble_est",ensemble:true,label:"Fermette SICOB (estimation par m² de toiture)"},
+    {id:"poutres_vent",label:"Poutres au vent (€)",unit:"€",hint:"Lire sur devis — moy. 650 €"},
+    {id:"charpente_trad",label:"Charpente traditionnelle annexe (€)",unit:"€",hint:"Terrasse / toit plat / carport — lire sur devis"},
+    {section:"🪵 Plancher R+1 (optionnel)"},
+    {id:"solivage",label:"Solivage lamellé-collé R+1",unit:"forfait",hint:"1 = inclure (moy. 9 743 €), 0 = plain-pied"},
+    {section:"🖼️ Habillage façade"},
+    {id:"bandeau",label:"Bandeau façade PVC (€)",unit:"€",hint:"Blanc ou anthracite — moy. 380 €"},
+    {id:"lambris",label:"Lambris débord / auvent PVC (€)",unit:"€",hint:"Blanc ou anthracite — moy. 390 €"},
+    {id:"liteaux",label:"Liteaux + pare-pluie (€)",unit:"€",hint:"Support bardage — moy. 570 € (absent si bardage non prévu)"},
+    {section:"🚚 Logistique"},
+    {id:"transport",label:"Transport (€)",unit:"€",hint:"Z1 1009€ / Z2 1251€ / Z3 2270€ / Z4 3316€ — lire sur devis",default:1009}
+  ],
+  imaj: [
+    {section:"📐 Murs ossature bois"},
+    {id:"mob_m2",label:"Surface MOB tout compris",unit:"m²",hint:"Ossature + ITE 100mm + laine GR35 + pare-vapeur — prix fixe 95,37 €/m²"},
+    {id:"mob_pignon_m2",label:"Surface murs pignon",unit:"m²",hint:"Non isolé + ITE 100mm — 83,26 €/m²"},
+    {id:"mob_refend_m2",label:"Surface murs de refend",unit:"m²",hint:"Ossature 45×95 intérieure — 33,96 €/m²"},
+    {section:"🏠 Charpente & toiture"},
+    {id:"fermettes",label:"Fermettes industrielles",unit:"forfait",hint:"1 = inclure, 0 = sans"},
+    {id:"charpente_trad",label:"Charpente traditionnelle (€)",unit:"€",hint:"Pannes, chevrons, arrêtier — lire sur devis"},
+    {id:"toit_terrasse_m2",label:"Toit terrasse (m²)",unit:"m²",hint:"Solives 45×220 + OSB 18mm — 51,79 €/m²"},
+    {section:"🪵 Plancher & structure (optionnel)"},
+    {id:"plancher_clt",label:"Plancher CLT 120mm",unit:"forfait",hint:"1 = inclure, 0 = sans"},
+    {id:"structure_bois",label:"Structure bois annexe (€)",unit:"€",hint:"Poteaux + sommiers — lire sur devis"},
+    {section:"🔩 Frais annexes"},
+    {id:"quincaillerie",label:"Quincaillerie chantier",unit:"forfait",hint:"1 = inclure (moy. 896 €)",default:1},
+    {id:"etude",label:"Bureau d'études EXE/PAC (€)",unit:"€",hint:"Si prévu — moy. 1 589 €"},
+    {section:"🚚 Logistique"},
+    {id:"transport",label:"Transport semi-remorque (€)",unit:"€",hint:"550 à 2050€/semi selon distance — lire sur devis"}
+  ],
+  savare: [
+    {section:"📐 Murs ossature bois"},
+    {id:"mob_m2",label:"Surface MOB (ossature + ITE + laine tout compris)",unit:"m²",hint:"Taux composite moy. 110,30 €/m²"},
+    {section:"🏠 Charpente"},
+    {id:"fermettes",label:"Charpente industrielle",unit:"forfait",hint:"1 = inclure, 0 = sans"},
+    {id:"charpente_trad",label:"Charpente traditionnelle (€)",unit:"€",hint:"Déplafonné, volumes spéciaux — lire sur devis"},
+    {section:"🪵 Plancher & structure"},
+    {id:"plancher_clt_m2",label:"Plancher CLT 120mm (m²)",unit:"m²",hint:"Hexapli 3L — moy. 147 €/m²"},
+    {id:"structure_bois",label:"Structure poteau-poutre (€)",unit:"€",hint:"Poteaux 140×140 + poutres GL24H — lire sur devis"},
+    {section:"📋 Frais fixes"},
+    {id:"etude",label:"Études techniques",unit:"forfait",hint:"1 = inclure (moy. 1 745 €)",default:1},
+    {section:"🚚 Logistique"},
+    {id:"transport",label:"Transport MOB (€)",unit:"€",hint:"Normandie — moy. 2 606 €, lire sur devis"}
+  ],
+  lowall: [
+    {section:"📐 Murs ossature bois"},
+    {id:"mob_m2",label:"Surface MOB isolé (ITE PSE 100mm)",unit:"m²",hint:"Ossature 45x120 + laine 120mm + pare-vapeur + ITE PSE — 110 à 113 €/m²"},
+    {id:"mob_ouvert_m2",label:"Surface MOB non isolé (ITE PSE seule)",unit:"m²",hint:"Garage, local technique — 85 €/m² fixe"},
+    {id:"mob_biosource_m2",label:"Surface MOB bio-sourcé (ITE fibre de bois)",unit:"m²",hint:"Laine de bois + ITE fibre de bois — 132 €/m² — sur demande"},
+    {section:"🔩 Quincaillerie"},
+    {id:"quinc_qty",label:"Kit quincaillerie",unit:"m²",hint:"= MOB auto (10 €/m²)"},
+    {section:"🏠 Charpente"},
+    {id:"fermettes",label:"Charpente (non fabriquée)",unit:"forfait",hint:"LOWALL ne fabrique pas de charpente"},
+    {section:"🚚 Transport"},
+    {id:"transport",label:"Transport plateau 13m (€)",unit:"€",hint:"Depuis Gardanne (13) — 1 100€ constaté (~45km). Lire sur devis, laisser 0 si non facturé"}
+  ]
+};
+
+const FIELD_TO_POSTE = {
+  boisboreal:{
+    mob_m2:{poste:"mob",type:"surface"},ite_m2:{poste:"ite100",type:"surface"},
+    laine_m2:{poste:"laine120",type:"surface"},pv_m2:{poste:"pv",type:"surface"},
+    protection_tete_ml:{poste:"protection_tete",type:"surface"},
+    plancher_clt:{poste:"plancher_clt",type:"surface"},
+    fermette_qty:{poste:"fermette",type:"forfait_qty"},
+    vr_qty:{poste:"coffre_vr",type:"unite"},
+    appuis_seuil_qty:{poste:"appuis_seuil",type:"unite"},
+    chargement_m2:{poste:"chargement",type:"surface"},
+    transport:{poste:"transport",type:"direct"},
+    etude:{poste:"etude",type:"direct"}
+  },
+  cobs:{
+    mob_m2:{poste:"mob",type:"surface"},isolation_m2:{poste:"isolation",type:"surface"},
+    ite_m2:{poste:"ite100",type:"surface"},appui_qty:{poste:"appui",type:"unite"},
+    pose_menui_qty:{poste:"pose_menui",type:"unite"},
+    pose_coffre_qty:{poste:"pose_coffre",type:"unite"},
+    charpente_m2:{poste:"charpente_indus",type:"surface"},
+    plancher_m2:{poste:"plancher_solivage",type:"surface"},
+    livraison:{poste:"livraison",type:"direct"},etude:{poste:"etude",type:"direct"}
+  },
+  sicob:{
+    mob_m2:{poste:"mob_complet",type:"surface"},
+    mob_etage_m2:{poste:"mob_etage",type:"surface"},
+    mob_pignon_m2:{poste:"mob_pignon",type:"surface"},
+    mob_rehausse_m2:{poste:"mob_rehausse",type:"surface"},
+    mob_garage_m2:{poste:"mob_garage",type:"surface"},
+    mob_95mm_m2:{poste:"mob_95mm",type:"surface"},
+    fermettes:{poste:"fermettes",type:"forfait_qty"},
+    poutres_vent:{poste:"poutres_vent",type:"direct"},
+    charpente_trad:{poste:"charpente_trad",type:"direct"},
+    solivage:{poste:"solivage",type:"forfait_qty"},
+    bandeau:{poste:"bandeau",type:"direct"},
+    lambris:{poste:"lambris",type:"direct"},
+    liteaux:{poste:"liteaux",type:"direct"},
+    transport:{poste:"transport",type:"direct"}
+  },
+  imaj:{
+    mob_m2:{poste:"mob_complet",type:"surface"},
+    mob_pignon_m2:{poste:"mob_pignon",type:"surface"},
+    mob_refend_m2:{poste:"mob_refend",type:"surface"},
+    fermettes:{poste:"fermettes",type:"forfait_qty"},
+    charpente_trad:{poste:"charpente_trad",type:"direct"},
+    toit_terrasse_m2:{poste:"toit_terrasse",type:"surface"},
+    plancher_clt:{poste:"plancher_clt",type:"forfait_qty"},
+    structure_bois:{poste:"structure_bois",type:"direct"},
+    quincaillerie:{poste:"quincaillerie",type:"forfait_qty"},
+    etude:{poste:"etude",type:"direct"},
+    transport:{poste:"transport",type:"direct"}
+  },
+  savare:{
+    mob_m2:{poste:"mob_composite",type:"surface"},
+    fermettes:{poste:"fermettes",type:"forfait_qty"},
+    charpente_trad:{poste:"charpente_trad",type:"direct"},
+    plancher_clt_m2:{poste:"plancher_clt",type:"surface"},
+    structure_bois:{poste:"structure_bois",type:"direct"},
+    etude:{poste:"etude",type:"forfait_qty"},
+    transport:{poste:"transport",type:"direct"}
+  },
+  lowall:{
+    mob_m2:{poste:"mob",type:"surface"},
+    mob_ouvert_m2:{poste:"mob_ouvert",type:"surface"},
+    mob_biosource_m2:{poste:"mob_biosource",type:"surface"},
+    quinc_qty:{poste:"quincaillerie",type:"surface"},
+    fermettes:{poste:"fermettes",type:"forfait_qty"},
+    transport:{poste:"transport",type:"direct"}
+  }
+};
+
+let CURRENT_USINE = "boisboreal";
+let CURRENT_VALUES = {};
+
+// ═══════════════════════════════════════════════════════════
+// SYSTÈME D'OVERRIDES
+// Gère : label_user, tooltip, visible, prix_type, prix_unitaire,
+//        ratio_source, ratio_value
+// ═══════════════════════════════════════════════════════════
+const STORAGE_KEY = "chiffrage_overrides_v1";
+let OVERRIDES = loadOverrides();
+
+function loadOverrides(){
+  try{const r=localStorage.getItem(STORAGE_KEY);return r?JSON.parse(r):{}}catch(e){return{}}
+}
+function saveOverrides(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(OVERRIDES))}catch(e){}
+}
+function getPoste(usineKey,posteCode){
+  const base=REFS[usineKey].postes[posteCode];
+  if(!base)return null;
+  const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode])||{};
+  return Object.assign({},base,{
+    label_user:ov.label_user!==undefined?ov.label_user:base.label_user,
+    tooltip:ov.tooltip!==undefined?ov.tooltip:base.tooltip,
+    visible:ov.visible!==undefined?ov.visible:base.visible
+  });
+}
+
+// Prix calculé en tenant compte des overrides prix
+function getPrixCalcule(usineKey,posteCode,depth=0){
+  if(depth>5)return REFS[usineKey]?.postes[posteCode]?.moyen||0;
+  const base=REFS[usineKey]?.postes[posteCode];
+  if(!base)return 0;
+  const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode])||{};
+  if(ov.prix_type==='fixe'&&ov.prix_unitaire!==undefined&&ov.prix_unitaire!==''){
+    return parseFloat(ov.prix_unitaire)||base.moyen;
+  }
+  if(ov.prix_type==='ratio'&&ov.ratio_source&&ov.ratio_value){
+    const src=getPrixCalcule(usineKey,ov.ratio_source,depth+1);
+    return src*parseFloat(ov.ratio_value);
+  }
+  return base.moyen;
+}
+
+function hasPrixOverride(usineKey,posteCode){
+  const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode])||{};
+  return ov.prix_type==='fixe'||ov.prix_type==='ratio';
+}
+
+function setOverride(usineKey,posteCode,field,value){
+  if(!OVERRIDES[usineKey])OVERRIDES[usineKey]={};
+  if(!OVERRIDES[usineKey][posteCode])OVERRIDES[usineKey][posteCode]={};
+  const base=REFS[usineKey].postes[posteCode];
+  const prixFields=['prix_type','prix_unitaire','ratio_source','ratio_value'];
+  if(!prixFields.includes(field)&&value===base[field]){
+    delete OVERRIDES[usineKey][posteCode][field];
+    if(Object.keys(OVERRIDES[usineKey][posteCode]).length===0)delete OVERRIDES[usineKey][posteCode];
+    if(Object.keys(OVERRIDES[usineKey]).length===0)delete OVERRIDES[usineKey];
+  } else {
+    OVERRIDES[usineKey][posteCode][field]=value;
+  }
+  saveOverrides();
+}
+function resetPoste(usineKey,posteCode){
+  if(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode]){
+    delete OVERRIDES[usineKey][posteCode];
+    if(Object.keys(OVERRIDES[usineKey]).length===0)delete OVERRIDES[usineKey];
+    saveOverrides();
+  }
+}
+function resetPrix(usineKey,posteCode){
+  if(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode]){
+    delete OVERRIDES[usineKey][posteCode].prix_type;
+    delete OVERRIDES[usineKey][posteCode].prix_unitaire;
+    delete OVERRIDES[usineKey][posteCode].ratio_source;
+    delete OVERRIDES[usineKey][posteCode].ratio_value;
+    if(Object.keys(OVERRIDES[usineKey][posteCode]).length===0)delete OVERRIDES[usineKey][posteCode];
+    if(Object.keys(OVERRIDES[usineKey]).length===0)delete OVERRIDES[usineKey];
+    saveOverrides();
+  }
+}
+function hasOverride(usineKey,posteCode){
+  return !!(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode]&&Object.keys(OVERRIDES[usineKey][posteCode]).length);
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function fmtEur(v){if(v===null||v===undefined||isNaN(v))return"—";return v.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €"}
+function fmtEurR(v){if(v===null||v===undefined||isNaN(v))return"—";return Math.round(v).toLocaleString("fr-FR")+" €"}
+function fmtNum(v,dec=0){if(v===null||v===undefined||isNaN(v))return"—";return v.toLocaleString("fr-FR",{minimumFractionDigits:dec,maximumFractionDigits:dec})}
+function fmtDateFR(iso){if(!iso)return"—";const d=new Date(iso);return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})}
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");clearTimeout(window._toastT);window._toastT=setTimeout(()=>t.classList.remove("on"),2500)}
+function escapeHtml(s){if(s===null||s===undefined)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function escapeAttr(s){if(s===null||s===undefined)return"";return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+    tab.classList.add("on");
+    document.getElementById("v-"+tab.dataset.view).classList.add("on");
+    if(tab.dataset.view==="referentiel")renderRef();
+    if(tab.dataset.view==="historique"){renderHist();renderImportView();}
+    if(tab.dataset.view==="parametres")renderParametres();
+    if(tab.dataset.view==="mesprojets")renderMesProjets();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// VUE 1 — ESTIMATEUR
+// ═══════════════════════════════════════════════════════════
+const AUTO_FILL_RULES = {
+  boisboreal:{
+    mob_m2:[
+      {target:"ite_m2",factor:1.0,label:"= MOB"},
+      {target:"laine_m2",factor:0.9,label:"= MOB −10%"},
+      {target:"pv_m2",factor:1.0,label:"= MOB"},
+      {target:"chargement_m2",factor:1.0,label:"= MOB"},
+      {target:"protection_tete_ml",factor:0.7,label:"= MOB −30%"}
+    ]
+  },
+  cobs:{mob_m2:[{target:"ite_m2",factor:1.0,label:"= MOB"},{target:"isolation_m2",factor:0.8,label:"= MOB −20%"}]},
+  lowall:{mob_m2:[]}  // quinc_qty géré via COMPUTED_FIELDS (somme mob+ouvert+biosource)
+};
+
+const COMPUTED_FIELDS = {
+  boisboreal:{
+    transport:(vals)=>{
+      const mob=vals.mob_m2||0,plancher=vals.plancher_clt||0;
+      const nb=(mob<141&&plancher===0)?1:2;
+      return{value:nb*1268,hint:`${nb} forfait${nb>1?'s':''} × 1 268 €`};
+    }
+  },
+  lowall:{
+    quinc_qty:(vals)=>{
+      const total=(vals.mob_m2||0)+(vals.mob_ouvert_m2||0)+(vals.mob_biosource_m2||0);
+      return{value:Math.round(total*100)/100,hint:`= MOB isolé + ouvert + bio-sourcé (${fmtNum(total,1)} m²)`};
+    }
+  }
+};
+
+let MANUAL_FIELDS=new Set();
+
+// ── FORM_OVERRIDES : hint text + hint visibility par champ de formulaire ──
+const FORM_STORAGE_KEY="chiffrage_form_overrides_v1";
+let FORM_OVERRIDES=loadFormOverrides();
+function loadFormOverrides(){try{const r=localStorage.getItem(FORM_STORAGE_KEY);return r?JSON.parse(r):{}}catch(e){return{}}}
+function saveFormOverrides(){try{localStorage.setItem(FORM_STORAGE_KEY,JSON.stringify(FORM_OVERRIDES))}catch(e){}}
+function getFormFieldData(usineKey,fieldId){
+  const schema=FORM_SCHEMAS[usineKey];
+  const field=schema?.find(f=>f.id===fieldId);
+  if(!field)return{hint:'',hint_visible:true,modified:false};
+  const ov=FORM_OVERRIDES[usineKey]?.[fieldId]||{};
+  return{
+    hint:ov.hint!==undefined?ov.hint:(field.hint||''),
+    hint_visible:ov.hint_visible!==undefined?ov.hint_visible:true,
+    modified:!!(FORM_OVERRIDES[usineKey]?.[fieldId]&&Object.keys(FORM_OVERRIDES[usineKey][fieldId]).length)
+  };
+}
+function setFormOverride(usineKey,fieldId,field,value){
+  if(!FORM_OVERRIDES[usineKey])FORM_OVERRIDES[usineKey]={};
+  if(!FORM_OVERRIDES[usineKey][fieldId])FORM_OVERRIDES[usineKey][fieldId]={};
+  const baseField=FORM_SCHEMAS[usineKey]?.find(f=>f.id===fieldId);
+  const baseVal=field==='hint_visible'?true:(baseField?.[field]);
+  if(value===baseVal){
+    delete FORM_OVERRIDES[usineKey][fieldId][field];
+    if(!Object.keys(FORM_OVERRIDES[usineKey][fieldId]).length)delete FORM_OVERRIDES[usineKey][fieldId];
+    if(!Object.keys(FORM_OVERRIDES[usineKey]).length)delete FORM_OVERRIDES[usineKey];
+  } else {
+    FORM_OVERRIDES[usineKey][fieldId][field]=value;
+  }
+  saveFormOverrides();
+}
+function resetFormField(usineKey,fieldId){
+  if(FORM_OVERRIDES[usineKey]?.[fieldId]){
+    delete FORM_OVERRIDES[usineKey][fieldId];
+    if(!Object.keys(FORM_OVERRIDES[usineKey]).length)delete FORM_OVERRIDES[usineKey];
+    saveFormOverrides();
+  }
+}
+// Trouve les field_id de formulaire qui pointent vers un poste donné
+function getFormFieldsForPoste(usineKey,posteCode){
+  const map=FIELD_TO_POSTE[usineKey];
+  if(!map)return[];
+  return Object.entries(map).filter(([,mp])=>mp.poste===posteCode).map(([fid])=>fid);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RÉFÉRENTIEL CHARPENTE EXTERNE
+// Tarifs pour usines ne fabriquant pas de charpente
+// ═══════════════════════════════════════════════════════════
+const CHARPENTE_EXT = {
+  fermettes: [
+    {id:"cp30",    label:"Combles perdus 30°",              prix:19.00},
+    {id:"cp45_sd", label:"45° CP sans débord",              prix:18.00},
+    {id:"cp45_ep", label:"45° entrait porteur",             prix:35.00},
+    {id:"cp35_cr", label:"35° avec croupe",                 prix:23.00},
+    {id:"cp40_cr", label:"40° avec croupe",                 prix:23.70},
+    {id:"cp30_cx", label:"30° CP complexe",                 prix:28.00},
+  ],
+  accessoires: [
+    {id:"pvc20",    label:"Habillage PVC blanc 20 cm", prix:13.50, unite:"ml"},
+    {id:"pvc25",    label:"Habillage PVC blanc 25 cm", prix:17.00, unite:"ml"},
+    {id:"sabliere", label:"Sablière",                  prix:8.80,  unite:"ml"},
+    {id:"chev_s",   label:"Chevêtre simple",           prix:6.50,  unite:"u"},
+    {id:"chev_esc", label:"Chevêtre escalier",         prix:103.00,unite:"u"},
+    {id:"chev_vlx", label:"Chevêtre Velux",            prix:126.00,unite:"u"},
+    {id:"rive",     label:"Rive égout et pignon",      prix:3.55,  unite:"ml"},
+  ]
+};
+
+let CHARPENTE_EXT_VALUES = {fermette_type:'', surface:0, pvc20:0, pvc25:0, sabliere:0, chev_s:0, chev_esc:0, chev_vlx:0, rive:0, devis_ext:0};
+
+// Usines qui estiment la charpente par m² (méthode ensemble)
+const CHARPENTE_ENSEMBLE_USINES=['sicob'];
+function isCharpenteEnsembleUsine(k){return CHARPENTE_ENSEMBLE_USINES.includes(k);}
+
+function isCharpenteHiddenForUsine(usineKey){
+  const schema=FORM_SCHEMAS[usineKey],map=FIELD_TO_POSTE[usineKey];
+  if(!schema||!map)return false;
+  let inCharp=false;
+  for(const item of schema){
+    if(item.section)inCharp=item.section.toLowerCase().includes('charpente');
+    else if(inCharp&&item.id&&!item.ensemble){
+      const mp=map[item.id];
+      if(mp){const p=getPoste(usineKey,mp.poste);if(p&&p.visible===false)return true;}
+    }
+  }
+  return false;
+}
+
+function calcCharpenteExtEstim(){
+  // Calcul estimateur seul (sans devis_ext) — pour affichage barré quand devis_ext actif
+  let total=0;
+  const ft=CHARPENTE_EXT.fermettes.find(f=>f.id===CHARPENTE_EXT_VALUES.fermette_type);
+  if(ft&&CHARPENTE_EXT_VALUES.surface>0) total+=ft.prix*CHARPENTE_EXT_VALUES.surface;
+  CHARPENTE_EXT.accessoires.forEach(a=>{
+    const qty=CHARPENTE_EXT_VALUES[a.id]||0;
+    if(qty>0)total+=a.prix*qty;
+  });
+  return total;
+}
+
+function calcCharpenteExt(){
+  // Devis externe saisi → priorité absolue sur l'estimateur
+  if(CHARPENTE_EXT_VALUES.devis_ext>0) return CHARPENTE_EXT_VALUES.devis_ext;
+  let total=0;
+  const ft=CHARPENTE_EXT.fermettes.find(f=>f.id===CHARPENTE_EXT_VALUES.fermette_type);
+  if(ft&&CHARPENTE_EXT_VALUES.surface>0) total+=ft.prix*CHARPENTE_EXT_VALUES.surface;
+  CHARPENTE_EXT.accessoires.forEach(a=>{
+    const qty=CHARPENTE_EXT_VALUES[a.id]||0;
+    if(qty>0)total+=a.prix*qty;
+  });
+  return total;
+}
+
+// Formulaire estimateur charpente (réutilisé dans la bannière externe ET en mode ensemble)
+function buildCharpenteEstimateur(label){
+  const vals=CHARPENTE_EXT_VALUES;
+  const fermOptions=CHARPENTE_EXT.fermettes.map(f=>
+    `<option value="${f.id}"${vals.fermette_type===f.id?' selected':''}>${f.label} — ${fmtNum(f.prix,2)} €/m²</option>`
+  ).join('');
+  const accRows=CHARPENTE_EXT.accessoires.map(a=>`
+    <div class="cext-acc-line">
+      <input type="number" data-cext="${a.id}" min="0" step="1" placeholder="0" value="${vals[a.id]||''}">
+      <span class="acc-label">${escapeHtml(a.label)}</span>
+      <span class="acc-pu">${fmtNum(a.prix,2)} €/${a.unite}</span>
+    </div>`).join('');
+  const subtotal=calcCharpenteExt();
+  const devisExtVal=CHARPENTE_EXT_VALUES.devis_ext||'';
+  const estimDisabled=CHARPENTE_EXT_VALUES.devis_ext>0;
+  return `<div class="cext-form">
+    <div class="cext-form-title">🏗️ ${escapeHtml(label||'Estimateur charpente')}</div>
+    <div class="cext-row-main" style="${estimDisabled?'opacity:0.4;pointer-events:none':''}">
+      <div class="cext-fld">
+        <label>Type de fermette</label>
+        <select data-cext="fermette_type">
+          <option value="">-- choisir un type --</option>
+          ${fermOptions}
+        </select>
+      </div>
+      <div class="cext-fld">
+        <label>Surface de toiture (m²)</label>
+        <input type="number" data-cext="surface" min="0" step="0.5" placeholder="ex: 120" value="${vals.surface||''}">
+      </div>
+    </div>
+    <div class="cext-acc-grid" style="${estimDisabled?'opacity:0.4;pointer-events:none':''}">${accRows}</div>
+    <div class="cext-subtotal" style="${estimDisabled?'opacity:0.4;text-decoration:line-through':''}">
+      <span>Sous-total estimé</span>
+      <span class="cext-st-amount" id="cext-st">${calcCharpenteExtEstim()>0?fmtEurR(calcCharpenteExtEstim()):'—'}</span>
+    </div>
+    <div style="margin-top:12px;border-top:1px dashed #C8A96E;padding-top:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5A2D00;margin-bottom:8px">📋 Devis charpentier reçu</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="number" data-cext="devis_ext" min="0" step="1" placeholder="Montant HT du devis reçu" value="${devisExtVal}"
+          style="flex:1;min-width:160px;padding:7px 10px;border:1.5px solid ${estimDisabled?'#2E7D32':'#C8A96E'};border-radius:7px;font-size:13px;background:${estimDisabled?'#F1F8F1':'#fff'}">
+        <span style="font-size:12px;color:var(--muted)">€ HT</span>
+        ${estimDisabled?`<span style="font-size:11px;color:#2E7D32;font-weight:600">✓ Utilisé dans le total</span>`:'<span style="font-size:11px;color:var(--faint)">Remplace l\'estimateur si renseigné</span>'}
+      </div>
+    </div>
+    ${estimDisabled?`<div class="cext-subtotal" style="margin-top:8px;color:#2E7D32"><span>Total charpente (devis)</span><span class="cext-st-amount">${fmtEurR(CHARPENTE_EXT_VALUES.devis_ext)}</span></div>`:''}
+  </div>`;
+}
+
+function buildExtBanner(){
+  return `<div class="charpente-ext-banner">
+    <span class="ceb-ico">📦</span>
+    <div style="flex:1;min-width:0">
+      <strong>Cette usine ne fabrique pas de charpente</strong>
+      <p>Faire une demande de devis en externe — utilise l'estimateur ci-dessous.</p>
+      ${buildCharpenteEstimateur('Estimateur charpente externe')}
+    </div>
+  </div>`;
+}
+
+function renderUsinePicker(){
+  const c=document.getElementById("usine-pick");
+  c.innerHTML="";
+  Object.entries(REFS).forEach(([key,u])=>{
+    const btn=document.createElement("button");
+    btn.className="usine-btn"+(key===CURRENT_USINE?" on":"");
+    btn.innerHTML=`<div class="usine-btn-name">${u.nom}</div>`;
+    btn.addEventListener("click",()=>{CURRENT_USINE=key;CURRENT_VALUES={};MANUAL_FIELDS=new Set();renderUsinePicker();renderForm();calcRecap()});
+    c.appendChild(btn);
+  });
+}
+
+function renderForm(){
+  const c=document.getElementById("form-usine");
+  const schema=FORM_SCHEMAS[CURRENT_USINE];
+  let html="";
+  let html_buffer="";
+  const map=FIELD_TO_POSTE[CURRENT_USINE];
+  let pendingSection=null,visibleInSection=0,hiddenCharpenteInSection=false;
+
+  const isCharpenteSection=s=>s&&s.toLowerCase().includes('charpente');
+
+  const flushSection=()=>{
+    if(pendingSection===null)return;
+    if(visibleInSection>0){
+      html+=`<div class="section-label">${pendingSection}</div>`+html_buffer;
+      if(hiddenCharpenteInSection&&isCharpenteSection(pendingSection)) html+=buildExtBanner();
+    } else if(hiddenCharpenteInSection&&isCharpenteSection(pendingSection)){
+      html+=`<div class="section-label">${pendingSection}</div>`+buildExtBanner();
+    }
+  };
+
+  schema.forEach(item=>{
+    if(item.section){
+      flushSection();
+      pendingSection=item.section;visibleInSection=0;html_buffer="";hiddenCharpenteInSection=false;
+    } else {
+      // Item "ensemble" : remplace la ligne forfait par l'estimateur par m²
+      if(item.ensemble){
+        html_buffer+=buildCharpenteEstimateur(item.label);
+        visibleInSection++;
+        return;
+      }
+      const fieldMap=map[item.id];
+      let isVisible=true,posteData=null;
+      if(fieldMap){
+        posteData=getPoste(CURRENT_USINE,fieldMap.poste);
+        if(posteData&&posteData.visible===false)isVisible=false;
+      }
+      if(!isVisible){
+        if(isCharpenteSection(pendingSection)) hiddenCharpenteInSection=true;
+        return;
+      }
+      const displayLabel=posteData?posteData.label_user:item.label;
+      const tooltipText=posteData&&posteData.tooltip?posteData.tooltip:"";
+      const tooltipIcon=tooltipText?`<span class="info-i" data-tip="${escapeAttr(tooltipText)}">ⓘ</span>`:"";
+      const def=item.default!==undefined?item.default:"";
+      const rules=AUTO_FILL_RULES[CURRENT_USINE]||{};
+      const cf=COMPUTED_FIELDS[CURRENT_USINE]||{};
+      let isAutoTarget=false;
+      for(const src in rules){if(rules[src].some(r=>r.target===item.id))isAutoTarget=true;}
+      const isComputed=!!cf[item.id];
+      const showBadge=isAutoTarget||isComputed;
+      const autoBadge=showBadge?`<span class="auto-badge" id="badge-${item.id}">auto</span>`:"";
+      const hintId=isComputed?`id="hint-${item.id}"`:"";
+      // Hint personnalisé
+      const {hint:effectiveHint,hint_visible,modified:hintModified}=getFormFieldData(CURRENT_USINE,item.id);
+      const hintBadge=hintModified?`<span style="font-size:9px;color:var(--terra);margin-left:3px">✎</span>`:"";
+      // Show prix override indicator
+      let prixBadge="";
+      if(fieldMap&&hasPrixOverride(CURRENT_USINE,fieldMap.poste)){
+        const px=getPrixCalcule(CURRENT_USINE,fieldMap.poste);
+        prixBadge=`<span class="prix-modifie-badge" title="Prix personnalisé">💶 ${fmtNum(px,2)} €</span>`;
+      }
+      const hintText=effectiveHint?`${item.unit} · ${escapeHtml(effectiveHint)}`:item.unit;
+      html_buffer+=`<div class="fld">
+        <div class="fld-l">
+          <label for="f-${item.id}">${escapeHtml(displayLabel)} ${tooltipIcon}${autoBadge}${prixBadge}</label>
+          <span class="fld-hint" ${hintId} style="${hint_visible?'':'display:none'}">${hintText}${hintBadge}</span>
+        </div>
+        <input type="number" id="f-${item.id}" data-id="${item.id}" min="0" step="0.01" placeholder="0" value="${def}">
+      </div>`;
+      visibleInSection++;
+    }
+  });
+  flushSection();
+  c.innerHTML=html;
+  schema.forEach(item=>{if(item.default!==undefined)CURRENT_VALUES[item.id]=item.default;});
+
+  const usineRules=AUTO_FILL_RULES[CURRENT_USINE]||{};
+  c.querySelectorAll("input[data-id]").forEach(inp=>{
+    const fid=inp.dataset.id;
+    inp.addEventListener("input",()=>{
+      const v=parseFloat(inp.value)||0;
+      CURRENT_VALUES[fid]=v;
+      if(usineRules[fid]){
+        usineRules[fid].forEach(rule=>{
+          if(!MANUAL_FIELDS.has(rule.target)){
+            const av=Math.round(v*rule.factor*100)/100;
+            CURRENT_VALUES[rule.target]=av;
+            const ti=document.getElementById("f-"+rule.target);
+            if(ti)ti.value=av;
+            updateAutoBadge(rule.target,true);
+          }
+        });
+      }
+      applyComputedFields();
+      const isAutoTarget=Object.values(usineRules).flat().some(r=>r.target===fid);
+      const isComputedTarget=(COMPUTED_FIELDS[CURRENT_USINE]||{})[fid];
+      if(isAutoTarget||isComputedTarget){MANUAL_FIELDS.add(fid);updateAutoBadge(fid,false);}
+      calcRecap();
+    });
+  });
+  applyComputedFields();
+  attachTooltips(c);
+
+  // Listeners charpente externe
+  c.querySelectorAll("[data-cext]").forEach(inp=>{
+    const evt=(inp.tagName==="SELECT")?"change":"input";
+    inp.addEventListener(evt,()=>{
+      const fid=inp.dataset.cext;
+      CHARPENTE_EXT_VALUES[fid]=(fid==='fermette_type')?inp.value:(parseFloat(inp.value)||0);
+      // Mettre à jour le sous-total live dans la bannière
+      const st=document.getElementById("cext-st");
+      if(st){const t=calcCharpenteExt();st.textContent=t>0?fmtEurR(t):"—";}
+      calcRecap();
+    });
+  });
+}
+
+function applyComputedFields(){
+  const cf=COMPUTED_FIELDS[CURRENT_USINE]||{};
+  Object.entries(cf).forEach(([fieldId,fn])=>{
+    if(MANUAL_FIELDS.has(fieldId))return;
+    const result=fn(CURRENT_VALUES);
+    CURRENT_VALUES[fieldId]=result.value;
+    const inp=document.getElementById("f-"+fieldId);
+    if(inp)inp.value=result.value;
+    const hintEl=document.getElementById("hint-"+fieldId);
+    if(hintEl&&result.hint)hintEl.textContent=result.hint;
+    updateAutoBadge(fieldId,true);
+  });
+}
+
+function updateAutoBadge(fieldId,isAuto){
+  const badge=document.getElementById("badge-"+fieldId);
+  if(!badge)return;
+  badge.textContent=isAuto?"auto":"manuel";
+  badge.style.opacity=isAuto?"1":"0.7";
+}
+
+let _tipEl=null;
+function getTipEl(){if(!_tipEl){_tipEl=document.createElement("div");_tipEl.className="tip-pop";document.body.appendChild(_tipEl);}return _tipEl;}
+function attachTooltips(root){
+  root.querySelectorAll(".info-i").forEach(el=>{
+    el.addEventListener("mouseenter",e=>{
+      const tip=getTipEl();tip.textContent=el.dataset.tip;tip.classList.add("on");
+      const r=el.getBoundingClientRect();
+      tip.style.left=(r.left+window.scrollX)+"px";tip.style.top=(r.bottom+window.scrollY+6)+"px";
+    });
+    el.addEventListener("mouseleave",()=>getTipEl().classList.remove("on"));
+  });
+}
+
+function calcRecap(){
+  const u=REFS[CURRENT_USINE];
+  const map=FIELD_TO_POSTE[CURRENT_USINE];
+  const lines=[];let subtotal=0,hasAnyValue=false;
+
+  Object.entries(map).forEach(([fieldId,mp])=>{
+    const v=CURRENT_VALUES[fieldId]||0;
+    if(v<=0)return;
+    hasAnyValue=true;
+    const poste=getPoste(CURRENT_USINE,mp.poste);
+    if(!poste)return;
+    const prix=getPrixCalcule(CURRENT_USINE,mp.poste);
+    const prixLabel=hasPrixOverride(CURRENT_USINE,mp.poste)?`💶${fmtNum(prix,2)}`:fmtNum(prix,2);
+    let amount=0,detail="";
+    if(mp.type==="surface"||mp.type==="unite"){
+      amount=v*prix;
+      detail=`${fmtNum(v,mp.type==="surface"?1:0)} ${mp.type==="surface"?"m²":"u"} × ${prixLabel} €`;
+    }else if(mp.type==="forfait_qty"){
+      amount=v*prix;
+      detail=`${v} × ${prixLabel} €`;
+    }else if(mp.type==="direct"){
+      amount=v;detail="saisi";
+    }
+    subtotal+=amount;
+    lines.push({label:poste.label_user,detail,amount,fiab:poste.fiabilite});
+  });
+
+  const recapTotal=document.getElementById("recap-total");
+  const recapTva=document.getElementById("recap-tva");
+  const recapLines=document.getElementById("recap-lines");
+  const recapFiab=document.getElementById("recap-fiab");
+  const recapActions=document.getElementById("recap-actions");
+
+  if(!hasAnyValue){
+    recapTotal.textContent="—";recapTva.textContent="—";
+    recapLines.innerHTML='<div class="recap-empty">Saisis les métrés pour voir l\'estimation</div>';
+    recapFiab.innerHTML="";recapActions.style.display="none";return;
+  }
+
+  recapTotal.textContent=fmtEurR(subtotal);
+  recapTva.textContent=`TVA 20 % : ${fmtEurR(subtotal*0.2)} · TTC : ${fmtEurR(subtotal*1.2)}`;
+
+  let h="";
+  lines.forEach(l=>{
+    h+=`<div class="recap-line">
+      <div class="recap-line-l">${l.label}<span class="det">${l.detail}</span></div>
+      <div class="recap-line-v">${fmtEurR(l.amount)}</div>
+    </div>`;
+  });
+  h+=`<div class="recap-line subtotal"><div class="recap-line-l">Sous-total MOB</div><div class="recap-line-v">${fmtEurR(subtotal)}</div></div>`;
+
+  // Charpente : usine externe (charpente cachée) OU usine ensemble par m² (ex. SICOB)
+  let totalGeneral=subtotal;
+  if(isCharpenteHiddenForUsine(CURRENT_USINE)||isCharpenteEnsembleUsine(CURRENT_USINE)){
+    const cextTotal=calcCharpenteExt();
+    const labelSection=isCharpenteEnsembleUsine(CURRENT_USINE)?'🏗️ Charpente SICOB':'🏗️ Charpente externe';
+    if(cextTotal>0){
+      totalGeneral+=cextTotal;
+      h+=`<div style="margin-top:12px;padding-top:10px;border-top:2px dashed var(--terra)">
+        <div style="font-size:10px;color:var(--terra);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${labelSection}</div>`;
+      if(CHARPENTE_EXT_VALUES.devis_ext>0){
+        // Devis externe : une seule ligne
+        h+=`<div class="recap-line"><div class="recap-line-l">Devis charpentier reçu<span class="det">montant HT saisi</span></div><div class="recap-line-v">${fmtEurR(CHARPENTE_EXT_VALUES.devis_ext)}</div></div>`;
+      } else {
+        // Estimateur : détail fermette + accessoires
+        const ft=CHARPENTE_EXT.fermettes.find(f=>f.id===CHARPENTE_EXT_VALUES.fermette_type);
+        if(ft&&CHARPENTE_EXT_VALUES.surface>0){
+          const montFerm=ft.prix*CHARPENTE_EXT_VALUES.surface;
+          h+=`<div class="recap-line"><div class="recap-line-l">Fermette ${ft.label}<span class="det">${fmtNum(CHARPENTE_EXT_VALUES.surface,1)} m² × ${fmtNum(ft.prix,2)} €</span></div><div class="recap-line-v">${fmtEurR(montFerm)}</div></div>`;
+        }
+        CHARPENTE_EXT.accessoires.forEach(a=>{
+          const qty=CHARPENTE_EXT_VALUES[a.id]||0;
+          if(qty>0){
+            const mt=a.prix*qty;
+            h+=`<div class="recap-line"><div class="recap-line-l">${a.label}<span class="det">${fmtNum(qty,a.unite==='ml'?1:0)} ${a.unite} × ${fmtNum(a.prix,2)} €</span></div><div class="recap-line-v">${fmtEurR(mt)}</div></div>`;
+          }
+        });
+      }
+      h+=`<div class="recap-line subtotal" style="color:var(--terra)"><div class="recap-line-l" style="color:var(--terra)">Sous-total charpente</div><div class="recap-line-v" style="color:var(--terra)">${fmtEurR(cextTotal)}</div></div>`;
+      h+=`</div>`;
+    } else {
+      // Avertissement uniquement si aucun devis externe saisi non plus
+      if(CHARPENTE_EXT_VALUES.devis_ext<=0){
+        h+=`<div style="margin-top:10px;padding:10px 14px;background:#FFF3CD;border:1px solid #FFB300;border-radius:8px;font-size:12px;color:#7A4F00">
+          <strong>⚠️ Charpente non renseignée</strong> — le total ci-dessous est incomplet. Remplis l'estimateur charpente dans la section correspondante.
+        </div>`;
+      }
+    }
+    recapTotal.textContent=fmtEurR(totalGeneral);
+    recapTva.textContent=`TVA 20 % : ${fmtEurR(totalGeneral*0.2)} · TTC : ${fmtEurR(totalGeneral*1.2)}`;
+  }
+
+  h+=`<div class="recap-line subtotal"><div class="recap-line-l">Total HT général</div><div class="recap-line-v">${fmtEurR(totalGeneral)}</div></div>`;
+  recapLines.innerHTML=h;
+
+  // Stocker pour la sauvegarde
+  window._currentTotal = totalGeneral;
+  window._currentLines = lines.slice();
+
+  let fiabHtml="";
+  if(u.devis_count<5)fiabHtml=`<div class="fiab-banner warn"><span class="ico">⚠️</span><span><strong>Fiabilité faible.</strong> Estimation s'appuie sur seulement ${u.devis_count} devis ${u.nom}.</span></div>`;
+  else if(u.devis_count<10)fiabHtml=`<div class="fiab-banner"><span class="ico">📊</span><span><strong>Fiabilité moyenne.</strong> Basée sur ${u.devis_count} devis ${u.nom}. Marge ±10%.</span></div>`;
+  else fiabHtml=`<div class="fiab-banner"><span class="ico">✓</span><span><strong>Fiabilité élevée.</strong> Basée sur ${u.devis_count} devis ${u.nom}. Précision ±5%.</span></div>`;
+  recapFiab.innerHTML=fiabHtml;
+  recapActions.style.display="flex";
+}
+
+// ═══════════════════════════════════════════════════════════
+// MES PROJETS — sauvegarde et liste
+// ═══════════════════════════════════════════════════════════
+const MES_PROJETS_KEY = "chiffrage:mes_projets:v1";
+
+// Lit le user connecté du portail (partage de localStorage same-origin)
+function getActiveUser(){
+  try {
+    const raw = localStorage.getItem('naturea_active_user');
+    if(!raw) return null;
+    const u = JSON.parse(raw);
+    return (u && u.franchise) ? u : null;
+  } catch(e){ return null; }
+}
+
+function loadMesProjets(){
+  try{ return JSON.parse(localStorage.getItem(MES_PROJETS_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveMesProjets(list){
+  try{ localStorage.setItem(MES_PROJETS_KEY, JSON.stringify(list)); }
+  catch(e){ console.warn("storage", e); }
+}
+
+function saveCurrentProjet(){
+  const nom = document.getElementById("projet-nom").value.trim();
+  const ref = document.getElementById("projet-ref").value.trim();
+  const total = window._currentTotal || 0;
+
+  if(!nom){
+    showToast("⚠️ Renseigne d'abord le nom du client / projet");
+    document.getElementById("projet-nom").focus();
+    return;
+  }
+  if(total <= 0){
+    showToast("⚠️ Saisis des métrés avant de sauvegarder");
+    return;
+  }
+
+  const usineLabel = REFS[CURRENT_USINE] ? REFS[CURRENT_USINE].nom : CURRENT_USINE;
+  const activeUser = getActiveUser();
+  const projet = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    nom: nom,
+    ref: ref,
+    usine: CURRENT_USINE,
+    usineLabel: usineLabel,
+    total: total,
+    agence: activeUser ? activeUser.franchise : null,
+    user_name: activeUser ? activeUser.name : null,
+    values: JSON.parse(JSON.stringify(CURRENT_VALUES)),
+    charpente_ext: JSON.parse(JSON.stringify(CHARPENTE_EXT_VALUES || {})),
+    lines: (window._currentLines || []).map(l => ({label:l.label, detail:l.detail, amount:l.amount}))
+  };
+
+  const list = loadMesProjets();
+  list.unshift(projet);
+  saveMesProjets(list);
+  renderMesProjets();
+  showToast("✓ Projet « " + nom + " » sauvegardé");
+}
+
+function renderMesProjets(){
+  const list = loadMesProjets();
+  const tbody = document.getElementById("mesprojets-body");
+  const table = document.getElementById("mesprojets-table");
+  const empty = document.getElementById("mesprojets-empty");
+  const count = document.getElementById("mesprojets-count");
+  const badge = document.getElementById("badge-mes");
+  if(!tbody) return;
+
+  if(badge) badge.textContent = list.length;
+  if(count) count.textContent = list.length + " projet" + (list.length > 1 ? "s" : "");
+
+  if(list.length === 0){
+    table.style.display = "none";
+    empty.style.display = "";
+    return;
+  }
+  table.style.display = "";
+  empty.style.display = "none";
+
+  tbody.innerHTML = list.map(p => {
+    const d = new Date(p.date);
+    const dateStr = d.toLocaleDateString("fr-FR", {day:"2-digit", month:"short", year:"numeric"});
+    const heureStr = d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+    const refDisplay = p.ref ? `<span style="color:var(--muted);font-size:12px">${escapeHtmlChi(p.ref)}</span>` : `<span style="color:var(--faint);font-size:11px;font-style:italic">—</span>`;
+    return `<tr>
+      <td>
+        <div style="font-weight:500">${dateStr}</div>
+        <div style="font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace">${heureStr}</div>
+      </td>
+      <td><strong>${escapeHtmlChi(p.nom)}</strong></td>
+      <td>${refDisplay}</td>
+      <td><span class="hist-pill ${p.usine}">${escapeHtmlChi(p.usineLabel || p.usine)}</span></td>
+      <td class="num"><strong>${fmtEurR(p.total)}</strong></td>
+      <td>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="reopenProjet(${p.id})" title="Réouvrir ce projet dans l'estimateur">↗ Ouvrir</button>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;color:var(--red)" onclick="deleteProjet(${p.id})" title="Supprimer">🗑</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function escapeHtmlChi(s){
+  if(s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function reopenProjet(id){
+  const list = loadMesProjets();
+  const p = list.find(x => x.id === id);
+  if(!p) return;
+  // Restaurer l'état
+  CURRENT_USINE = p.usine;
+  CURRENT_VALUES = JSON.parse(JSON.stringify(p.values || {}));
+  if(p.charpente_ext) CHARPENTE_EXT_VALUES = JSON.parse(JSON.stringify(p.charpente_ext));
+  document.getElementById("projet-nom").value = p.nom || "";
+  document.getElementById("projet-ref").value = p.ref || "";
+  renderUsinePicker();
+  renderForm();
+  calcRecap();
+  // Switch vers l'onglet Chiffrer
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("on"));
+  document.querySelector('.tab[data-view="estimer"]').classList.add("on");
+  document.getElementById("v-estimer").classList.add("on");
+  showToast("✓ Projet « " + p.nom + " » rouvert");
+}
+
+function deleteProjet(id){
+  if(!confirm("Supprimer définitivement ce projet ?")) return;
+  let list = loadMesProjets();
+  list = list.filter(p => p.id !== id);
+  saveMesProjets(list);
+  renderMesProjets();
+  showToast("🗑 Projet supprimé");
+}
+
+document.getElementById("btn-save").addEventListener("click", saveCurrentProjet);
+document.getElementById("btn-export").addEventListener("click",()=>showToast("📄 Export PDF disponible en étape 3"));
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  CURRENT_VALUES={};
+  CHARPENTE_EXT_VALUES={fermette_type:'',surface:0,pvc20:0,pvc25:0,sabliere:0,chev_s:0,chev_esc:0,chev_vlx:0,rive:0};
+  document.getElementById("projet-nom").value = "";
+  document.getElementById("projet-ref").value = "";
+  renderForm();
+  calcRecap();
+  showToast("🔄 Formulaire réinitialisé");
+});
+
+// Init Mes Projets au chargement
+renderMesProjets();
+
+// ═══════════════════════════════════════════════════════════
+// VUE 2 — RÉFÉRENTIEL
+// ═══════════════════════════════════════════════════════════
+function toggleParamCard(key){
+  const body=document.getElementById("param-card-body-"+key);
+  const btn=document.getElementById("collapse-btn-"+key);
+  if(!body)return;
+  const collapsed=body.style.display==="none";
+  body.style.display=collapsed?"":"none";
+  btn.textContent=collapsed?"▲":"▼";
+}
+
+function renderRef(){
+  const c=document.getElementById("ref-grid");
+  let html="";
+  Object.entries(REFS).forEach(([key,u])=>{
+    let postesHtml="";
+    Object.keys(u.postes).forEach(pkey=>{
+      const p=getPoste(key,pkey);
+      const hasPx=hasPrixOverride(key,pkey);
+      const pxCurrent=hasPx?getPrixCalcule(key,pkey):null;
+      const unitLabel=p.unite==="forfait"?"forfait":(p.unite==="€/m²"?"€/m²":(p.unite==="€/u"?"€/unité":p.unite));
+      const overrideMark=hasOverride(key,pkey)?'<span title="Libellé personnalisé" style="color:var(--terra);font-size:10px;margin-left:6px">●</span>':"";
+      const prixMark=hasPx?`<span title="Prix personnalisé" style="color:#1565C0;font-size:10px;margin-left:4px">💶</span>`:"";
+      const pxVal=hasPx?pxCurrent:p.moyen;
+      postesHtml+=`<div class="ref-poste">
+        <div class="ref-poste-name">
+          ${escapeHtml(p.label_user)}${overrideMark}${prixMark}
+          <span class="unite">${unitLabel} · ${p.n} devis · <span class="fiabilite ${p.fiabilite}">${p.fiabilite}</span></span>
+        </div>
+        <div>
+          <div class="ref-poste-val${hasPx?' style="color:#1565C0"':''}">${p.unite==="forfait"?fmtEurR(pxVal):fmtNum(pxVal,2)+" €"}</div>
+          <div class="ref-poste-range">stats: ${fmtNum(p.moyen,2)} € (min ${fmtNum(p.min,2)} → max ${fmtNum(p.max,2)})</div>
+        </div>
+      </div>`;
+    });
+    const fiab=u.devis_count>=10?"haute":(u.devis_count>=5?"moyenne":"faible");
+    html+=`<div class="card ref-card" style="border-top:4px solid ${u.couleur}">
+      <div class="card-h">
+        <div class="card-h-l">
+          <div class="ico" style="background:${u.couleur}22;color:${u.couleur}">🏭</div>
+          <div><h3 style="margin:0">${u.nom}</h3><div style="font-size:11px;color:var(--faint);margin-top:2px">${u.description}</div></div>
+        </div>
+      </div>
+      <div class="card-b"><div class="ref-postes">${postesHtml}</div></div>
+      <div class="ref-meta">
+        <div><div class="ref-meta-n">${u.devis_count}</div><div style="margin-top:2px">devis sources</div></div>
+        <div style="text-align:right">
+          <span class="fiabilite ${fiab}">Fiabilité ${fiab}</span>
+          <div style="margin-top:6px">Dernière MAJ : ${fmtDateFR(u.derniere_maj)}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  // Carte charpente externe
+  let fermHtml=CHARPENTE_EXT.fermettes.map(f=>`
+    <div class="ref-poste">
+      <div class="ref-poste-name">${escapeHtml(f.label)}<span class="unite">€/m² toiture</span></div>
+      <div><div class="ref-poste-val">${fmtNum(f.prix,2)} €</div></div>
+    </div>`).join('');
+  let accHtml=CHARPENTE_EXT.accessoires.map(a=>`
+    <div class="ref-poste">
+      <div class="ref-poste-name">${escapeHtml(a.label)}<span class="unite">€/${a.unite}</span></div>
+      <div><div class="ref-poste-val">${fmtNum(a.prix,2)} €</div></div>
+    </div>`).join('');
+  html+=`<div class="card ref-card" style="border-top:4px solid var(--terra)">
+    <div class="card-h" style="background:var(--sand)">
+      <div class="card-h-l">
+        <div class="ico" style="background:#F5E6D533;color:var(--terra)">🏗️</div>
+        <div><h3 style="margin:0;color:var(--terra)">Charpente Externe</h3>
+          <div style="font-size:11px;color:var(--faint);margin-top:2px">Tarif de référence — usines sans production charpente</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-b">
+      <div style="font-size:11px;color:var(--terra);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px">Fermettes (€/m² de toiture)</div>
+      <div class="ref-postes">${fermHtml}</div>
+      <div style="font-size:11px;color:var(--terra);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:14px 0 8px">Accessoires</div>
+      <div class="ref-postes">${accHtml}</div>
+    </div>
+    <div class="ref-meta">
+      <div><div style="font-size:11px;color:var(--muted)">Tarif coordinateur réseau</div></div>
+      <div style="text-align:right"><span class="fiabilite haute" style="background:#F5E6D5;color:var(--terra)">Tarif fixe réseau</span></div>
+    </div>
+  </div>`;
+  c.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VUE 3 — HISTORIQUE
+// ═══════════════════════════════════════════════════════════
+function renderHist(){
+  const tb=document.getElementById("hist-body");
+  const sorted=[...DEVIS_HIST].sort((a,b)=>b.date.localeCompare(a.date));
+  let html="";
+  sorted.forEach(d=>{
+    const u=REFS[d.usine];
+    const isNew2026=d.usine==="sicob"&&d.date>="2026-01-01";
+    html+=`<tr${isNew2026?' style="background:#fff9f0"':''}>
+      <td><span class="hist-pill ${d.usine}">${u.nom}</span></td>
+      <td><strong>${d.n}</strong><div style="font-size:11px;color:var(--faint);margin-top:2px">${d.client}</div></td>
+      <td>${fmtDateFR(d.date)}</td>
+      <td class="num">${fmtNum(d.mob_m2,1)} m²</td>
+      <td class="num${isNew2026?' style="color:#C4632A;font-weight:700"':''}">
+        ${fmtNum(d.mob_pu,2)} €${isNew2026?' <span style="font-size:9px;color:var(--terra)">2026</span>':''}
+      </td>
+      <td class="num"><strong>${fmtEurR(d.total)}</strong></td>
+    </tr>`;
+  });
+  tb.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VUE 4 — PARAMÈTRES
+// ═══════════════════════════════════════════════════════════
+function renderParametres(){
+  const c=document.getElementById("param-grid");
+  let html="";
+  Object.entries(REFS).forEach(([usineKey,u])=>{
+    let postesHtml="";
+    Object.keys(u.postes).forEach(pkey=>{
+      const baseP=u.postes[pkey];
+      const p=getPoste(usineKey,pkey);
+      const isModified=hasOverride(usineKey,pkey);
+      const hasPx=hasPrixOverride(usineKey,pkey);
+      const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][pkey])||{};
+      const prixType=ov.prix_type||'auto';
+      const prixCurrent=getPrixCalcule(usineKey,pkey);
+
+      // Dropdown options pour source ratio
+      const otherPostes=Object.keys(u.postes).filter(k=>k!==pkey);
+      const ratioOptions=otherPostes.map(k=>{
+        const lbl=u.postes[k].label_user.substring(0,45);
+        return`<option value="${k}"${ov.ratio_source===k?' selected':''}>${lbl}</option>`;
+      }).join('');
+
+      const prixSectionHtml=`
+        <div class="prix-section">
+          <div class="prix-section-title">
+            <span>💶 Prix unitaire (${baseP.unite})</span>
+            ${hasPx?`<button class="reset-btn" style="color:var(--terra);background:none;border:none;cursor:pointer;font-size:10px;font-weight:600" data-action="reset-prix" data-usine="${usineKey}" data-poste="${pkey}">↺ reset prix</button>`:''}
+          </div>
+          <div class="prix-mode-btns">
+            <button class="prix-mode-btn${prixType==='auto'?' on':''}" data-prixmode="auto" data-usine="${usineKey}" data-poste="${pkey}">📊 Stats (${fmtNum(baseP.moyen,2)} €)</button>
+            <button class="prix-mode-btn${prixType==='fixe'?' on':''}" data-prixmode="fixe" data-usine="${usineKey}" data-poste="${pkey}">✏️ Prix fixe</button>
+            <button class="prix-mode-btn${prixType==='ratio'?' on':''}" data-prixmode="ratio" data-usine="${usineKey}" data-poste="${pkey}">🔗 Ratio</button>
+          </div>
+          <div class="prix-auto-display" id="prix-auto-${usineKey}-${pkey}" style="${prixType!=='auto'?'display:none':''}">
+            Valeur statistique : <strong>${fmtNum(baseP.moyen,2)} €</strong> 
+            <span style="color:var(--faint);font-size:10px;">(min ${fmtNum(baseP.min,2)} → max ${fmtNum(baseP.max,2)})</span>
+          </div>
+          <div class="prix-fixe-row" id="prix-fixe-${usineKey}-${pkey}" style="${prixType!=='fixe'?'display:none':''}">
+            <input type="number" class="prix-input" data-prixfield="prix_unitaire" data-usine="${usineKey}" data-poste="${pkey}" 
+              min="0" step="0.01" value="${ov.prix_unitaire||baseP.moyen}" style="width:120px">
+            <span class="prix-unite">${baseP.unite}</span>
+          </div>
+          <div class="prix-ratio-row" id="prix-ratio-${usineKey}-${pkey}" style="${prixType!=='ratio'?'display:none':''}">
+            <select class="prix-input" data-prixfield="ratio_source" data-usine="${usineKey}" data-poste="${pkey}" style="flex:1;min-width:160px">
+              <option value="">-- choisir poste source --</option>
+              ${ratioOptions}
+            </select>
+            <span class="ratio-sep">×</span>
+            <input type="number" class="prix-input" data-prixfield="ratio_value" data-usine="${usineKey}" data-poste="${pkey}" 
+              min="0" step="0.001" value="${ov.ratio_value||1}" style="width:80px">
+            <span class="prix-preview" id="prix-preview-${usineKey}-${pkey}">= ${fmtNum(prixCurrent,2)} €</span>
+          </div>
+          ${hasPx?`<div style="margin-top:8px;font-size:11px;color:#1565C0;font-weight:600">▶ Prix actif : ${fmtNum(prixCurrent,2)} ${baseP.unite}</div>`:''}
+        </div>`;
+
+      // Hint editor : calculé avant le template literal pour éviter les problèmes d'imbrication
+      const formFieldsForPoste=getFormFieldsForPoste(usineKey,pkey);
+      let hintEditorHtml='';
+      if(formFieldsForPoste.length){
+        hintEditorHtml=formFieldsForPoste.map(fid=>{
+          const schemaForHint=FORM_SCHEMAS[usineKey];
+          const baseFieldForHint=schemaForHint?.find(f=>f.id===fid);
+          if(!baseFieldForHint)return'';
+          const {hint:effectiveHint,hint_visible,modified:hintMod}=getFormFieldData(usineKey,fid);
+          const resetBtnHint=hintMod?`<button style="background:none;border:none;color:var(--terra);font-size:10px;font-weight:600;cursor:pointer" data-action="reset-hint" data-usine="${usineKey}" data-fieldid="${fid}">&#8630; reset</button>`:'';
+          return '<div class="prix-section" style="margin-top:14px">'
+            +'<div class="prix-section-title"><span>&#x1F4AC; Intitulé d\'aide (hint) <span style="color:var(--faint);font-weight:400;font-size:10px">champ '+fid+'</span></span>'+resetBtnHint+'</div>'
+            +'<div class="param-fld" style="margin-bottom:8px"><input type="text" class="hint-input" data-hintfield="hint" data-usine="'+usineKey+'" data-fieldid="'+fid+'" value="'+escapeAttr(effectiveHint)+'" placeholder="'+escapeAttr(baseFieldForHint.hint||'')+'">'+'</div>'
+            +'<div class="param-toggle"><input type="checkbox" class="hint-input" data-hintfield="hint_visible" data-usine="'+usineKey+'" data-fieldid="'+fid+'" id="hv-'+usineKey+'-'+fid+'" '+(hint_visible?'checked':'')+'><label for="hv-'+usineKey+'-'+fid+'">Afficher le hint dans le formulaire</label></div>'
+            +(hintMod?'<div style="margin-top:6px;font-size:10px;color:var(--terra)">&#9998; Hint personnalisé</div>':'')
+            +'</div>';
+        }).join('');
+      }
+
+      postesHtml+=`<div class="param-poste" data-usine="${usineKey}" data-poste="${pkey}">
+        <div style="margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap">
+          <strong style="color:var(--ink);font-size:14px">${escapeHtml(p.label_user)}</strong>
+          <span class="param-poste-code">code · ${pkey}</span>
+          ${isModified?'<span class="param-modified">● modifié</span>':''}
+          ${hasPx?'<span class="prix-modifie-badge">💶 prix personnalisé</span>':''}
+        </div>
+        <div class="param-poste-grid">
+          <div>
+            <div class="param-fld">
+              <label>Libellé affiché aux franchisés
+                ${isModified?`<button class="reset-btn" data-action="reset-label" data-usine="${usineKey}" data-poste="${pkey}">↺ réinitialiser</button>`:''}
+              </label>
+              <input type="text" class="param-input" data-field="label_user" data-usine="${usineKey}" data-poste="${pkey}" 
+                value="${escapeAttr(p.label_user)}" placeholder="${escapeAttr(baseP.label_user)}">
+            </div>
+            <div class="param-fld">
+              <label>Tooltip d'aide (au survol du ⓘ)</label>
+              <textarea class="param-input" data-field="tooltip" data-usine="${usineKey}" data-poste="${pkey}" 
+                placeholder="Description technique optionnelle">${escapeHtml(p.tooltip||"")}</textarea>
+            </div>
+            <div class="param-toggle">
+              <input type="checkbox" class="param-input" data-field="visible" data-usine="${usineKey}" data-poste="${pkey}" 
+                id="vis-${usineKey}-${pkey}" ${p.visible!==false?"checked":""}>
+              <label for="vis-${usineKey}-${pkey}">Visible dans le formulaire de chiffrage</label>
+            </div>
+            ${prixSectionHtml}
+          </div>
+          <div>
+            <div class="param-fld">
+              <label><span style="color:var(--faint)">🔒 Texte reconnu dans les PDF (verrouillé)</span></label>
+              <div class="pdf-source"><span class="lock">🔒</span><span>"${escapeHtml(baseP.label_pdf)}"</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--faint);line-height:1.5;margin-top:8px">
+              ⓘ Cette chaîne sert à identifier le poste lors de l'extraction automatique des futurs devis ${u.nom}. Elle ne peut pas être modifiée.
+            </div>
+            ${hintEditorHtml}
+          </div>
+        </div>
+      </div>`;
+    });
+
+    // Indicateur fiabilité global : basé sur la moyenne des n de tous les postes
+    const allN = Object.values(u.postes).map(p=>p.n||0);
+    const avgN = allN.reduce((a,b)=>a+b,0)/allN.length;
+    const globalFiab = avgN>=10?'haute':(avgN>=5?'moyenne':'faible');
+    const fiabLabel = globalFiab==='haute'?'Données fiables':(globalFiab==='moyenne'?'Fiabilité moyenne':'Données limitées');
+
+    html+=`<div class="param-card" style="border-top:4px solid ${u.couleur}" data-usine-card="${usineKey}">
+      <div class="param-card-h">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap">
+          <h3 style="margin:0"><span class="ico" style="background:${u.couleur}22;color:${u.couleur}">🏭</span>${escapeHtml(u.nom)}</h3>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap">${u.devis_count} devis · MAJ ${fmtDateFR(u.derniere_maj)}</span>
+          <span class="fiabilite ${globalFiab}" style="font-size:11px">${fiabLabel}</span>
+        </div>
+        <button class="param-collapse-btn" id="collapse-btn-${usineKey}" title="Replier/déplier" onclick="toggleParamCard('${usineKey}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:13px;cursor:pointer;color:var(--muted);flex-shrink:0">▼</button>
+      </div>
+      <div id="param-card-body-${usineKey}" style="display:none">${postesHtml}</div>
+    </div>`;
+  });
+  c.innerHTML=html;
+
+  // Listeners labels/tooltip/visible
+  c.querySelectorAll(".param-input[data-field]").forEach(inp=>{
+    const evt=inp.type==="checkbox"?"change":"input";
+    inp.addEventListener(evt,()=>{
+      const usine=inp.dataset.usine,poste=inp.dataset.poste,field=inp.dataset.field;
+      let value=inp.type==="checkbox"?inp.checked:inp.value;
+      if(field==="label_user"&&String(value).trim()==="")value=REFS[usine].postes[poste].label_user;
+      setOverride(usine,poste,field,value);
+      if(CURRENT_USINE===usine){renderForm();calcRecap();}
+    });
+  });
+
+  // Reset label
+  c.querySelectorAll('button[data-action="reset-label"]').forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const usine=btn.dataset.usine,poste=btn.dataset.poste;
+      resetPoste(usine,poste);
+      renderParametres();
+      if(CURRENT_USINE===usine){renderForm();calcRecap();}
+      showToast("✓ Poste réinitialisé");
+    });
+  });
+
+  // ── Hint inputs ──
+  c.querySelectorAll(".hint-input").forEach(inp=>{
+    const evt=inp.type==="checkbox"?"change":"input";
+    inp.addEventListener(evt,()=>{
+      const usine=inp.dataset.usine,fid=inp.dataset.fieldid,field=inp.dataset.hintfield;
+      const value=inp.type==="checkbox"?inp.checked:inp.value;
+      setFormOverride(usine,fid,field,value);
+      if(CURRENT_USINE===usine)renderForm();
+    });
+  });
+
+  // Reset hint
+  c.querySelectorAll('button[data-action="reset-hint"]').forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      resetFormField(btn.dataset.usine,btn.dataset.fieldid);
+      renderParametres();
+      if(CURRENT_USINE===btn.dataset.usine)renderForm();
+      showToast("✓ Hint réinitialisé");
+    });
+  });
+
+  // ── Prix mode toggle ──
+  c.querySelectorAll(".prix-mode-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const usine=btn.dataset.usine,poste=btn.dataset.poste,mode=btn.dataset.prixmode;
+      setOverride(usine,poste,"prix_type",mode==="auto"?undefined:mode);
+      if(mode==="auto"){
+        if(OVERRIDES[usine]&&OVERRIDES[usine][poste]){
+          delete OVERRIDES[usine][poste].prix_type;
+          delete OVERRIDES[usine][poste].prix_unitaire;
+          delete OVERRIDES[usine][poste].ratio_source;
+          delete OVERRIDES[usine][poste].ratio_value;
+          if(Object.keys(OVERRIDES[usine][poste]).length===0)delete OVERRIDES[usine][poste];
+          if(Object.keys(OVERRIDES[usine]).length===0)delete OVERRIDES[usine];
+          saveOverrides();
+        }
+      }
+      // Toggle visibility
+      const autoEl=document.getElementById(`prix-auto-${usine}-${poste}`);
+      const fixeEl=document.getElementById(`prix-fixe-${usine}-${poste}`);
+      const ratioEl=document.getElementById(`prix-ratio-${usine}-${poste}`);
+      if(autoEl)autoEl.style.display=mode==='auto'?'':'none';
+      if(fixeEl)fixeEl.style.display=mode==='fixe'?'flex':'none';
+      if(ratioEl)ratioEl.style.display=mode==='ratio'?'flex':'none';
+      // Update button states
+      btn.closest('.prix-mode-btns').querySelectorAll('.prix-mode-btn').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      updatePrixPreview(usine,poste);
+      if(CURRENT_USINE===usine){renderForm();calcRecap();}
+    });
+  });
+
+  // ── Prix inputs (fixe & ratio) ──
+  c.querySelectorAll(".prix-input[data-prixfield]").forEach(inp=>{
+    inp.addEventListener("input",()=>{
+      const usine=inp.dataset.usine,poste=inp.dataset.poste,field=inp.dataset.prixfield;
+      setOverride(usine,poste,field,inp.value===''?undefined:inp.type==='select-one'?inp.value:parseFloat(inp.value));
+      updatePrixPreview(usine,poste);
+      if(CURRENT_USINE===usine){calcRecap();}
+    });
+  });
+
+  // ── Reset prix ──
+  c.querySelectorAll('button[data-action="reset-prix"]').forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      resetPrix(btn.dataset.usine,btn.dataset.poste);
+      renderParametres();
+      if(CURRENT_USINE===btn.dataset.usine){renderForm();calcRecap();}
+      showToast("✓ Prix réinitialisé aux statistiques");
+    });
+  });
+}
+
+function updatePrixPreview(usine,poste){
+  const previewEl=document.getElementById(`prix-preview-${usine}-${poste}`);
+  if(!previewEl)return;
+  const px=getPrixCalcule(usine,poste);
+  previewEl.textContent=`= ${fmtNum(px,2)} €`;
+}
+
+// Bouton tout réinitialiser
+document.getElementById("btn-reset-all").addEventListener("click",()=>{
+  if(Object.keys(OVERRIDES).length===0){showToast("Aucune personnalisation à réinitialiser");return;}
+  if(confirm("Réinitialiser TOUTES les personnalisations (libellés et prix) ?\n\nLes valeurs reviendront aux données d'origine.")){
+    OVERRIDES={};saveOverrides();renderParametres();renderForm();calcRecap();
+    showToast("✓ Toutes les personnalisations supprimées");
+  }
+});
+
+// Export overrides
+document.getElementById("btn-export-overrides").addEventListener("click",()=>{
+  if(Object.keys(OVERRIDES).length===0){showToast("Aucune personnalisation à exporter");return;}
+  const data=JSON.stringify({version:2,exportedAt:new Date().toISOString(),overrides:OVERRIDES},null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="chiffrage-naturea-perso-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast("📤 Fichier exporté");
+});
+
+// Import overrides
+document.getElementById("btn-import-overrides").addEventListener("click",()=>document.getElementById("file-import-overrides").click());
+document.getElementById("file-import-overrides").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data.overrides)throw new Error("Format invalide");
+      if(!confirm("Remplacer les personnalisations actuelles par celles du fichier ?"))return;
+      OVERRIDES=data.overrides;saveOverrides();renderParametres();renderForm();calcRecap();
+      showToast("📥 Personnalisations importées");
+    }catch(err){alert("Erreur lors de la lecture du fichier : "+err.message);}
+  };
+  reader.readAsText(file);
+  e.target.value="";
+});
+
+// ═══════════════════════════════════════════════════════════
+// MODULE IMPORT DEVIS USINE
+// Parse les PDF de devis usine, compare aux tarifs de référence,
+// permet à l'animateur de décider ligne par ligne, et historise.
+// ═══════════════════════════════════════════════════════════
+
+const TARIFS_HISTORY_KEY = "chiffrage:tarifs_history:v1";
+let IMPORT_QUEUE = []; // {file, name, status, parsed?}
+let CURRENT_IMPORT = null; // {usine, devis_num, devis_date, client, total_ht, postes:[]}
+
+// Détection usine via mots-clés / SIREN
+const USINE_DETECTION = {
+  sicob:      [/\bSICOB\b/i, /\b444\s*231\s*955\b/, /RIEUPEYROUX/i],
+  boisboreal: [/\bBOIS[\s\-]*BOR[ÉE]AL\b/i, /\bBoisbor[ée]al\b/i],
+  cobs:       [/\bCOBS\b/i, /\bGIPEN\b/i],
+  imaj:       [/\bIMAJ\b/i, /MARMANDE/i],
+  savare:     [/\bSAVARE\b/i, /\bEIFFAGE\b.*BOIS/i, /LESSAY|MOULT/i],
+  lowall:     [/\bLOWALL\b/i, /GARDANNE/i]
+};
+
+function detectUsineFromText(text){
+  for(const [key, patterns] of Object.entries(USINE_DETECTION)){
+    if(patterns.some(p => p.test(text))) return key;
+  }
+  return null;
+}
+
+// Extrait métadonnées : n° devis, date, client, total HT
+function extractMetadata(text){
+  const meta = {};
+  // N° devis : "Devis n°1106 du 03/02/2025" ou "DC25-00201" ou "D2026-18"
+  const numMatch = text.match(/(?:Devis\s*n[°º]?|N[°º]?\s*(?:devis)?)\s*([A-Z0-9\-\/]{2,20})/i);
+  if(numMatch) meta.devis_num = numMatch[1].replace(/[\/]$/, '');
+  // Date du devis
+  const dateMatch = text.match(/du\s+(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i)
+                 || text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(dateMatch){
+    const [,d,m,y] = dateMatch;
+    meta.devis_date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  // Client : "Sujet : MAISONS NATUREA / DUWIME" ou "Client : XXX"
+  const cliMatch = text.match(/(?:Sujet|Client|Affaire)\s*:?\s*([^\n]{3,80})/i);
+  if(cliMatch){
+    let c = cliMatch[1].replace(/MAISONS\s*NATUREA\s*\/\s*/i,'').trim();
+    meta.client = c.split(/[\n\r]/)[0].substring(0, 60);
+  }
+  // Total HT : "Total H.T. 29 972.11" ou "Total HT : 29972,11"
+  const totMatch = text.match(/Total\s*H\.?T\.?\s*[:\s]?\s*([\d\s]+[.,]\d{2})(?!\s*\d)/i);
+  if(totMatch) meta.total_ht = parseFloatFR(totMatch[1]);
+  return meta;
+}
+
+function parseFloatFR(s){
+  if(!s) return null;
+  return parseFloat(String(s).replace(/\s/g,'').replace(',','.'));
+}
+
+// Parser GÉNÉRIQUE v2 : ancre la regex sur la fin "<NUM> <NUM> <NUM> <TVA>%"
+// puis extrait nom + unité optionnelle depuis le préfixe.
+// Gère les lignes avec ou sans unité (ex. "POUTRES AU VENT" sans unité chez SICOB).
+function parsePostes(text){
+  const lines = text.split(/[\n\r]+/);
+  const postes = [];
+  const numStr = '\\d{1,3}(?:[\\s\\u00A0]\\d{3})*(?:[.,]\\d+)?';
+  // Format : <prefix> <qte> <pu> <total> <tva>%
+  const tailRx = new RegExp(
+    '^\\s*(.+?)\\s+(' + numStr + ')\\s+(' + numStr + ')\\s+(' + numStr + ')\\s+(\\d+)\\s*%\\s*$'
+  );
+  // Unité optionnelle à la fin du préfixe
+  const uniteRx = /^(.+?)\s+(ENS|M2|M3|ML|FRT|U|BTE|H|FORFAIT|M²|m²|ml|u|forfait)\s*$/;
+  // Mots-clés à ignorer (entêtes de tableau, sous-totaux, page, etc.)
+  const skipPatterns = [
+    /total\s*h\.?t\.?/i, /total\s*t\.?t\.?c/i, /total\s*tva/i,
+    /sous[\s\-]*total/i, /^page\b/i, /^designation/i, /^d[ée]signation/i,
+    /siren\b/i, /capital\b/i
+  ];
+
+  for(const raw of lines){
+    const line = raw.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+    if(line.length < 10 || line.length > 250) continue;
+    if(skipPatterns.some(p => p.test(line))) continue;
+
+    const m = line.match(tailRx);
+    if(!m) continue;
+
+    const [, prefix, qteS, puS, totalS, tva] = m;
+    const qte = parseFloatFR(qteS);
+    const pu = parseFloatFR(puS);
+    const total = parseFloatFR(totalS);
+    const tvaNum = parseInt(tva, 10);
+
+    if(!isFinite(qte) || !isFinite(pu) || !isFinite(total)) continue;
+    // TVA standard FR : 5.5, 10, 20 (on ignore 0 ou autres pour éviter les faux positifs)
+    if(![5, 10, 20].includes(tvaNum)) continue;
+    // Filtre cohérence : qte * pu ≈ total (tolérance 1% + 1€)
+    if(Math.abs(qte * pu - total) > Math.max(1, total * 0.01)) continue;
+    // Filtres minimaux
+    if(pu < 1 || qte <= 0 || total < 5) continue;
+
+    // Extraction nom + unité optionnelle
+    let nom, unite;
+    const um = prefix.match(uniteRx);
+    if(um){
+      nom = um[1].trim();
+      unite = um[2].toUpperCase().replace('M²', 'M2').replace('forfait','FORFAIT');
+    } else {
+      nom = prefix.trim();
+      unite = 'ENS'; // par défaut : forfait/ensemble
+    }
+
+    // Le nom doit commencer par une lettre majuscule (lettre ou accent FR)
+    if(!/^[A-ZÀ-ÿ]/.test(nom)) continue;
+    if(nom.length < 3 || nom.length > 120) continue;
+    // Le nom ne doit pas être uniquement numérique
+    if(/^[\d\s\.\,]+$/.test(nom)) continue;
+
+    postes.push({
+      label_pdf: nom,
+      unite, qte, pu, total
+    });
+  }
+  return postes;
+}
+
+// Mapping : essaie de matcher un poste détecté avec un poste existant
+// (compare le nom détecté au label_pdf de chaque poste de l'usine)
+function suggestMapping(usineKey, posteDetecte){
+  if(!REFS[usineKey]) return null;
+  const target = posteDetecte.label_pdf.toLowerCase().replace(/[^a-zà-ÿ0-9 ]/g,'');
+  let best = null, bestScore = 0;
+  Object.entries(REFS[usineKey].postes).forEach(([code, p]) => {
+    const labels = [p.label_pdf, p.label_user].filter(Boolean).map(l =>
+      l.toLowerCase().replace(/[^a-zà-ÿ0-9 ]/g,'')
+    );
+    labels.forEach(lbl => {
+      if(!lbl) return;
+      // Score = nb mots communs / nb mots du target
+      const tgtWords = new Set(target.split(/\s+/).filter(w => w.length >= 3));
+      const lblWords = new Set(lbl.split(/\s+/).filter(w => w.length >= 3));
+      let common = 0;
+      tgtWords.forEach(w => { if(lblWords.has(w)) common++; });
+      const score = tgtWords.size ? common / tgtWords.size : 0;
+      if(score > bestScore){ bestScore = score; best = code; }
+    });
+  });
+  return bestScore >= 0.5 ? best : null;
+}
+
+// Lecture d'un PDF avec pdf.js
+async function readPdfText(file){
+  if(typeof pdfjsLib === 'undefined'){
+    throw new Error('pdf.js non chargé — vérifie ta connexion internet');
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  let fullText = '';
+  for(let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    // Reconstitue ligne par ligne en groupant par y
+    const items = content.items.map(it => ({
+      str: it.str,
+      x: it.transform[4],
+      y: Math.round(it.transform[5])
+    })).sort((a,b) => b.y - a.y || a.x - b.x);
+    let curY = null, lineParts = [];
+    const lines = [];
+    items.forEach(it => {
+      if(curY === null || Math.abs(curY - it.y) > 3){
+        if(lineParts.length) lines.push(lineParts.join(' '));
+        lineParts = [it.str];
+        curY = it.y;
+      } else {
+        lineParts.push(it.str);
+      }
+    });
+    if(lineParts.length) lines.push(lineParts.join(' '));
+    fullText += lines.join('\n') + '\n';
+  }
+  return fullText;
+}
+
+// Pipeline complet pour un fichier
+async function processFile(fileEntry){
+  fileEntry.status = 'parsing';
+  renderImportFiles();
+  try {
+    const text = await readPdfText(fileEntry.file);
+    fileEntry.text = text;
+    // Détection scan (PDF sans texte ou très peu)
+    const cleanText = text.replace(/\s+/g,' ').trim();
+    if(cleanText.length < 200){
+      fileEntry.status = 'scan';
+      fileEntry.error = 'PDF probablement scanné (peu ou pas de texte extractible). Saisie manuelle à venir dans une prochaine version.';
+      renderImportFiles();
+      return;
+    }
+    const usine = detectUsineFromText(text);
+    const meta = extractMetadata(text);
+    const postes = parsePostes(text);
+    fileEntry.parsed = {usine, meta, postes, text};
+    fileEntry.status = 'ok';
+    renderImportFiles();
+    // Auto-affichage du premier fichier OK
+    if(!CURRENT_IMPORT){
+      showImportPreview(fileEntry);
+    }
+  } catch(err){
+    fileEntry.status = 'err';
+    fileEntry.error = err.message || 'Erreur de lecture du PDF';
+    renderImportFiles();
+  }
+}
+
+function renderImportFiles(){
+  const cont = document.getElementById('import-files');
+  if(!cont) return;
+  if(!IMPORT_QUEUE.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = IMPORT_QUEUE.map((f, idx) => {
+    let statusHtml = '';
+    if(f.status === 'parsing') statusHtml = '<span class="status parsing">⏳ Lecture...</span>';
+    else if(f.status === 'ok') statusHtml = `<span class="status ok">✓ ${f.parsed.postes.length} poste${f.parsed.postes.length>1?'s':''}</span>`;
+    else if(f.status === 'scan') statusHtml = '<span class="status scan">📷 Scan</span>';
+    else if(f.status === 'err') statusHtml = `<span class="status err">✗ ${escapeHtml(f.error||'erreur')}</span>`;
+    const usineLabel = f.parsed?.usine ? REFS[f.parsed.usine].nom : '';
+    const previewBtn = f.status === 'ok' ? `<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="showImportPreviewByIdx(${idx})">→ Voir</button>` : '';
+    const removeBtn = `<button class="btn btn-ghost" style="padding:4px 8px;font-size:13px" onclick="removeImportFile(${idx})" title="Retirer">✕</button>`;
+    return `<div class="import-file">
+      <span style="font-size:16px">📄</span>
+      <span class="fname" title="${escapeAttr(f.name)}">${escapeHtml(f.name)}</span>
+      ${usineLabel ? `<span style="font-size:11px;color:var(--terra);font-weight:600">${escapeHtml(usineLabel)}</span>` : ''}
+      ${statusHtml}
+      ${previewBtn}
+      ${removeBtn}
+    </div>`;
+  }).join('');
+}
+
+window.showImportPreviewByIdx = (idx) => {
+  const f = IMPORT_QUEUE[idx];
+  if(f && f.status === 'ok') showImportPreview(f);
+};
+window.removeImportFile = (idx) => {
+  IMPORT_QUEUE.splice(idx, 1);
+  renderImportFiles();
+  if(!IMPORT_QUEUE.length){
+    document.getElementById('import-preview').style.display = 'none';
+    CURRENT_IMPORT = null;
+  }
+};
+
+function showImportPreview(fileEntry){
+  CURRENT_IMPORT = {
+    fileEntry,
+    usine: fileEntry.parsed.usine,
+    meta: fileEntry.parsed.meta,
+    postes: fileEntry.parsed.postes.map(p => {
+      const mapped = fileEntry.parsed.usine ? suggestMapping(fileEntry.parsed.usine, p) : null;
+      const ancien = mapped ? getPrixCalcule(fileEntry.parsed.usine, mapped) : null;
+      const delta = (ancien && p.pu) ? ((p.pu - ancien) / ancien * 100) : null;
+      return {...p, mapped, ancien_pu: ancien, delta_pct: delta, applique: false};
+    })
+  };
+  renderImportPreview();
+}
+
+function renderImportPreview(){
+  const cont = document.getElementById('import-preview');
+  if(!cont || !CURRENT_IMPORT) return;
+  const {fileEntry, usine, meta, postes} = CURRENT_IMPORT;
+  const usineOptions = Object.entries(REFS).map(([k,u]) =>
+    `<option value="${k}"${k===usine?' selected':''}>${escapeHtml(u.nom)}</option>`
+  ).join('');
+  const usineKey = usine;
+
+  let rowsHtml = '';
+  postes.forEach((p, i) => {
+    const posteOptions = usineKey ? ['<option value="">— ne pas mapper —</option>'].concat(
+      Object.entries(REFS[usineKey].postes).map(([code, ref]) => {
+        const sel = code === p.mapped ? ' selected' : '';
+        return `<option value="${code}"${sel}>${escapeHtml(ref.label_user.substring(0,55))}</option>`;
+      })
+    ).join('') : '';
+    let deltaHtml = '<span class="delta-pill unmap">non mappé</span>';
+    if(p.mapped && p.ancien_pu !== null){
+      if(Math.abs(p.delta_pct) < 0.1) deltaHtml = '<span class="delta-pill same">= 0%</span>';
+      else if(p.delta_pct > 10) deltaHtml = `<span class="delta-pill up">↑ +${p.delta_pct.toFixed(1)}%</span>`;
+      else if(p.delta_pct > 0) deltaHtml = `<span class="delta-pill up-mid">↑ +${p.delta_pct.toFixed(1)}%</span>`;
+      else deltaHtml = `<span class="delta-pill down">↓ ${p.delta_pct.toFixed(1)}%</span>`;
+    } else if(p.mapped) {
+      deltaHtml = '<span class="delta-pill new">nouveau</span>';
+    }
+    const rowClass = !p.mapped ? 'unmapped' : (p.applique ? 'applied' : '');
+    rowsHtml += `<tr class="${rowClass}" data-idx="${i}">
+      <td><input type="checkbox" class="apply-cb" ${p.mapped && p.ancien_pu !== null ? '' : 'disabled'}></td>
+      <td><div style="font-weight:500">${escapeHtml(p.label_pdf)}</div>
+          <div style="font-size:10.5px;color:var(--faint);margin-top:2px">${p.unite} · ${fmtNum(p.qte, p.qte%1?2:0)} × ${fmtNum(p.pu,2)} = ${fmtEurR(p.total)}</div></td>
+      <td>${usineKey ? `<select class="map-sel">${posteOptions}</select>` : '—'}</td>
+      <td class="col-num">${p.ancien_pu !== null ? fmtNum(p.ancien_pu, 2)+' €' : '<span style="color:var(--faint)">—</span>'}</td>
+      <td class="col-num"><strong>${fmtNum(p.pu, 2)} €</strong></td>
+      <td>${deltaHtml}</td>
+    </tr>`;
+  });
+
+  const mappedCount = postes.filter(p => p.mapped && p.ancien_pu !== null).length;
+  const newCount = postes.filter(p => p.mapped && p.ancien_pu === null).length;
+
+  cont.style.display = '';
+  cont.innerHTML = `
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-h">
+        <div class="card-h-l"><div class="ico">🔍</div><h3>Aperçu de l'import</h3></div>
+        <div style="font-size:11.5px;color:var(--muted)">${escapeHtml(fileEntry.name)}</div>
+      </div>
+      <div class="card-b">
+        <div class="import-meta">
+          <div>
+            <div class="import-meta-fld">Usine détectée</div>
+            <div class="import-meta-val">
+              <select id="import-usine-sel">
+                <option value="">— sélectionner —</option>
+                ${usineOptions}
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="import-meta-fld">N° devis</div>
+            <div class="import-meta-val">${escapeHtml(meta.devis_num || '—')}</div>
+          </div>
+          <div>
+            <div class="import-meta-fld">Date du devis</div>
+            <div class="import-meta-val">${meta.devis_date ? fmtDateFR(meta.devis_date) : '—'}</div>
+          </div>
+          <div>
+            <div class="import-meta-fld">Client</div>
+            <div class="import-meta-val" style="font-family:inherit;font-weight:500">${escapeHtml(meta.client || '—')}</div>
+          </div>
+          <div>
+            <div class="import-meta-fld">Total HT</div>
+            <div class="import-meta-val">${meta.total_ht ? fmtEurR(meta.total_ht) : '—'}</div>
+          </div>
+          <div>
+            <div class="import-meta-fld">Postes détectés</div>
+            <div class="import-meta-val">${postes.length} (${mappedCount} mappés${newCount?', '+newCount+' nouveaux':''})</div>
+          </div>
+        </div>
+        ${!usineKey ? '<div class="import-pdfjs-warn"><strong>⚠️ Usine non détectée automatiquement.</strong> Sélectionne-la dans le menu déroulant ci-dessus pour activer le mapping des postes.</div>' : ''}
+        ${postes.length === 0 ? `
+        <div style="text-align:center;padding:24px 20px;color:var(--muted);font-style:italic;background:var(--cream);border-radius:9px;margin-bottom:14px">
+          Aucun poste tarifaire détecté. Le format de ce PDF peut différer du parser standard.
+        </div>
+        <details style="margin-bottom:14px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+          <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">🔧 Mode debug · voir le texte extrait par pdf.js</summary>
+          <div style="margin-top:10px;font-size:11px;color:var(--faint);font-family:'JetBrains Mono',monospace">
+            <div style="margin-bottom:6px">Texte extrait — copie-colle moi ce contenu si le parsing échoue, je pourrai adapter le parser à ton format.</div>
+            <textarea readonly style="width:100%;height:300px;font-family:inherit;font-size:10.5px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--cream);color:var(--ink)" onclick="this.select()">${escapeHtml(fileEntry.parsed?.text || '(aucun texte extrait)')}</textarea>
+          </div>
+        </details>
+        <div class="import-actions">
+          <button class="btn btn-secondary" id="btn-import-cancel">Fermer</button>
+        </div>
+        ` : `
+        <div style="overflow-x:auto;max-height:520px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+          <table class="import-table">
+            <thead><tr>
+              <th style="width:32px"><input type="checkbox" id="select-all-cb"></th>
+              <th>Désignation détectée</th>
+              <th>Mappé sur</th>
+              <th class="col-num">Ancien PU</th>
+              <th class="col-num">Nouveau PU</th>
+              <th>Écart</th>
+            </tr></thead>
+            <tbody id="import-rows">${rowsHtml}</tbody>
+          </table>
+        </div>
+        <div class="import-actions">
+          <div class="summary" id="import-summary">Coche les lignes à appliquer</div>
+          <button class="btn btn-secondary" id="btn-import-cancel">Annuler</button>
+          <button class="btn btn-primary" id="btn-import-apply">✓ Enregistrer & appliquer la sélection</button>
+        </div>
+        `}
+      </div>
+    </div>
+  `;
+  attachImportListeners();
+}
+
+function attachImportListeners(){
+  const sel = document.getElementById('import-usine-sel');
+  if(sel) sel.addEventListener('change', e => {
+    CURRENT_IMPORT.usine = e.target.value || null;
+    // Recalcule mappings
+    CURRENT_IMPORT.postes = CURRENT_IMPORT.postes.map(p => {
+      const mapped = CURRENT_IMPORT.usine ? suggestMapping(CURRENT_IMPORT.usine, p) : null;
+      const ancien = mapped ? getPrixCalcule(CURRENT_IMPORT.usine, mapped) : null;
+      const delta = (ancien && p.pu) ? ((p.pu - ancien) / ancien * 100) : null;
+      return {...p, mapped, ancien_pu: ancien, delta_pct: delta, applique: false};
+    });
+    renderImportPreview();
+  });
+  document.querySelectorAll('.map-sel').forEach((s, i) => {
+    s.addEventListener('change', e => {
+      const p = CURRENT_IMPORT.postes[i];
+      p.mapped = e.target.value || null;
+      p.ancien_pu = (p.mapped && CURRENT_IMPORT.usine) ? getPrixCalcule(CURRENT_IMPORT.usine, p.mapped) : null;
+      p.delta_pct = (p.ancien_pu && p.pu) ? ((p.pu - p.ancien_pu) / p.ancien_pu * 100) : null;
+      renderImportPreview();
+    });
+  });
+  document.querySelectorAll('.apply-cb').forEach((cb, i) => {
+    cb.addEventListener('change', e => {
+      CURRENT_IMPORT.postes[i].applique = e.target.checked;
+      updateImportSummary();
+    });
+  });
+  const allCb = document.getElementById('select-all-cb');
+  if(allCb) allCb.addEventListener('change', e => {
+    CURRENT_IMPORT.postes.forEach((p, i) => {
+      if(p.mapped && p.ancien_pu !== null){
+        p.applique = e.target.checked;
+        const cb = document.querySelectorAll('.apply-cb')[i];
+        if(cb) cb.checked = e.target.checked;
+      }
+    });
+    updateImportSummary();
+  });
+  const cancelBtn = document.getElementById('btn-import-cancel');
+  if(cancelBtn) cancelBtn.addEventListener('click', () => {
+    document.getElementById('import-preview').style.display = 'none';
+    CURRENT_IMPORT = null;
+  });
+  const applyBtn = document.getElementById('btn-import-apply');
+  if(applyBtn) applyBtn.addEventListener('click', applyImport);
+  updateImportSummary();
+}
+
+function updateImportSummary(){
+  if(!CURRENT_IMPORT) return;
+  const sum = document.getElementById('import-summary');
+  if(!sum) return;
+  const sel = CURRENT_IMPORT.postes.filter(p => p.applique).length;
+  const total = CURRENT_IMPORT.postes.filter(p => p.mapped && p.ancien_pu !== null).length;
+  sum.innerHTML = sel > 0
+    ? `<strong>${sel}</strong> ligne${sel>1?'s':''} sélectionnée${sel>1?'s':''} sur ${total} mappée${total>1?'s':''}`
+    : `Coche les lignes à appliquer (sur ${total} mappée${total>1?'s':''})`;
+}
+
+function applyImport(){
+  if(!CURRENT_IMPORT || !CURRENT_IMPORT.usine){
+    showToast("⚠️ Sélectionne d'abord une usine"); return;
+  }
+  const usineKey = CURRENT_IMPORT.usine;
+  let appliqueCount = 0;
+  CURRENT_IMPORT.postes.forEach(p => {
+    if(p.applique && p.mapped){
+      // Bascule l'override en prix fixe
+      setOverride(usineKey, p.mapped, 'prix_type', 'fixe');
+      setOverride(usineKey, p.mapped, 'prix_unitaire', p.pu);
+      appliqueCount++;
+    }
+  });
+  // Historisation (toujours, même si rien d'appliqué : on garde la trace)
+  const histEntry = {
+    id: Date.now(),
+    date_import: new Date().toISOString(),
+    filename: CURRENT_IMPORT.fileEntry.name,
+    usine: usineKey,
+    devis_num: CURRENT_IMPORT.meta.devis_num || null,
+    devis_date: CURRENT_IMPORT.meta.devis_date || null,
+    client: CURRENT_IMPORT.meta.client || null,
+    total_ht: CURRENT_IMPORT.meta.total_ht || null,
+    postes: CURRENT_IMPORT.postes.map(p => ({
+      label_pdf: p.label_pdf, unite: p.unite, qte: p.qte, pu: p.pu, total: p.total,
+      mapped: p.mapped, ancien_pu: p.ancien_pu, delta_pct: p.delta_pct, applique: p.applique
+    }))
+  };
+  const hist = loadHistory();
+  hist.unshift(histEntry);
+  saveHistory(hist);
+
+  showToast(appliqueCount > 0
+    ? `✓ ${appliqueCount} tarif${appliqueCount>1?'s':''} appliqué${appliqueCount>1?'s':''} · import historisé`
+    : `📋 Import historisé (aucun tarif appliqué)`);
+
+  // Retire ce fichier de la queue
+  const idx = IMPORT_QUEUE.indexOf(CURRENT_IMPORT.fileEntry);
+  if(idx >= 0) IMPORT_QUEUE.splice(idx, 1);
+  CURRENT_IMPORT = null;
+  document.getElementById('import-preview').style.display = 'none';
+  renderImportFiles();
+  renderHistoryList();
+  updateImportBadge();
+
+  // Si paramètres ouverts ou estimateur en cours, on rafraîchit
+  if(typeof renderParametres === 'function' && document.getElementById('v-parametres').classList.contains('on')) renderParametres();
+  if(typeof renderForm === 'function') renderForm();
+  if(typeof calcRecap === 'function') calcRecap();
+}
+
+// === Historique ===
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(TARIFS_HISTORY_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveHistory(h){
+  try{ localStorage.setItem(TARIFS_HISTORY_KEY, JSON.stringify(h)); } catch(e){}
+}
+
+function renderHistoryList(){
+  const list = loadHistory();
+  const cont = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const stats = document.getElementById('history-stats');
+  const count = document.getElementById('history-count');
+  if(!cont) return;
+  if(count) count.textContent = list.length + ' import' + (list.length > 1 ? 's' : '');
+  if(!list.length){
+    cont.innerHTML = '';
+    if(empty) empty.style.display = '';
+    if(stats) stats.innerHTML = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  // Stats agrégées : delta moyen sur 30j par usine
+  if(stats){
+    const cutoff = Date.now() - 30 * 86400000;
+    const recent = list.filter(h => new Date(h.date_import).getTime() >= cutoff);
+    const byUsine = {};
+    recent.forEach(h => {
+      if(!byUsine[h.usine]) byUsine[h.usine] = [];
+      h.postes.forEach(p => {
+        if(p.applique && typeof p.delta_pct === 'number') byUsine[h.usine].push(p.delta_pct);
+      });
+    });
+    const usineStats = Object.entries(byUsine).filter(([,arr]) => arr.length > 0)
+      .map(([u, arr]) => ({u, avg: arr.reduce((s,x)=>s+x,0)/arr.length, n: arr.length}));
+    if(usineStats.length){
+      stats.innerHTML = '<div style="grid-column:1/-1;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;margin-bottom:-6px">Variation moyenne · 30 derniers jours</div>' +
+        usineStats.map(s => {
+          const cls = s.avg > 5 ? 'up' : (s.avg < -1 ? 'down' : '');
+          const sign = s.avg >= 0 ? '+' : '';
+          return `<div>
+            <div class="history-stat-l">${escapeHtml(REFS[s.u]?.nom || s.u)}</div>
+            <div class="history-stat-v ${cls}">${sign}${s.avg.toFixed(1)}%</div>
+            <div style="font-size:10px;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-top:3px">${s.n} tarif${s.n>1?'s':''} appliqué${s.n>1?'s':''}</div>
+          </div>`;
+        }).join('');
+    } else {
+      stats.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:12px;font-style:italic;padding:6px">Aucune variation appliquée sur les 30 derniers jours</div>';
+    }
+  }
+
+  cont.innerHTML = list.map(h => {
+    const d = new Date(h.date_import);
+    const dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}) + ' · ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    const applies = h.postes.filter(p => p.applique).length;
+    const deltas = h.postes.filter(p => p.applique && typeof p.delta_pct === 'number').map(p => p.delta_pct);
+    const avgDelta = deltas.length ? deltas.reduce((s,x)=>s+x,0) / deltas.length : null;
+    let deltaHtml = '<span style="color:var(--faint);font-size:11px;font-style:italic">aucun appliqué</span>';
+    if(avgDelta !== null){
+      const cls = avgDelta > 5 ? 'up' : (avgDelta > 0 ? 'up-mid' : 'down');
+      const sign = avgDelta >= 0 ? '+' : '';
+      deltaHtml = `<span class="delta-pill ${cls}">${sign}${avgDelta.toFixed(1)}%</span>`;
+    }
+    return `<div class="history-item" onclick="viewHistoryDetail(${h.id})">
+      <span class="h-pill ${h.usine}">${escapeHtml(REFS[h.usine]?.nom || h.usine)}</span>
+      <div class="h-info">
+        <div class="h-num">Devis ${escapeHtml(h.devis_num || '?')} · ${escapeHtml(h.client || 'sans client')}</div>
+        <div class="h-meta">${dateStr} · ${h.postes.length} poste${h.postes.length>1?'s':''} détecté${h.postes.length>1?'s':''}${h.total_ht ? ' · ' + fmtEurR(h.total_ht) : ''}</div>
+      </div>
+      <div class="h-applied">${applies}/${h.postes.length}<br><span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.4px">appliqué${applies>1?'s':''}</span></div>
+      <div class="h-delta">${deltaHtml}</div>
+      <button class="h-del" onclick="event.stopPropagation();deleteHistoryEntry(${h.id})" title="Supprimer">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+window.viewHistoryDetail = (id) => {
+  const h = loadHistory().find(x => x.id === id);
+  if(!h) return;
+  const lines = h.postes.map(p => {
+    const delta = (typeof p.delta_pct === 'number') ? `${p.delta_pct >= 0 ? '+' : ''}${p.delta_pct.toFixed(1)}%` : '—';
+    return `${p.applique?'✓':'·'} ${p.label_pdf} · ${fmtNum(p.pu,2)} € (${delta})`;
+  }).join('\n');
+  alert(`Devis ${h.devis_num || '?'} · ${REFS[h.usine]?.nom || h.usine}\nClient : ${h.client || '—'}\nDate devis : ${h.devis_date ? fmtDateFR(h.devis_date) : '—'}\nTotal HT : ${h.total_ht ? fmtEurR(h.total_ht) : '—'}\n\nPostes :\n${lines}`);
+};
+window.deleteHistoryEntry = (id) => {
+  if(!confirm('Supprimer cet import de l\'historique ?\n\nLes tarifs déjà appliqués ne seront pas annulés (utilise Paramètres pour ça).')) return;
+  const list = loadHistory().filter(h => h.id !== id);
+  saveHistory(list);
+  renderHistoryList();
+  updateImportBadge();
+};
+
+function updateImportBadge(){
+  // L'onglet Import a été fusionné dans Historique — fonction conservée
+  // pour compat (appels existants), elle ne fait rien.
+  return;
+}
+
+function renderImportView(){
+  // Vérifie pdf.js
+  const status = document.getElementById('import-pdfjs-status');
+  if(status){
+    if(typeof pdfjsLib === 'undefined'){
+      status.innerHTML = '<div class="import-pdfjs-warn">⚠️ Librairie pdf.js non chargée. Vérifie ta connexion internet et recharge la page.</div>';
+    } else { status.innerHTML = ''; }
+  }
+  renderImportFiles();
+  renderHistoryList();
+  updateImportBadge();
+}
+
+// Drop zone listeners
+(function setupImportDropzone(){
+  const dz = document.getElementById('import-dropzone');
+  const inp = document.getElementById('import-file-input');
+  const btn = document.getElementById('import-btn-main');
+  if(!dz || !inp) return;
+  dz.addEventListener('click', () => inp.click());
+  if(btn) btn.addEventListener('click', () => inp.click());
+  inp.addEventListener('change', e => handleFiles(e.target.files));
+  ['dragenter','dragover'].forEach(ev =>
+    dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev =>
+    dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); }));
+  dz.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+})();
+
+function handleFiles(fileList){
+  const files = Array.from(fileList || []).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+  if(!files.length){
+    showToast('⚠️ Aucun fichier PDF détecté');
+    return;
+  }
+  files.forEach(f => {
+    const entry = {file: f, name: f.name, status: 'parsing'};
+    IMPORT_QUEUE.push(entry);
+    processFile(entry);
+  });
+  document.getElementById('import-file-input').value = '';
+}
+
+// Init au démarrage
+updateImportBadge();
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+function updateHeaderStats(){
+  document.getElementById("hs-usines").textContent=Object.keys(REFS).length;
+  document.getElementById("hs-devis").textContent=DEVIS_HIST.length;
+  let totalPostes=0;
+  Object.values(REFS).forEach(u=>totalPostes+=Object.keys(u.postes).length);
+  document.getElementById("hs-postes").textContent=totalPostes;
+  document.getElementById("badge-hist").textContent=DEVIS_HIST.length;
+}
+
+updateHeaderStats();
+renderUsinePicker();
+renderForm();
+calcRecap();
+</script>
+</body>
+</html>
