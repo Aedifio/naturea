@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Codir — Pilotage exécutif</title>
@@ -267,49 +268,59 @@
 
 
 /* ============================================================
-   HARMONISATION CHARTE GRAPHIQUE NATURÉA
-   Injection automatique — peut être retirée d'un bloc
+   CHARTE GRAPHIQUE NATURÉA — source : Plaquette commerciale V10
+   Vert du logo #41532A (accent principal) · Terracotta #D69362 (secondaire)
+   Police Archivo (substitut de Gopher)
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap');
-
-/* === HARMONISATION CHARTE NATURÉA === */
-:root {
-  --bg: #FBFAF5 !important;
-  --surface: #FFFFFF !important;
-  --surface-alt: #EDE5D2 !important;
-  --ink: #1E2D10 !important;
-  --muted: #6B7A56 !important;
-  --subtle: #9BAA85 !important;
-  --border: #DDD5BF !important;
-  --border-strong: #C8BFA8 !important;
-  --accent: #2B4A1A !important;
-  --accent-soft: #E8EFDD !important;
-  --accent-ink: #1E3611 !important;
-  --wood: #E07840 !important;
-  --wood-soft: #FAEAD9 !important;
-  --wood-ink: #C4632A !important;
-  --green: #5A7A3A !important;
-  --green-soft: #E5EFD9 !important;
-  --amber: #C68B2C !important;
-  --amber-soft: #F7ECD7 !important;
-  --red: #B8453D !important;
-  --red-soft: #F5DEDC !important;
+:root{
+  /* Fonds & neutres */
+  --bg:#FBFAF5!important; --paper:#FBFAF5!important; --paper2:#FFFFFF!important;
+  --surface:#FFFFFF!important; --white:#FFFFFF!important; --card:#FFFFFF!important; --bg4:#FFFFFF!important;
+  --surface-alt:#F2EDE3!important; --cream:#F2EDE3!important; --sand:#F2EDE3!important; --sand2:#E9E1D1!important;
+  --mist:#F6F2E9!important; --faint:#F6F2E9!important; --bg2:#F2EDE3!important; --bg3:#E9E1D1!important;
+  --ink:#1E2A18!important; --text:#1E2A18!important; --ink2:#2E3A26!important; --ink3:#46503C!important;
+  --text2:#46503C!important; --text3:#5E6B4F!important; --ink-soft:#46503C!important; --ink-mute:#9BA889!important;
+  --muted:#5E6B4F!important; --subtle:#9BA889!important;
+  --border:#E2DCCD!important; --border2:#EDE7DA!important; --border-strong:#D8D0BC!important;
+  --line:#E2DCCD!important; --line2:#EDE7DA!important;
+  /* Accent PRINCIPAL = VERT DU LOGO #41532A (toutes les variantes "primaire") */
+  --accent:#41532A!important; --accent-soft:#EAEFE0!important; --accent-ink:#38471F!important;
+  --primary:#41532A!important; --primary-l:#556B36!important; --primary-d:#38471F!important; --primary-soft:#EAEFE0!important;
+  --forest:#41532A!important; --forest2:#38471F!important;
+  --gold:#41532A!important; --gold2:#38471F!important; --gold3:#EAEFE0!important;
+  --blue:#41532A!important; --blue-dark:#38471F!important; --blue-light:#EAEFE0!important;
+  --clay:#41532A!important; --clay-d:#38471F!important; --clay-soft:#EAEFE0!important;
+  --green:#41532A!important; --green-soft:#EAEFE0!important; --ok:#41532A!important;
+  /* Accent SECONDAIRE = ORANGE DU LOGO #D69362 */
+  --wood:#D69362!important; --wood-soft:#F6E7D7!important; --wood-ink:#B87648!important;
+  --wood-l:#E2A982!important; --wood-d:#B87648!important;
+  --orange:#D69362!important; --orange-dark:#B87648!important;
+  --terra:#D69362!important; --terra2:#B87648!important;
+  --petrol:#D69362!important; --petrol-soft:#F6E7D7!important;
+  --purple:#D69362!important;
+  /* Olive / sauge (tertiaire) */
+  --sage:#839049!important; --sage2:#6B7A3A!important; --yellow:#C68B2C!important;
+  /* Sémantique */
+  --warn:#C68B2C!important; --amber:#C68B2C!important; --amber-soft:#F7ECD7!important;
+  --danger:#B8453D!important; --red:#B8453D!important; --red-soft:#F5DEDC!important;
+  /* Familles de police */
+  --sans:'Archivo',system-ui,-apple-system,sans-serif!important;
+  --serif:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --display:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --mono:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
 }
-
-
-/* Force fonts harmonisées */
-html, body, button, input, select, textarea, p, span, td, th, li, a, label, div {
-  font-family: "DM Sans", system-ui, -apple-system, sans-serif !important;
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div, small, strong, b {
+  font-family:'Archivo',system-ui,-apple-system,sans-serif!important;
 }
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Cormorant Garamond", Georgia, serif !important;
-  letter-spacing: -0.3px;
+h1, h2, h3, h4, h5, h6,
+.disp, .kpibig, .brand, .page-title, .kpi-v, .stat-v, [class*="title"], [class*="kpi-v"] {
+  font-family:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  font-weight:800!important; letter-spacing:-0.01em!important;
 }
 code, pre, .mono, [class*="mono"] {
-  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace !important;
+  font-family:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
 }
-
-/* === FIN HARMONISATION === */
+/* === FIN CHARTE NATURÉA === */
 </style>
 </head>
 <body>

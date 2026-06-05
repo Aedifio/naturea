@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réseau Audit — Suivi des franchises</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.460.0/lucide.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+:root{
+  --paper:#F3EFE7; --paper2:#FBF9F4; --card:#FFFFFF;
+  --ink:#1F231E; --ink-soft:#565B50; --ink-mute:#9A9C90;
+  --line:#E4DDD0; --line2:#EFEAE0;
+  --clay:#BD4A2A; --clay-d:#9C3C20; --clay-soft:#F6E4DC;
+  --petrol:#1F5E59; --petrol-soft:#DBE9E6;
+  --green:#2F7D4F; --amber:#C2891B; --red:#BE382C;
+}
+*{box-sizing:border-box}
+body{margin:0}
+.fnet{font-family:'Hanken Grotesk',sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+.fnet h1,.fnet h2,.fnet h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+i[data-lucide]{width:17px;height:17px;stroke-width:2}
+.shell{display:flex;min-height:100vh}
+.side{width:230px;flex-shrink:0;background:var(--ink);color:#E7E3D7;padding:22px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;line-height:1.05;color:#fff;margin-bottom:2px}
+.brand small{display:block;font-family:'Hanken Grotesk';font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--clay);margin-top:6px}
+.navsec{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7d8074;margin:18px 8px 6px}
+.navitem{display:flex;align-items:center;gap:11px;padding:10px 12px;border:none;background:transparent;color:#C9C5B8;border-radius:9px;width:100%;text-align:left;font-size:14px;font-weight:500;transition:.15s}
+.navitem:hover{background:#2c302a;color:#fff}
+.navitem.on{background:var(--clay);color:#fff}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;border-bottom:1px solid var(--line);background:var(--paper2);position:sticky;top:0;z-index:20}
+.content{padding:26px 28px 60px;max-width:1240px;width:100%}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;font-size:13px;transition:.15s}
+.btn:hover{border-color:var(--ink-mute)}
+.btn.pri{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn.pri:hover{background:var(--clay-d)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-soft)}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:8px}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.45;cursor:default}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.pad{padding:18px}
+.in{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--paper2);font-size:14px;color:var(--ink);outline:none;transition:.15s}
+.in:focus{border-color:var(--clay);background:#fff}
+.in:disabled{background:#f0ece3;color:var(--ink-soft)}
+.lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:5px;display:block}
+.numin{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.badge i{width:13px;height:13px}
+.grid{display:grid;gap:16px}
+.kpibig{font-family:'Bricolage Grotesque';font-weight:800;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-soft)}
+.tiny{font-size:11px}
+.sep{height:1px;background:var(--line2);margin:14px 0}
+.tabbar{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+.tab{padding:10px 16px;border:none;background:transparent;border-bottom:2px solid transparent;color:var(--ink-soft);font-weight:600;font-size:14px;margin-bottom:-1px}
+.tab.on{color:var(--clay);border-color:var(--clay)}
+.agrow{display:grid;grid-template-columns:1.4fr .9fr .9fr .9fr .8fr .7fr;gap:12px;align-items:center;padding:13px 16px;border-top:1px solid var(--line2)}
+.agrow.head{border-top:none;background:var(--paper2);font-weight:700}
+.agrow.clk{cursor:pointer}
+.agrow.clk:hover{background:var(--paper2)}
+.bar{height:7px;border-radius:99px;background:var(--line2);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px}
+.modal-bg{position:fixed;inset:0;background:rgba(31,35,30,.42);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:var(--card);border-radius:16px;max-width:520px;width:100%;padding:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--paper2);border:1px solid var(--line)}
+.leafblock{padding:14px 0;border-top:1px solid var(--line2)}
+.leafblock:first-child{border-top:none}
+.leafhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:9px}
+.rowline{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.rowline .in{margin:0}
+.rowline .emp{width:170px;flex-shrink:0}
+.rowline .val{width:84px;flex-shrink:0}
+.rowline .note{width:72px;flex-shrink:0}
+.rowline .mcol{width:62px;flex-shrink:0;text-align:center}
+.rowline .cmt{flex:1;min-width:120px}
+.rowline.mhead{margin-bottom:2px}
+.mlab{align-self:flex-end;text-align:center;color:var(--ink-soft);font-weight:700;line-height:1.15}
+.rowline.mhead .emp.mlab,.rowline.mhead .cmt.mlab{text-align:left}
+.starbtn{background:none;border:none;padding:0;line-height:0}
+.starbtn i{width:16px;height:16px}
+.fade{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.empty{text-align:center;padding:60px 20px;color:var(--ink-soft)}
+.chartbox{height:300px}
+.ratbl{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+.ratbl th{font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;padding:7px 8px;text-align:center;border-bottom:1px solid var(--line)}
+.ratbl td{padding:8px;text-align:center;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line2)}
+.ratbl tr.agtot td{border-top:2px solid var(--line);border-bottom:none;background:var(--paper2)}
+@media(max-width:820px){.side{display:none}.agrow{grid-template-columns:1fr;gap:6px}.rowline{flex-wrap:wrap}.rowline .emp,.rowline .val,.rowline .note,.rowline .mcol{width:auto;flex:1}.rowline.mhead{display:none}}
+#print-root{display:none}
+.pr-doc{font-family:Arial,Helvetica,sans-serif;color:#1F231E;max-width:820px;margin:0 auto;padding:20px;font-size:12px}
+.pr-head{display:flex;justify-content:space-between;border-bottom:2px solid #BD4A2A;padding-bottom:10px;margin-bottom:14px}
+.pr-title{font-size:20px;font-weight:800}
+.pr-section{margin-bottom:10px}
+.pr-st{font-weight:800;font-size:14px;border-bottom:1px solid #E4DDD0;margin:12px 0 6px;color:#9C3C20}
+.pr-leaf{margin:6px 0 6px 2px}
+.pr-lt{font-weight:700;margin-bottom:2px}
+.pr-mut{color:#9A9C90;font-weight:400;font-size:11px}
+.pr-note{color:#565B50;font-style:italic;margin-top:2px}
+.pr-foot{margin-top:18px;color:#9A9C90;font-size:10px}
+.pr-tb{border-collapse:collapse;width:100%;font-size:11px;margin-top:3px}
+.pr-tb th{background:#F3EFE7;text-align:left;padding:4px 7px;border:1px solid #E4DDD0;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+.pr-tb td{padding:4px 7px;border:1px solid #EFEAE0}
+@media print{
+  body.printing>.fnet,body.printing>#modal-root{display:none!important}
+  body.printing>#print-root{display:block!important}
+  .pr-section,.pr-leaf{break-inside:avoid}
+}
+
+/* ============================================================
+   CHARTE GRAPHIQUE NATURÉA — source : Plaquette commerciale V10
+   Vert du logo #41532A (accent principal) · Terracotta #D69362 (secondaire)
+   Police Archivo (substitut de Gopher)
+   ============================================================ */
+:root{
+  /* Fonds & neutres */
+  --bg:#FBFAF5!important; --paper:#FBFAF5!important; --paper2:#FFFFFF!important;
+  --surface:#FFFFFF!important; --white:#FFFFFF!important; --card:#FFFFFF!important; --bg4:#FFFFFF!important;
+  --surface-alt:#F2EDE3!important; --cream:#F2EDE3!important; --sand:#F2EDE3!important; --sand2:#E9E1D1!important;
+  --mist:#F6F2E9!important; --faint:#F6F2E9!important; --bg2:#F2EDE3!important; --bg3:#E9E1D1!important;
+  --ink:#1E2A18!important; --text:#1E2A18!important; --ink2:#2E3A26!important; --ink3:#46503C!important;
+  --text2:#46503C!important; --text3:#5E6B4F!important; --ink-soft:#46503C!important; --ink-mute:#9BA889!important;
+  --muted:#5E6B4F!important; --subtle:#9BA889!important;
+  --border:#E2DCCD!important; --border2:#EDE7DA!important; --border-strong:#D8D0BC!important;
+  --line:#E2DCCD!important; --line2:#EDE7DA!important;
+  /* Accent PRINCIPAL = VERT DU LOGO #41532A (toutes les variantes "primaire") */
+  --accent:#41532A!important; --accent-soft:#EAEFE0!important; --accent-ink:#38471F!important;
+  --primary:#41532A!important; --primary-l:#556B36!important; --primary-d:#38471F!important; --primary-soft:#EAEFE0!important;
+  --forest:#41532A!important; --forest2:#38471F!important;
+  --gold:#41532A!important; --gold2:#38471F!important; --gold3:#EAEFE0!important;
+  --blue:#41532A!important; --blue-dark:#38471F!important; --blue-light:#EAEFE0!important;
+  --clay:#41532A!important; --clay-d:#38471F!important; --clay-soft:#EAEFE0!important;
+  --green:#41532A!important; --green-soft:#EAEFE0!important; --ok:#41532A!important;
+  /* Accent SECONDAIRE = ORANGE DU LOGO #D69362 */
+  --wood:#D69362!important; --wood-soft:#F6E7D7!important; --wood-ink:#B87648!important;
+  --wood-l:#E2A982!important; --wood-d:#B87648!important;
+  --orange:#D69362!important; --orange-dark:#B87648!important;
+  --terra:#D69362!important; --terra2:#B87648!important;
+  --petrol:#D69362!important; --petrol-soft:#F6E7D7!important;
+  --purple:#D69362!important;
+  /* Olive / sauge (tertiaire) */
+  --sage:#839049!important; --sage2:#6B7A3A!important; --yellow:#C68B2C!important;
+  /* Sémantique */
+  --warn:#C68B2C!important; --amber:#C68B2C!important; --amber-soft:#F7ECD7!important;
+  --danger:#B8453D!important; --red:#B8453D!important; --red-soft:#F5DEDC!important;
+  /* Familles de police */
+  --sans:'Archivo',system-ui,-apple-system,sans-serif!important;
+  --serif:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --display:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --mono:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
+}
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div, small, strong, b {
+  font-family:'Archivo',system-ui,-apple-system,sans-serif!important;
+}
+h1, h2, h3, h4, h5, h6,
+.disp, .kpibig, .brand, .page-title, .kpi-v, .stat-v, [class*="title"], [class*="kpi-v"] {
+  font-family:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  font-weight:800!important; letter-spacing:-0.01em!important;
+}
+code, pre, .mono, [class*="mono"] {
+  font-family:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
+}
+/* === FIN CHARTE NATURÉA === */
+</style>
+</head>
+<body>
+<div class="fnet">
+  <div class="shell">
+    <aside class="side" id="side"></aside>
+    <div class="main">
+      <div class="topbar" id="topbar"></div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+</div>
+<div id="modal-root"></div>
+<div id="print-root"></div>
+
+<script>
+/* ============================== CONFIG ============================== */
+const DATA_KEY="fnet:data:v1";
+const docKey=id=>"fnet:doc:"+id;
+const AUDIT=[
+ {id:"mkt",label:"Marketing",children:[
+   {id:"mkt.annonce",label:"Annonce",kind:"num",hint:"Nb d'annonces mises en ligne"},
+   {id:"mkt.rs",label:"Réseaux sociaux",kind:"num",hint:"Nb de publications / mois"},
+   {id:"mkt.ac",label:"Action commerciale",children:[
+     {id:"mkt.ac.po",label:"Portes ouvertes (PO)",kind:"num",hint:"Nb de portes ouvertes organisées"},
+     {id:"mkt.ac.panneau",label:"Panneautage",kind:"num",hint:"Nb de panneaux posés"},
+   ]},
+   {id:"mkt.avis",label:"Avis client",kind:"num",hint:"Nb d'avis recueillis"},
+   {id:"mkt.appreciation",label:"Appréciation globale",kind:"text",hint:"Appréciation générale du marketing de l'agence"},
+ ]},
+ {id:"cli",label:"Clientèle",children:[
+   {id:"cli.contact",label:"Contacts mensuels",children:[
+     {id:"cli.contact.entrant",label:"Contacts entrants",kind:"num",kpi:"entrant",hint:"Nb de contacts entrants reçus"},
+     {id:"cli.contact.traite",label:"Traités",kind:"num",kpi:"contacts",hint:"Nb de contacts traités"},
+     {id:"cli.contact.relance",label:"À relancer",kind:"num",hint:"Nb de contacts à relancer"},
+     {id:"cli.contact.rdv",label:"RDV pris",kind:"multi",kpi:"rdv",hint:"Par salarié : nb de R1, R2, R3 et signatures prises (RDV = R1+R2+R3)",cols:[
+       {key:"r1",label:"R1"},{key:"r2",label:"R2"},{key:"r3",label:"R3"},{key:"sign",label:"Signature"},
+     ]},
+     {id:"cli.contact.hs",label:"Contacts HS",kind:"calc",kpi:"hs",hint:"Calcul automatique : entrants − (traités + à relancer)"},
+   ]},
+   {id:"cli.fiche",label:"Fiche découverte",kind:"qual",hint:"Qualité de la découverte client, par salarié (commentaire + note)"},
+   {id:"cli.signatures",label:"Signatures",kind:"num",kpi:"signatures",hint:"Nb de signatures"},
+   {id:"cli.ccmi",label:"Nombre de résiliations",kind:"num",kpi:"ccmi",hint:"Nb de résiliations sur le mois"},
+ ]},
+ {id:"dev",label:"Développement",children:[
+   {id:"dev.foncier",label:"Recherche foncière",children:[
+     {id:"dev.foncier.terrain",label:"Nouveaux terrains",kind:"num",hint:"Nb de nouveaux terrains sur le mois"},
+   ]},
+   {id:"dev.part",label:"Partenaires",children:[
+     {id:"dev.part.new",label:"Nouveaux partenaires",kind:"num",hint:"Nb de nouveaux partenaires sur le mois"},
+   ]},
+ ]},
+];
+const LEAFKIND={},LEAFNODE={},NUMLEAVES=[],MULTILEAVES=[];
+(function walk(ns){ns.forEach(n=>{if(n.children)walk(n.children);else{LEAFKIND[n.id]=n.kind;LEAFNODE[n.id]=n;if(n.kind==="num")NUMLEAVES.push(n.id);if(n.kind==="multi")MULTILEAVES.push(n.id);}});})(AUDIT);
+
+/* ============================== UTILS ============================== */
+const uid=()=>Math.random().toString(36).slice(2,10);
+const MFR=["Janv","Févr","Mars","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"];
+const todayYM=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const ymLabel=ym=>{const[y,m]=ym.split("-");return MFR[+m-1]+" "+y;};
+const ymShort=ym=>{const[y,m]=ym.split("-");return MFR[+m-1]+" "+y.slice(2);};
+const fmtDate=iso=>{if(!iso)return"—";const[y,m,d]=iso.split("-");return d+"/"+m+"/"+y;};
+function monthsBack(ym,n){const[y,m]=ym.split("-").map(Number);const o=[];for(let i=n-1;i>=0;i--){const d=new Date(y,m-1-i,1);o.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"));}return o;}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
+function leafTotal(au,id){const lf=au&&au.leaves&&au.leaves[id];if(!lf||!lf.rows)return 0;return lf.rows.reduce((s,r)=>s+(Number(r.val)||0),0);}
+function leafTotalEmp(au,id,empId){const lf=au&&au.leaves&&au.leaves[id];if(!lf||!lf.rows)return 0;return lf.rows.reduce((s,r)=>(empId!=null&&r.empId!==empId)?s:s+(Number(r.val)||0),0);}
+function rdvTotal(au,empId){const lf=au&&au.leaves&&au.leaves["cli.contact.rdv"];if(!lf||!lf.rows)return 0;return lf.rows.reduce((s,r)=>{if(empId!=null&&r.empId!==empId)return s;const v=r.vals||{};return s+(Number(v.r1)||0)+(Number(v.r2)||0)+(Number(v.r3)||0);},0);}
+function rdvCol(au,empId,key){const lf=au&&au.leaves&&au.leaves["cli.contact.rdv"];if(!lf||!lf.rows)return 0;return lf.rows.reduce((s,r)=>(empId!=null&&r.empId!==empId)?s:s+(Number(r.vals&&r.vals[key])||0),0);}
+function computeHS(au,empId){return leafTotalEmp(au,"cli.contact.entrant",empId)-(leafTotalEmp(au,"cli.contact.traite",empId)+leafTotalEmp(au,"cli.contact.relance",empId));}
+function ratiosFrom(c){const pct=(n,d)=>d>0?n/d*100:null;return Object.assign({},c,{r_traite:pct(c.traite,c.entrant),r_rdv:pct(c.rdv,c.entrant),r_sign:pct(c.sign,c.entrant),r_sign_r1:pct(c.sign,c.r1),r_resil:pct(c.resil,c.sign),r_hs:pct(c.hs,c.entrant)});}
+function computeRatios(au,empId){return ratiosFrom({entrant:leafTotalEmp(au,"cli.contact.entrant",empId),traite:leafTotalEmp(au,"cli.contact.traite",empId),rdv:rdvTotal(au,empId),r1:rdvCol(au,empId,"r1"),sign:leafTotalEmp(au,"cli.signatures",empId),resil:leafTotalEmp(au,"cli.ccmi",empId),hs:computeHS(au,empId)});}
+function computeRatiosMonth(a,ym,empId){const c={entrant:0,traite:0,rdv:0,r1:0,sign:0,resil:0,hs:0};monthAuditsAll(a,ym).forEach(au=>{c.entrant+=leafTotalEmp(au,"cli.contact.entrant",empId);c.traite+=leafTotalEmp(au,"cli.contact.traite",empId);c.rdv+=rdvTotal(au,empId);c.r1+=rdvCol(au,empId,"r1");c.sign+=leafTotalEmp(au,"cli.signatures",empId);c.resil+=leafTotalEmp(au,"cli.ccmi",empId);c.hs+=computeHS(au,empId);});return ratiosFrom(c);}
+function computeKpis(au){const contacts=leafTotal(au,"cli.contact.traite"),signatures=leafTotal(au,"cli.signatures"),ccmi=leafTotal(au,"cli.ccmi"),entrant=leafTotal(au,"cli.contact.entrant");return{contacts,signatures,ccmi,entrant,transfo:contacts>0?signatures/contacts*100:0};}
+function computeAch(au,obj){if(!au||!obj||!(obj.signatures>0))return null;return computeKpis(au).signatures/obj.signatures;}
+/* ---- agrégation MENSUELLE : tous les audits d'un mois se cumulent (somme) ---- */
+function monthAuditsAll(a,ym){return (a.audits||[]).filter(au=>au.date&&au.date.slice(0,7)===ym);}
+function monthKpis(a,ym){let c=0,s=0,r=0,e=0;monthAuditsAll(a,ym).forEach(au=>{const k=computeKpis(au);c+=k.contacts;s+=k.signatures;r+=k.ccmi;e+=k.entrant;});return{contacts:c,signatures:s,ccmi:r,entrant:e,transfo:c>0?s/c*100:0};}
+function computeAchMonth(a,ym){const obj=a.objectives;if(!obj||!(obj.signatures>0))return null;if(!monthAuditsAll(a,ym).length)return null;return monthKpis(a,ym).signatures/obj.signatures;}
+function monthNoteStats(a,ym){const per={};let gsum=0,gcount=0;monthAuditsAll(a,ym).forEach(au=>{Object.keys(au.leaves||{}).forEach(id=>{const lf=au.leaves[id];if(lf&&Array.isArray(lf.rows))lf.rows.forEach(row=>{const n=Number(row.note);if(row.empId&&row.note!==""&&row.note!=null&&!isNaN(n)){per[row.empId]=per[row.empId]||{sum:0,count:0};per[row.empId].sum+=n;per[row.empId].count++;gsum+=n;gcount++;}});});});const emp={};Object.keys(per).forEach(eid=>{emp[eid]={avg:per[eid].sum/per[eid].count,count:per[eid].count};});return{emp,agency:gcount?gsum/gcount:null,rated:Object.keys(per).length,points:gcount};}
+function statusVar(ach,th){if(ach==null)return"var(--ink-mute)";if(ach>=1)return"var(--green)";if(ach>=th)return"var(--amber)";return"var(--red)";}
+function statusHex(ach,th){if(ach==null)return"#9A9C90";if(ach>=1)return"#2F7D4F";if(ach>=th)return"#C2891B";return"#BE382C";}
+/* per-salarié /10 note stats across all audited points of one audit */
+function noteStats(au){
+  const per={};let gsum=0,gcount=0;
+  if(au&&au.leaves){Object.keys(au.leaves).forEach(id=>{const lf=au.leaves[id];if(lf&&Array.isArray(lf.rows)){lf.rows.forEach(r=>{const n=Number(r.note);if(r.empId&&r.note!==""&&r.note!=null&&!isNaN(n)){per[r.empId]=per[r.empId]||{sum:0,count:0};per[r.empId].sum+=n;per[r.empId].count++;gsum+=n;gcount++;}});}});}
+  const emp={};Object.keys(per).forEach(eid=>{emp[eid]={avg:per[eid].sum/per[eid].count,count:per[eid].count};});
+  return{emp,agency:gcount?gsum/gcount:null,rated:Object.keys(per).length,points:gcount};
+}
+function empPointNotes(au,empId){
+  const out=[];
+  if(au&&au.leaves){Object.keys(au.leaves).forEach(id=>{const lf=au.leaves[id];if(lf&&Array.isArray(lf.rows)){lf.rows.forEach(r=>{const n=Number(r.note);if(r.empId===empId&&r.note!==""&&r.note!=null&&!isNaN(n))out.push({label:(LEAFNODE[id]&&LEAFNODE[id].label)||id,note:n});});}});}
+  return out;
+}
+
+/* ============================== STATE & STORAGE ============================== */
+/* Stockage robuste : 1) API persistante d'artifact si présente, 2) localStorage (fichier ouvert directement dans le navigateur), 3) mémoire (dernier recours, sans persistance). */
+const STORE=(()=>{
+  if(typeof window!=="undefined"&&window.storage&&typeof window.storage.get==="function"){
+    return{kind:"artifact",get:k=>window.storage.get(k,false),set:(k,v)=>window.storage.set(k,v,false),del:k=>window.storage.delete(k,false),list:p=>window.storage.list(p,false)};
+  }
+  let ls=null;try{const t="__fnet_t__";window.localStorage.setItem(t,"1");window.localStorage.removeItem(t);ls=window.localStorage;}catch(e){ls=null;}
+  if(ls){return{kind:"local",
+    get:async k=>{const v=ls.getItem(k);return v==null?null:{value:v};},
+    set:async(k,v)=>{ls.setItem(k,v);return{value:v};},
+    del:async k=>{ls.removeItem(k);return{deleted:true};},
+    list:async p=>{const keys=[];for(let i=0;i<ls.length;i++){const key=ls.key(i);if(!p||key.indexOf(p)===0)keys.push(key);}return{keys};}};}
+  const mem={};return{kind:"memory",
+    get:async k=>k in mem?{value:mem[k]}:null,
+    set:async(k,v)=>{mem[k]=v;return{value:v};},
+    del:async k=>{delete mem[k];return{deleted:true};},
+    list:async p=>({keys:Object.keys(mem).filter(k=>!p||k.indexOf(p)===0)})};
+})();
+const hasStore=STORE.kind!=="memory";
+const state={agencies:[],settings:{threshold:0.8,noteThreshold:5},ym:todayYM(),route:{view:"network",id:null},tab:"synthese",synthView:"mois",auditId:null,closed:new Set(),openNotes:new Set(),bulk:"",archOpen:false,auditEdit:false,auditExpanded:new Set()};
+let saveTimer;
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{try{await STORE.set(DATA_KEY,JSON.stringify({version:2,agencies:state.agencies,settings:state.settings}));}catch(e){console.error(e);}},500);}
+async function loadData(){try{const r=await STORE.get(DATA_KEY);return r?JSON.parse(r.value):null;}catch{return null;}}
+
+const currentAgency=()=>state.agencies.find(a=>a.id===state.route.id);
+const currentAudit=()=>{const a=currentAgency();return a?(a.audits||[]).find(au=>au.id===state.auditId)||null:null;};
+function monthAudit(a,ym){const list=(a.audits||[]).filter(au=>au.date&&au.date.slice(0,7)===ym);if(!list.length)return null;const fin=list.filter(au=>au.status==="validated"||au.status==="archived");const pool=fin.length?fin:list;return pool.slice().sort((x,y)=>x.date.localeCompare(y.date)).slice(-1)[0];}
+function isLocked(au){return !!au&&au.status!=="draft";}
+function defaultAuditId(a){if(!a||!(a.audits||[]).length)return null;const inM=monthAuditsAll(a,state.ym);if(inM.length)return inM.slice().sort((x,y)=>y.date.localeCompare(x.date))[0].id;return a.audits.slice().sort((x,y)=>y.date.localeCompare(x.date))[0].id;}
+function ensureLeaf(au,id){au.leaves=au.leaves||{};if(!au.leaves[id])au.leaves[id]=LEAFKIND[id]==="text"?{text:"",note:""}:{rows:[],note:""};return au.leaves[id];}
+
+/* ----- migration v1 (months) -> v2 (audits[]) + leaf shapes ----- */
+function convOldLeaf(id,v){
+  if(LEAFKIND[id]==="text")return{text:(v&&v.val)||"",note:(v&&v.note)||""};
+  const has=(v&&v.val!==""&&v.val!=null)||(v&&v.emp);
+  return{rows:has?[{id:uid(),empId:(v&&v.emp)||"",val:Number(v&&v.val)||0,comment:""}]:[],note:(v&&v.note)||""};
+}
+function normLeaf(id,lf){
+  const kind=LEAFKIND[id];
+  if(kind==="text"){if(lf&&typeof lf.text==="string")return lf;return{text:(lf&&lf.val)||"",note:(lf&&lf.note)||""};}
+  if(lf&&Array.isArray(lf.rows)){lf.rows.forEach(r=>{if(!r.id)r.id=uid();if(kind==="multi"&&(!r.vals||typeof r.vals!=="object"))r.vals={};});return lf;}
+  return convOldLeaf(id,lf||{});
+}
+function migrate(data){
+  data=data||{};
+  data.agencies=(data.agencies||[]).map(a=>{
+    a.employees=a.employees||[];a.objectives=a.objectives||{};a.documents=a.documents||[];
+    if(!a.audits){
+      a.audits=[];
+      const months=a.months||{};
+      Object.keys(months).sort().forEach(ym=>{
+        const m=months[ym],leaves={};
+        Object.keys(m.audit||{}).forEach(id=>{leaves[id]=convOldLeaf(id,m.audit[id]);});
+        a.audits.push({id:uid(),date:(m.visitDate||ym+"-15"),status:"validated",leaves,empRatings:m.empRatings||{},note:(m.note??"")});
+      });
+      delete a.months;
+    }
+    (a.audits||[]).forEach(au=>{au.leaves=au.leaves||{};au.empRatings=au.empRatings||{};if(au.status==="archived")au.status="validated";if(!au.status)au.status="draft";Object.keys(au.leaves).forEach(id=>{au.leaves[id]=normLeaf(id,au.leaves[id]);});});
+    return a;
+  });
+  data.settings=Object.assign({threshold:0.8,noteThreshold:5},data.settings||{});
+  return data;
+}
+
+/* image downscale */
+function fileToScaledDataURL(file,maxW=1400,q=.82){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const sc=Math.min(1,maxW/img.width);const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",q));};img.onerror=rej;img.src=fr.result;};fr.onerror=rej;fr.readAsDataURL(file);});}
+
+/* ============================== HTML BUILDERS ============================== */
+function noteVar(note,thr){if(note==null)return "var(--ink-mute)";if(note<thr)return "var(--red)";if(note<thr+1.5)return "var(--amber)";return "var(--green)";}
+function pillHTML(note,thr){
+  if(note==null)return `<span class="pill" style="background:var(--line2);color:var(--ink-soft)">— pas de note</span>`;
+  const c=noteVar(note,thr),bg=c==="var(--green)"?"#E3F1E8":c==="var(--amber)"?"#F8EFD7":"#F8E1DD";
+  const lab=note<thr?"En difficulté":note<thr+1.5?"À surveiller":"Bon";
+  return `<span class="pill" style="background:${bg};color:${c}"><span class="dot" style="width:9px;height:9px;border-radius:99px;background:${c}"></span>${lab} · ${note.toFixed(1)}/10</span>`;
+}
+function statHTML(label,value,sub,accent,id){
+  return `<div class="card pad"><div class="lab">${label}</div><div class="kpibig" id="${id||""}" style="color:${accent||"var(--ink)"}">${value}</div>${sub?`<div class="tiny muted" id="${id?id+"-sub":""}" style="margin-top:4px">${sub}</div>`:""}</div>`;
+}
+function dot(c){return `<span style="display:inline-block;width:9px;height:9px;border-radius:99px;flex-shrink:0;background:${c}"></span>`;}
+function empOptions(sel){const a=currentAgency();return `<option value="">— non attribué —</option>`+a.employees.map(e=>`<option value="${e.id}" ${sel===e.id?"selected":""}>${esc(e.name||"(sans nom)")}</option>`).join("");}
+
+/* ----- SIDEBAR / TOPBAR ----- */
+function renderSidebar(){
+  const th=state.settings.noteThreshold;
+  const agHTML=!state.agencies.length?`<div class="tiny" style="color:#7d8074;padding:4px 12px">Aucune agence</div>`
+   :state.agencies.map(a=>{const note=monthNoteStats(a,state.ym).agency;const on=state.route.view==="agency"&&state.route.id===a.id;
+     return `<button class="navitem ${on?"on":""}" data-act="nav-agency" data-id="${a.id}" style="font-size:13px">${dot(noteVar(note,th))}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</span></button>`;}).join("");
+  document.getElementById("side").innerHTML=`
+    <div class="brand">Réseau<br>Audit<small>Suivi des franchises</small></div>
+    <div class="navsec">Pilotage</div>
+    <button class="navitem ${state.route.view==="network"?"on":""}" data-act="nav-network"><i data-lucide="layout-grid"></i> Vue réseau</button>
+    <div class="navsec">Agences</div>
+    <div style="overflow-y:auto;flex:1;margin:0 -6px;padding:0 6px">${agHTML}</div>
+    <button class="navitem" data-act="open-settings"><i data-lucide="settings"></i> Réglages</button>`;
+}
+function renderTopbar(){
+  document.getElementById("topbar").innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px">
+      <i data-lucide="calendar" class="muted"></i><span class="lab" style="margin:0">Période</span>
+      <input class="in" type="month" id="ym-pick" value="${state.ym}" style="width:160px">
+    </div>
+    <button class="btn pri" data-act="add-agency"><span style="font-weight:800;font-size:16px;line-height:1">+</span> Agence</button>`;
+}
+
+/* ----- NETWORK ----- */
+function netRows(){
+  return state.agencies.map(a=>{return{a,k:monthKpis(a,state.ym),note:monthNoteStats(a,state.ym).agency};})
+   .sort((x,y)=>{if(x.note==null)return 1;if(y.note==null)return -1;return x.note-y.note;});}
+function renderNetwork(){
+  const th=state.settings.noteThreshold,rows=netRows();
+  const tot=rows.reduce((a,r)=>({s:a.s+r.k.signatures,c:a.c+r.k.ccmi}),{s:0,c:0});
+  const totObj=state.agencies.reduce((s,a)=>s+(Number(a.objectives&&a.objectives.signatures)||0),0);
+  const transfo=rows.length?rows.reduce((a,r)=>a+r.k.transfo,0)/rows.length:0;
+  const trouble=rows.filter(r=>r.note!=null&&r.note<th).length;
+  const head=`<div class="agrow head">${["Agence","Signatures","Résiliations","Transfo.","Statut"].map(t=>`<div class="tiny" style="text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)">${t}</div>`).join("")}<div class="tiny" style="text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);text-align:right">Note</div></div>`;
+  const body=rows.map(({a,k,note})=>{const obj=a.objectives||{};return `
+     <div class="agrow clk" data-act="nav-agency" data-id="${a.id}">
+       <div><div style="font-weight:700;display:flex;align-items:center;gap:7px">${dot(noteVar(note,th))}${esc(a.name)}</div><div class="tiny muted">${a.employees.length} salarié(s) · ${(a.audits||[]).length} audit(s)</div></div>
+       <div><div style="font-weight:700;font-variant-numeric:tabular-nums">${k.signatures}${obj.signatures?`<span class="muted tiny"> / ${obj.signatures}</span>`:""}</div>${obj.signatures>0?`<div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,k.signatures/obj.signatures*100)}%;background:var(--clay)"></i></div>`:""}</div>
+       <div style="font-weight:700;font-variant-numeric:tabular-nums">${k.ccmi}${obj.ccmi?`<span class="muted tiny"> / ${obj.ccmi}</span>`:""}</div>
+       <div style="font-weight:700;font-variant-numeric:tabular-nums">${k.transfo.toFixed(1)}%</div>
+       <div>${pillHTML(note,th)}</div>
+       <div class="disp" style="text-align:right;font-weight:800;color:${noteVar(note,th)}">${note==null?"—":note.toFixed(1)+"/10"}</div></div>`;}).join("");
+  return `<div class="fade">
+    <h1 style="font-size:30px;margin:0 0 4px">Vue réseau</h1>
+    <div class="muted" style="margin-bottom:22px">${state.agencies.length} agence(s) · audits de <b>${ymLabel(state.ym)}</b></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:22px">
+      <div class="card pad"><div class="lab">Signatures vs objectif — réseau</div>
+        <div class="kpibig" style="color:var(--clay)">${tot.s}<span style="font-size:18px;color:var(--ink-soft)"> / ${totObj}</span></div>
+        <div class="tiny muted" style="margin-top:4px">${totObj>0?Math.round(tot.s/totObj*100)+"% du cumul des objectifs ("+state.agencies.length+" agence(s))":"aucun objectif de signatures défini"}</div>
+        ${totObj>0?`<div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,tot.s/totObj*100)}%;background:var(--clay)"></i></div>`:""}</div>
+      ${statHTML("Résiliations réseau",tot.c,null,"var(--petrol)")}
+      ${statHTML("Transfo. moyenne",transfo.toFixed(1)+"%")}
+      ${statHTML("Agences en difficulté",trouble,"note moyenne < "+th+"/10",trouble?"var(--red)":"var(--green)")}
+    </div>
+    ${state.agencies.length?`<div class="card pad" style="margin-bottom:22px"><div class="disp" style="font-weight:700;font-size:16px;margin-bottom:4px"><i data-lucide="trending-up" style="vertical-align:-3px"></i> Cumul réseau — contacts entrants & signatures</div><div class="tiny muted" style="margin-bottom:12px">Totaux de toutes les agences par mois (année ${state.ym.split("-")[0]}) · pointillé = objectif signatures cumulé (${totObj}/mois)</div><div style="height:300px"><canvas id="chart-network"></canvas></div></div>`:""}
+    <div class="card" style="overflow:hidden">${head}${body||`<div class="empty">Ajoute des agences pour commencer (bouton « Agence » ou Réglages → créer plusieurs agences).</div>`}</div></div>`;
+}
+
+/* ----- AUDIT FORM ----- */
+function leafHTML(node,au,ro){
+  const noteOpen=state.openNotes.has(node.id);
+  /* ---- TEXT leaf (ex: Appréciation globale) ---- */
+  if(node.kind==="text"){
+    const lf=au.leaves[node.id]||{};const hasNote=(lf.note||"").trim().length>0;
+    return `<div class="leafblock">
+      <div class="leafhead"><div><b>${node.label}</b>${node.hint?`<div class="tiny muted">${node.hint}</div>`:""}</div>
+        <button class="btn sm ghost" data-act="toggle-note" data-id="${node.id}" ${ro?"disabled":""} title="Commentaire" style="color:${hasNote?"var(--clay)":"var(--ink-mute)"}"><i data-lucide="message-square-plus"></i></button></div>
+      <textarea class="in" rows="3" data-k="leaftext" data-leaf="${node.id}" data-f="text" placeholder="Texte libre…" ${ro?"disabled":""}>${esc(lf.text||"")}</textarea>
+      ${noteOpen?`<div class="fade" style="margin-top:8px"><textarea class="in" rows="2" data-k="leaftext" data-leaf="${node.id}" data-f="note" placeholder="Commentaire complémentaire…" ${ro?"disabled":""}>${esc(lf.note||"")}</textarea></div>`:""}</div>`;
+  }
+  const lf=au.leaves[node.id]||{rows:[],note:""};const rows=lf.rows||[];
+  const hasNote=(lf.note||"").trim().length>0;
+  const noteCell=r=>`<input class="in note numin" type="number" min="0" max="10" step="0.5" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="note" value="${r.note??""}" placeholder="/10" title="Note du salarié sur ce point (/10)" ${ro?"disabled":""}>`;
+  const delCell=r=>ro?"":`<button class="btn sm danger ghost" data-act="del-row" data-leaf="${node.id}" data-row="${r.id}"><i data-lucide="x"></i></button>`;
+  const head=(label,total)=>`<div class="leafhead"><div><b>${node.label}</b>${node.kpi?` <span class="pill" style="background:var(--clay-soft);color:var(--clay-d)">KPI</span>`:""}${node.hint?`<div class="tiny muted">${node.hint}</div>`:""}</div>
+      <div style="display:flex;align-items:center;gap:10px;white-space:nowrap">${total!=null?`<span class="tiny muted">Total <b id="total-${node.id}" style="color:var(--ink);font-size:13px">${total}</b></span>`:""}
+        <button class="btn sm ghost" data-act="toggle-note" data-id="${node.id}" ${ro?"disabled":""} title="Commentaire général" style="color:${hasNote?"var(--clay)":"var(--ink-mute)"}"><i data-lucide="message-square-plus"></i></button></div></div>`;
+  const addBtn=ro?"":`<button class="btn sm" data-act="add-row" data-leaf="${node.id}" style="margin-top:2px"><i data-lucide="user-plus"></i> Ajouter un salarié</button>`;
+  const noteBox=noteOpen?`<div class="fade" style="margin-top:10px"><textarea class="in" rows="2" data-k="leafnote" data-leaf="${node.id}" placeholder="Commentaire général sur ce point…" ${ro?"disabled":""}>${esc(lf.note||"")}</textarea></div>`:"";
+
+  /* ---- CALC leaf (ex: Contacts HS) : valeur calculée automatiquement, lecture seule ---- */
+  if(node.kind==="calc"){
+    return `<div class="leafblock">${head(null,null)}<div id="calc-${node.id}">${hsLeafBody(au)}</div>${noteBox}</div>`;
+  }
+
+  /* ---- QUAL leaf (ex: Fiche découverte) : salarié + note/10 + commentaire, pas de quantité ---- */
+  if(node.kind==="qual"){
+    const rowsHTML=rows.length?rows.map(r=>`
+     <div class="rowline">
+       <select class="in emp" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="empId" ${ro?"disabled":""}>${empOptions(r.empId)}</select>
+       ${noteCell(r)}
+       <input class="in cmt" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="comment" value="${esc(r.comment||"")}" placeholder="qualité de la découverte (commentaire)…" ${ro?"disabled":""}>
+       ${delCell(r)}
+     </div>`).join("")
+     :`<div class="tiny muted" style="margin-bottom:6px">Aucune saisie. Ajoute un salarié pour juger la qualité de sa découverte client.</div>`;
+    return `<div class="leafblock">${head(node.label,null)}${rowsHTML}${addBtn}${noteBox}</div>`;
+  }
+
+  /* ---- MULTI leaf (ex: RDV pris) : salarié + colonnes (R1/R2/R3/Sign) + note/10 + commentaire ---- */
+  if(node.kind==="multi"){
+    const cols=node.cols||[];
+    const tot=cols.map(c=>rows.reduce((s,r)=>s+(Number(r.vals&&r.vals[c.key])||0),0));
+    const colHead=rows.length?`<div class="rowline mhead"><span class="emp tiny mlab">Salarié</span>${cols.map((c,i)=>`<span class="mcol tiny mlab">${c.label}<br><b id="mtot-${node.id}-${c.key}" style="color:var(--ink)">${tot[i]}</b></span>`).join("")}<span class="note tiny mlab">/10</span><span class="cmt tiny mlab">Commentaire</span></div>`:"";
+    const rowsHTML=rows.length?colHead+rows.map(r=>`
+     <div class="rowline">
+       <select class="in emp" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="empId" ${ro?"disabled":""}>${empOptions(r.empId)}</select>
+       ${cols.map(c=>`<input class="in mcol numin" type="number" data-k="mval" data-leaf="${node.id}" data-row="${r.id}" data-col="${c.key}" value="${(r.vals&&r.vals[c.key])??""}" placeholder="0" ${ro?"disabled":""}>`).join("")}
+       ${noteCell(r)}
+       <input class="in cmt" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="comment" value="${esc(r.comment||"")}" placeholder="commentaire…" ${ro?"disabled":""}>
+       ${delCell(r)}
+     </div>`).join("")
+     :`<div class="tiny muted" style="margin-bottom:6px">Aucune saisie. Ajoute un salarié pour renseigner ses R1 / R2 / R3 / signatures.</div>`;
+    return `<div class="leafblock">${head(node.label,null)}${rowsHTML}${addBtn}${noteBox}</div>`;
+  }
+
+  /* ---- NUM leaf (défaut) : salarié + quantité + note/10 + commentaire ---- */
+  const total=rows.reduce((s,r)=>s+(Number(r.val)||0),0);
+  const rowsHTML=rows.length?rows.map(r=>`
+     <div class="rowline">
+       <select class="in emp" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="empId" ${ro?"disabled":""}>${empOptions(r.empId)}</select>
+       <input class="in val numin" type="number" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="val" value="${r.val??""}" placeholder="0" title="Quantité" ${ro?"disabled":""}>
+       ${noteCell(r)}
+       <input class="in cmt" data-k="row" data-leaf="${node.id}" data-row="${r.id}" data-f="comment" value="${esc(r.comment||"")}" placeholder="commentaire (lié au salarié)…" ${ro?"disabled":""}>
+       ${delCell(r)}
+     </div>`).join("")
+   :`<div class="tiny muted" style="margin-bottom:6px">Aucune saisie. Ajoute un salarié (ou « non attribué ») pour renseigner un chiffre.</div>`;
+  return `<div class="leafblock">${head(node.label,total)}${rowsHTML}${addBtn}${noteBox}</div>`;
+}
+function auditNodeHTML(node,depth,au,ro){
+  if(node.children){
+    const open=!state.closed.has(node.id),isTop=depth===0;
+    return `<div class="${isTop?"card":""}" style="${isTop?"margin-bottom:16px;overflow:hidden":"margin-top:8px;padding-left:14px;border-left:2px solid var(--line2)"}">
+      <button data-act="toggle-section" data-id="${node.id}" style="display:flex;align-items:center;gap:8px;width:100%;border:none;background:${isTop?"var(--paper2)":"transparent"};padding:${isTop?"13px 18px":"6px 0"};text-align:left">
+        <i data-lucide="${open?"chevron-down":"chevron-right"}"></i><span class="disp" style="font-weight:${isTop?700:600};font-size:${isTop?16:14}px;color:${isTop?"var(--ink)":"var(--ink-soft)"}">${node.label}</span></button>
+      ${open?`<div style="padding:${isTop?"4px 18px 14px":"2px 0 4px"}">${node.children.map(c=>auditNodeHTML(c,depth+1,au,ro)).join("")}</div>`:""}</div>`;
+  }
+  return leafHTML(node,au,ro);
+}
+function hsLeafBody(au){
+  const a=currentAgency();const emps=(a&&a.employees)||[];
+  const total=computeHS(au,null);
+  const per=emps.map(e=>({e,v:computeHS(au,e.id),any:leafTotalEmp(au,"cli.contact.entrant",e.id)||leafTotalEmp(au,"cli.contact.traite",e.id)||leafTotalEmp(au,"cli.contact.relance",e.id)})).filter(x=>x.any);
+  const pills=per.length?per.map(x=>`<span class="pill" style="background:#fff;border:1px solid var(--line);color:var(--ink-soft)">${esc(x.e.name||"(sans nom)")} · <b style="color:${x.v<0?"var(--red)":"var(--ink)"}">${x.v}</b></span>`).join(" "):`<span class="tiny muted">Renseigne les contacts entrants, traités et à relancer ci-dessus pour obtenir le calcul.</span>`;
+  return `<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px"><div class="disp" style="font-weight:800;font-size:24px;color:${total<0?"var(--red)":"var(--ink)"}">${total}</div><div class="tiny muted">= entrants − (traités + à relancer)${total<0?" · valeur négative : vérifie tes saisies":""}</div></div><div style="display:flex;flex-wrap:wrap;gap:6px">${pills}</div>`;
+}
+function agencyRecapHTML(au){
+  const stats=noteStats(au);const a=currentAgency();const emps=(a&&a.employees)||[];
+  if(!stats.rated)return `<span class="tiny muted">Aucune note /10 saisie pour l'instant. Note les salariés point par point ci-dessus (champ « /10 » de chaque ligne).</span>`;
+  return emps.filter(e=>stats.emp[e.id]).map(e=>`<span class="pill" style="background:#fff;border:1px solid var(--line);color:var(--ink-soft)">${esc(e.name||"(sans nom)")} · <b style="color:var(--ink)">${stats.emp[e.id].avg.toFixed(1)}</b>/10</span>`).join(" ");
+}
+function globalNoteHTML(au,ro){
+  const stats=noteStats(au);
+  return `<div class="card pad" style="margin-top:8px;background:var(--paper2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div><div class="disp" style="font-weight:700;font-size:16px">Note moyenne de l'agence</div><div class="tiny muted">Moyenne pondérée par le nombre de points notés (chaque point audité compte autant) · ${stats.points||0} note(s) · audit du ${fmtDate(au.date)}</div></div>
+      <div class="disp" id="audit-agnote" style="font-weight:800;font-size:28px;color:${stats.agency==null?"var(--ink-mute)":"var(--clay)"}">${stats.agency==null?"—":stats.agency.toFixed(1)}<span style="font-size:16px;color:var(--ink-soft)">/10</span></div>
+    </div>
+    <div class="sep"></div>
+    <div class="tiny muted" style="margin-bottom:8px">Moyenne par salarié</div>
+    <div id="audit-agrecap" style="display:flex;flex-wrap:wrap;gap:6px">${agencyRecapHTML(au)}</div></div>`;
+}
+const RATIO_COLS=[["r_traite","Traités / entrants"],["r_rdv","RDV / entrants"],["r_sign","Signatures / entrants"],["r_sign_r1","Signatures / R1"],["r_resil","Résil. / signatures"],["r_hs","HS / entrants"]];
+function ratiosTable(emps,getR){
+  const fmt=v=>v==null?`<span class="muted">—</span>`:v.toFixed(1)+"%";
+  const ag=getR(null);
+  const rows=emps.map(e=>({e,r:getR(e.id)})).filter(x=>x.r.entrant||x.r.traite||x.r.rdv||x.r.sign||x.r.resil||x.r.hs||x.r.r1);
+  const header=`<tr><th style="text-align:left">Salarié</th>${RATIO_COLS.map(c=>`<th>${c[1]}</th>`).join("")}</tr>`;
+  const body=rows.map(({e,r})=>`<tr><td style="text-align:left;font-weight:600">${esc(e.name||"(sans nom)")}</td>${RATIO_COLS.map(c=>`<td>${fmt(r[c[0]])}</td>`).join("")}</tr>`).join("");
+  const agRow=`<tr class="agtot"><td style="text-align:left;font-weight:800">Agence (total)</td>${RATIO_COLS.map(c=>`<td style="font-weight:800;color:var(--clay)">${fmt(ag[c[0]])}</td>`).join("")}</tr>`;
+  return header+body+agRow;
+}
+function ratiosTableRows(au){const a=currentAgency();return ratiosTable((a&&a.employees)||[],id=>computeRatios(au,id));}
+function ratiosRecapHTML(au){
+  return `<div class="card pad" style="margin-top:8px">
+    <div class="disp" style="font-weight:700;font-size:16px;margin-bottom:4px"><i data-lucide="percent" style="vertical-align:-3px"></i> Ratios de conversion</div>
+    <div class="tiny muted" style="margin-bottom:12px">Sur l'audit en cours, par salarié et pour l'agence. « — » = dénominateur nul (pas assez de données).</div>
+    <div style="overflow-x:auto"><table class="ratbl" id="audit-rattbl">${ratiosTableRows(au)}</table></div>
+    <div class="tiny muted" style="margin-top:10px">Lecture : part des contacts entrants traités, transformés en RDV (R1+R2+R3) puis en signature ; <b>Signatures / R1</b> = taux de transformation des 1ers RDV en signature ; taux de résiliation (résil. ÷ signatures) ; part de contacts hors sujet.</div>
+  </div>`;
+}
+function ratiosMonthRecapHTML(a){
+  return `<div class="card pad">
+    <div class="disp" style="font-weight:700;font-size:16px;margin-bottom:4px"><i data-lucide="percent" style="vertical-align:-3px"></i> Ratios de conversion — cumul ${ymLabel(state.ym)}</div>
+    <div class="tiny muted" style="margin-bottom:12px">Cumul de tous les audits du mois, par salarié et pour l'agence.</div>
+    <div style="overflow-x:auto"><table class="ratbl">${ratiosTable((a.employees)||[],id=>computeRatiosMonth(a,state.ym,id))}</table></div>
+  </div>`;
+}
+function auditStatusBadge(st){
+  if(st==="validated")return `<span class="badge" style="background:#E3F1E8;color:var(--green)"><i data-lucide="check-circle-2"></i> Validé</span>`;
+  if(st==="archived")return `<span class="badge" style="background:#EFEAE0;color:var(--ink-soft)"><i data-lucide="archive"></i> Archivé</span>`;
+  return `<span class="badge" style="background:#F8EFD7;color:var(--amber)"><i data-lucide="pencil-line"></i> Brouillon</span>`;
+}
+function miniStat(label,val,color){return `<div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-size:10px">${label}</div><div class="disp" style="font-weight:800;font-size:18px;color:${color||"var(--ink)"}">${val}</div></div>`;}
+function auditArchiveHTML(a){
+  const arch=(a.audits||[]).filter(au=>au.status==="archived").sort((x,y)=>y.date.localeCompare(x.date));
+  if(!arch.length)return "";
+  const open=state.archOpen,cur=currentAudit();
+  const rows=arch.map(au=>{const k=computeKpis(au),ns=noteStats(au),on=cur&&cur.id===au.id;return `
+    <div class="agrow clk" style="grid-template-columns:1.4fr .8fr .8fr auto;gap:12px;${on?"background:var(--paper2)":""}" data-act="open-edit" data-id="${au.id}">
+      <div style="font-weight:600;display:flex;align-items:center;gap:7px"><i data-lucide="file-text" style="width:14px;height:14px;color:var(--ink-mute)"></i>Audit du ${fmtDate(au.date)}</div>
+      <div class="tiny muted">${k.signatures} sign. · ${k.ccmi} résil.</div>
+      <div class="tiny muted">${ns.agency==null?"—":ns.agency.toFixed(1)+"/10"}</div>
+      <button class="btn sm" data-act="open-edit" data-id="${au.id}">Ouvrir</button></div>`;}).join("");
+  return `<div class="card" style="margin-top:16px;overflow:hidden">
+    <button data-act="toggle-arch" style="display:flex;align-items:center;gap:8px;width:100%;border:none;background:var(--paper2);padding:13px 16px;text-align:left"><i data-lucide="${open?"folder-open":"folder"}"></i><span class="disp" style="font-weight:700;font-size:15px">Archives (${arch.length})</span><span class="tiny muted" style="margin-left:auto">conservés et comptés dans les cumuls</span></button>
+    ${open?`<div>${rows}</div>`:""}</div>`;
+}
+function auditAccordionItem(a,au){
+  const open=state.auditExpanded.has(au.id),k=computeKpis(au),ns=noteStats(au);
+  return `<div class="card" style="margin-bottom:10px;overflow:hidden">
+    <button data-act="toggle-audit-exp" data-id="${au.id}" style="display:flex;align-items:center;gap:10px;width:100%;border:none;background:${open?"var(--paper2)":"var(--card)"};padding:13px 16px;text-align:left">
+      <i data-lucide="${open?"chevron-down":"chevron-right"}"></i>
+      <span style="font-weight:700">Audit du ${fmtDate(au.date)}</span>
+      ${auditStatusBadge(au.status)}
+      <span style="margin-left:auto;display:flex;gap:14px;align-items:center" class="tiny muted">
+        <span><b style="color:var(--clay)">${k.signatures}</b> sign.</span>
+        <span>note <b style="color:var(--ink)">${ns.agency==null?"—":ns.agency.toFixed(1)+"/10"}</b></span></span></button>
+    ${open?`<div class="fade" style="padding:14px 16px;border-top:1px solid var(--line2)">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:12px;margin-bottom:14px">
+        ${miniStat("Entrants",k.entrant)}${miniStat("Signatures",k.signatures,"var(--clay)")}${miniStat("Résiliations",k.ccmi,"var(--petrol)")}${miniStat("Transfo.",k.transfo.toFixed(1)+"%")}${miniStat("Note agence",ns.agency==null?"—":ns.agency.toFixed(1)+"/10")}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sm pri" data-act="open-edit" data-id="${au.id}"><i data-lucide="pencil"></i> Ouvrir pour éditer</button>
+        <button class="btn sm" data-act="pdf-audit" data-id="${au.id}"><i data-lucide="file-down"></i> PDF</button>
+        <button class="btn sm danger ghost" data-act="del-audit" data-id="${au.id}"><i data-lucide="trash-2"></i> Supprimer</button></div></div>`:""}</div>`;
+}
+function renderAuditList(a){
+  const ym=state.ym;
+  const list=monthAuditsAll(a,ym).filter(au=>au.status!=="archived").sort((x,y)=>y.date.localeCompare(x.date));
+  const mk=monthKpis(a,ym),mns=monthNoteStats(a,ym);
+  const allCount=monthAuditsAll(a,ym).length,archCount=allCount-list.length;
+  const cumul=`<div class="card pad" style="margin-bottom:16px;background:var(--paper2)">
+    <div class="lab">Cumul du mois — ${ymLabel(ym)}</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:12px;margin-top:6px">
+      ${miniStat("Contacts entrants",mk.entrant)}${miniStat("Signatures",mk.signatures,"var(--clay)")}${miniStat("Résiliations",mk.ccmi,"var(--petrol)")}${miniStat("Transfo.",mk.transfo.toFixed(1)+"%")}${miniStat("Note agence",mns.agency==null?"—":mns.agency.toFixed(1)+"/10")}
+    </div>
+    <div class="tiny muted" style="margin-top:8px">${allCount} audit(s) ce mois${archCount?` (dont ${archCount} archivé(s) dans le dossier)`:""} · tous se cumulent ci-dessus.</div></div>`;
+  const items=list.length?list.map(au=>auditAccordionItem(a,au)).join(""):`<div class="empty"><i data-lucide="clipboard-check" style="opacity:.4;width:28px;height:28px"></i><div style="margin-top:8px">Aucun audit pour ${ymLabel(ym)}.<br>Clique sur <b>« Nouvel audit »</b>.</div></div>`;
+  return `<div class="fade">
+    <div class="toolbar" style="justify-content:space-between">
+      <div class="disp" style="font-weight:700;font-size:16px"><i data-lucide="clipboard-check" style="vertical-align:-3px"></i> Audits de ${ymLabel(ym)}</div>
+      <button class="btn pri sm" data-act="new-audit"><i data-lucide="plus"></i> Nouvel audit</button></div>
+    ${cumul}${items}${auditArchiveHTML(a)}</div>`;
+}
+function auditEditToolbar(a,cur,ro){
+  let actions="";
+  if(cur.status==="draft")actions=`${auditStatusBadge("draft")}<button class="btn sm pri" data-act="validate-audit"><i data-lucide="check-circle-2"></i> Valider</button>`;
+  else if(cur.status==="archived")actions=`${auditStatusBadge("archived")}<button class="btn sm" data-act="unarchive-audit"><i data-lucide="archive-restore"></i> Désarchiver</button>`;
+  else actions=`${auditStatusBadge("validated")}<button class="btn sm" data-act="reopen-audit"><i data-lucide="pencil"></i> Modifier</button><button class="btn sm" data-act="archive-audit"><i data-lucide="archive"></i> Archiver</button>`;
+  return `<div class="toolbar">
+    <button class="btn sm ghost" data-act="audit-list"><i data-lucide="arrow-left"></i> Liste</button>
+    <span style="display:flex;align-items:center;gap:6px"><span class="lab" style="margin:0">Date</span><input class="in" type="date" data-k="auditdate" value="${cur.date}" ${ro?"disabled":""} style="width:150px"></span>
+    ${actions}
+    <button class="btn sm" data-act="export-pdf" title="Exporter / envoyer en PDF"><i data-lucide="file-down"></i> PDF</button>
+    <div style="flex:1"></div>
+    <button class="btn sm danger ghost" data-act="del-audit" data-id="${cur.id}" title="Supprimer cet audit"><i data-lucide="trash-2"></i></button></div>`;
+}
+function renderAuditEdit(a){
+  const cur=currentAudit();if(!cur)return renderAuditList(a);
+  const ro=isLocked(cur),k=computeKpis(cur);
+  return `<div class="fade">${auditEditToolbar(a,cur,ro)}
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px">
+      ${statHTML("Contacts entrants",k.entrant,null,"var(--ink)","kpi-entrant")}
+      ${statHTML("Signatures (cet audit)",k.signatures,null,"var(--clay)","kpi-sign")}
+      ${statHTML("Nombre de résiliations",k.ccmi,null,"var(--petrol)","kpi-ccmi")}
+      ${statHTML("Taux transfo.",k.transfo.toFixed(1)+"%",k.signatures+" sign. / "+k.contacts+" traités",null,"kpi-transfo")}
+    </div>
+    ${AUDIT.map(s=>auditNodeHTML(s,0,cur,ro)).join("")}
+    ${globalNoteHTML(cur,ro)}
+    ${ratiosRecapHTML(cur)}</div>`;
+}
+function renderAudit(a){
+  if(state.auditEdit&&currentAudit())return renderAuditEdit(a);
+  return renderAuditList(a);
+}
+
+/* ----- SYNTHÈSE ----- */
+function synthSeries(a){
+  if(state.synthView==="annee"){
+    const yset=new Set((a.audits||[]).map(au=>au.date.slice(0,4)));
+    const arr=[...yset].sort().map(y=>{let s=0,c=0,e=0;for(let mo=1;mo<=12;mo++){const kp=monthKpis(a,y+"-"+String(mo).padStart(2,"0"));s+=kp.signatures;c+=kp.ccmi;e+=kp.entrant;}return{label:y,s,c,e};});
+    if(!arr.length)arr.push({label:state.ym.split("-")[0],s:0,c:0,e:0});
+    return{labels:arr.map(x=>x.label),sign:arr.map(x=>x.s),ccmi:arr.map(x=>x.c),entrant:arr.map(x=>x.e)};
+  }
+  const list=state.synthView==="glissant"?monthsBack(state.ym,12):Array.from({length:12},(_,i)=>state.ym.split("-")[0]+"-"+String(i+1).padStart(2,"0"));
+  return{labels:list.map(ymShort),sign:list.map(k=>monthKpis(a,k).signatures),ccmi:list.map(k=>monthKpis(a,k).ccmi),entrant:list.map(k=>monthKpis(a,k).entrant)};
+}
+function renderSynthese(a){
+  const k=monthKpis(a,state.ym),obj=a.objectives||{},s=synthSeries(a);
+  const nbMonth=monthAuditsAll(a,state.ym).length,nbTotal=(a.audits||[]).length,mnote=monthNoteStats(a,state.ym).agency,nt=state.settings.noteThreshold;
+  const tot={s:s.sign.reduce((x,y)=>x+y,0),c:s.ccmi.reduce((x,y)=>x+y,0),e:(s.entrant||[]).reduce((x,y)=>x+y,0)};
+  const toggle=[["mois","Par mois"],["annee","Par année"],["glissant","12 mois glissants"]].map(([kk,l])=>`<button class="btn sm" data-act="synthview" data-view="${kk}" style="background:${state.synthView===kk?"var(--clay)":"transparent"};color:${state.synthView===kk?"#fff":"var(--ink-soft)"};border:none">${l}</button>`).join("");
+  return `<div class="fade">
+    <div class="card pad" style="margin-bottom:18px"><div class="lab">Informations de l'agence</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><input class="in" style="flex:1 1 220px" data-k="agency" data-f="name" value="${esc(a.name)}" placeholder="Nom de l'agence"><input class="in" style="flex:2 1 280px" data-k="agency" data-f="address" value="${esc(a.address||"")}" placeholder="Adresse"></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:20px">
+      ${statHTML("Audits réalisés (mois)",nbMonth,nbTotal+" au total",null,"syn-nb")}
+      ${statHTML("Note moyenne (mois)",mnote==null?"—":mnote.toFixed(1)+"/10",mnote!=null&&mnote<nt?"sous le seuil d'alerte":"",noteVar(mnote,nt),"syn-note")}
+      ${statHTML("Signatures (mois sélect.)",k.signatures,obj.signatures?`objectif ${obj.signatures} · ${Math.round(k.signatures/obj.signatures*100)||0}%`:"pas d'objectif","var(--clay)","syn-sign")}
+      ${statHTML("Résiliations (mois sélect.)",k.ccmi,obj.ccmi?`objectif ${obj.ccmi} · ${Math.round(k.ccmi/obj.ccmi*100)||0}%`:"pas d'objectif","var(--petrol)","syn-ccmi")}
+      ${statHTML("Transfo. (mois sélect.)",k.transfo.toFixed(1)+"%",obj.transfo?`objectif ${obj.transfo}%`:"pas d'objectif",null,"syn-transfo")}
+    </div>
+    <div class="card pad" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px"><div class="disp" style="font-weight:700;font-size:16px">Évolution des ventes</div><div style="display:flex;gap:4px;background:var(--paper2);padding:4px;border-radius:10px">${toggle}</div></div>
+      <div class="tiny muted" style="margin-bottom:8px">Total sur la période affichée : <b>${tot.e}</b> contacts entrants · <b>${tot.s}</b> signatures · <b>${tot.c}</b> résiliations · ratio entrants/signatures : <b>${tot.s>0?(tot.e/tot.s).toFixed(1):"—"}</b>${tot.s>0?" entrant(s) par signature":""}</div>
+      <div class="chartbox"><canvas id="chart-evolution"></canvas></div></div>
+    <div style="margin-bottom:18px">${ratiosMonthRecapHTML(a)}</div>
+    <div class="card pad">
+      <div class="disp" style="font-weight:700;font-size:16px;margin-bottom:4px"><i data-lucide="target" style="vertical-align:-3px"></i> Objectifs mensuels</div>
+      <div class="tiny muted" style="margin-bottom:14px">Servent au suivi des signatures vs objectif (le statut « en difficulté » dépend, lui, de la note moyenne).</div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div><span class="lab">Signatures / mois</span><input class="in numin" style="width:100%" type="number" data-k="obj" data-f="signatures" value="${obj.signatures??""}"></div>
+        <div><span class="lab">Résiliations / mois</span><input class="in numin" style="width:100%" type="number" data-k="obj" data-f="ccmi" value="${obj.ccmi??""}"></div>
+        <div><span class="lab">Taux transfo. cible (%)</span><input class="in numin" style="width:100%" type="number" data-k="obj" data-f="transfo" value="${obj.transfo??""}"></div>
+      </div></div></div>`;
+}
+
+/* ----- ÉQUIPE ----- */
+function renderEquipe(a){
+  const cur=currentAudit(),ro=isLocked(cur);
+  const stats=cur?noteStats(cur):{emp:{},agency:null,rated:0};
+  const ctx=cur?`Audit du <b>${fmtDate(cur.date)}</b>${ro?" (archivé)":""} — les notes /10 se saisissent point par point dans l'onglet <b>Audit</b> ; les moyennes ci-dessous se calculent toutes seules.`:`Crée ou sélectionne un audit (onglet Audit) pour noter les salariés.`;
+  const summary=cur?`<div class="card pad" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--paper2)">
+      <div><div class="lab" style="margin:0">Note moyenne de l'agence</div><div class="tiny muted">Moyenne des notes /10 de tous les salariés notés (${stats.rated} salarié(s))</div></div>
+      <div class="disp" style="font-weight:800;font-size:30px;color:${stats.agency==null?"var(--ink-mute)":"var(--clay)"}">${stats.agency==null?"—":stats.agency.toFixed(1)}<span style="font-size:16px;color:var(--ink-soft)">/10</span></div></div>`:"";
+  const rows=a.employees.map(em=>{
+    const st=cur?stats.emp[em.id]:null;
+    const pts=cur?empPointNotes(cur,em.id):[];
+    const r=cur?((cur.empRatings||{})[em.id]||{}):{};
+    const ptsHTML=cur?(pts.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px">${pts.map(p=>`<span class="pill" style="background:#fff;border:1px solid var(--line);color:var(--ink-soft)">${esc(p.label)} · <b style="color:var(--ink)">${p.note}</b>/10</span>`).join("")}</div>`:`<div class="tiny muted" style="margin-top:5px">Aucune note saisie pour ce salarié dans cet audit.</div>`):"";
+    return `<div class="card pad">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <input class="in" style="flex:1 1 170px" data-k="emp" data-id="${em.id}" data-f="name" placeholder="Nom du salarié" value="${esc(em.name)}">
+        <input class="in" style="flex:1 1 170px" data-k="emp" data-id="${em.id}" data-f="role" placeholder="Fonction (commercial, conducteur de travaux…)" value="${esc(em.role)}">
+        <div style="text-align:right;white-space:nowrap"><div class="lab" style="margin:0">Moyenne</div><div class="disp" style="font-weight:800;font-size:22px;color:${st?"var(--petrol)":"var(--ink-mute)"}">${st?st.avg.toFixed(1):"—"}<span style="font-size:12px;color:var(--ink-soft)">/10</span></div></div>
+        <button class="btn sm danger ghost" data-act="del-emp" data-id="${em.id}"><i data-lucide="trash-2"></i></button></div>
+      <div class="sep"></div>
+      <div style="${cur?"":"opacity:.5"}">
+        <span class="lab">Notes par point audité${st?` · ${st.count} point(s) noté(s)`:""}</span>
+        ${ptsHTML}
+        <input class="in" style="width:100%;margin-top:10px" data-k="rating" data-id="${em.id}" data-f="comment" placeholder="Commentaire de synthèse sur le salarié…" value="${esc(r.comment||"")}" ${(!cur||ro)?"disabled":""}>
+      </div></div>`;}).join("");
+  return `<div class="fade">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap"><div class="tiny muted" style="max-width:640px">${ctx}</div><button class="btn pri sm" data-act="add-emp"><span style="font-weight:800;font-size:15px;line-height:1">+</span> Salarié</button></div>
+    ${summary}
+    ${a.employees.length?`<div class="grid" style="grid-template-columns:1fr">${rows}</div>`:`<div class="empty">Aucun salarié. Ajoute l'équipe pour pouvoir attribuer les chiffres et les noter.</div>`}</div>`;
+}
+
+/* ----- DOCUMENTS ----- */
+function renderDocs(a){
+  const docs=a.documents||[];
+  const cards=docs.map(d=>`<div class="card pad" style="display:flex;flex-direction:column;gap:8px">
+     <div style="display:flex;align-items:center;gap:8px"><i data-lucide="${d.kind==="image"?"image":"file-spreadsheet"}" style="color:${d.kind==="image"?"var(--petrol)":"var(--green)"}"></i><span style="font-weight:600;font-size:13px;word-break:break-word">${esc(d.name)}</span></div>
+     <div class="tiny muted">${d.kind==="excel"?(d.rows??"?")+" lignes · ":""}importé le ${d.importedAt}</div>
+     <div style="display:flex;gap:6px;margin-top:4px"><button class="btn sm" data-act="open-doc" data-id="${d.id}" style="flex:1">Ouvrir</button><button class="btn sm danger ghost" data-act="del-doc" data-id="${d.id}"><i data-lucide="trash-2"></i></button></div></div>`).join("");
+  return `<div class="fade">
+    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+      <input type="file" id="file-img" accept="image/*" hidden><input type="file" id="file-xls" accept=".xlsx,.xls,.csv" hidden>
+      <button class="btn" data-act="import-image"><i data-lucide="image"></i> Importer une image</button>
+      <button class="btn" data-act="import-excel"><i data-lucide="file-spreadsheet"></i> Importer un Excel / CSV</button>
+      <span class="muted tiny" id="imp-status" style="align-self:center"></span></div>
+    ${docs.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${cards}</div>`:`<div class="empty"><i data-lucide="upload" style="opacity:.4;width:28px;height:28px"></i><div style="margin-top:8px">Aucun document. Importe les exports de ton outil (captures, tableaux Excel).</div></div>`}</div>`;
+}
+
+/* ----- AGENCY SHELL ----- */
+function renderAgency(){
+  const a=currentAgency();if(!a)return `<div class="empty">Agence introuvable.</div>`;
+  const note=monthNoteStats(a,state.ym).agency;
+  const tabs=[["synthese","Synthèse & KPI"],["audit","Audit"],["equipe","Salariés"],["docs","Documents"]].map(([k,l])=>`<button class="tab ${state.tab===k?"on":""}" data-act="tab" data-tab="${k}">${l}</button>`).join("");
+  let inner=state.tab==="synthese"?renderSynthese(a):state.tab==="audit"?renderAudit(a):state.tab==="equipe"?renderEquipe(a):renderDocs(a);
+  return `<div class="fade">
+    <button class="btn ghost sm" data-act="nav-network" style="margin-bottom:12px"><i data-lucide="arrow-left"></i> Réseau</button>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px">
+      <div><h1 id="agency-title" style="font-size:30px;margin:0">${esc(a.name)}</h1><div class="muted" style="margin-top:4px">${esc(a.address||"Adresse non renseignée")} · ${a.employees.length} salarié(s)</div></div>
+      <div style="text-align:right"><span id="agency-pill">${pillHTML(note,state.settings.noteThreshold)}</span><div class="tiny muted" style="margin-top:6px">Période : <b>${ymLabel(state.ym)}</b></div></div></div>
+    <div class="tabbar">${tabs}</div>${inner}</div>`;
+}
+
+/* ============================== RENDER PIPELINE ============================== */
+let chartRefs={};
+function buildCharts(){
+  Object.values(chartRefs).forEach(c=>{try{c.destroy();}catch{}});chartRefs={};
+  if(typeof Chart==="undefined")return;
+  const th=state.settings.threshold;
+  const ev=document.getElementById("chart-evolution");
+  if(ev){const a=currentAgency();if(a){const s=synthSeries(a);
+    chartRefs.ev=new Chart(ev,{type:"bar",data:{labels:s.labels,datasets:[{label:"Contacts entrants",data:s.entrant||[],backgroundColor:"#C2891B",borderRadius:4},{label:"Signatures",data:s.sign,backgroundColor:"#BD4A2A",borderRadius:4},{label:"Résiliations",data:s.ccmi,backgroundColor:"#1F5E59",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:"Hanken Grotesk"}}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"#EFEAE0"}}}}});}}
+  const net=document.getElementById("chart-network");
+  if(net){
+    const y=state.ym.split("-")[0],months=Array.from({length:12},(_,i)=>y+"-"+String(i+1).padStart(2,"0"));
+    const sign=months.map(mo=>state.agencies.reduce((s,a)=>s+monthKpis(a,mo).signatures,0));
+    const entrant=months.map(mo=>state.agencies.reduce((s,a)=>s+monthKpis(a,mo).entrant,0));
+    const totObj=state.agencies.reduce((s,a)=>s+(Number(a.objectives&&a.objectives.signatures)||0),0);
+    const ds=[{label:"Contacts entrants réseau",data:entrant,backgroundColor:"#C2891B",borderRadius:4},{label:"Signatures réseau",data:sign,backgroundColor:"#BD4A2A",borderRadius:4}];
+    if(totObj>0)ds.push({type:"line",label:"Objectif signatures (cumul réseau)",data:months.map(()=>totObj),borderColor:"#1F5E59",borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,tension:0});
+    chartRefs.net=new Chart(net,{type:"bar",data:{labels:months.map(ymShort),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:"Hanken Grotesk"}}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"#EFEAE0"}}}}});}
+}
+function afterRender(){
+  if(window.lucide)lucide.createIcons();
+  buildCharts();
+  const fi=document.getElementById("file-img");if(fi)fi.onchange=onImportImage;
+  const fx=document.getElementById("file-xls");if(fx)fx.onchange=onImportExcel;
+}
+function renderContent(){document.getElementById("content").innerHTML=state.route.view==="network"?renderNetwork():renderAgency();afterRender();}
+function renderApp(){renderSidebar();renderTopbar();renderContent();}
+function refreshDerived(){
+  const a=currentAgency();if(!a)return;const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const cur=currentAudit();
+  if(cur){const k=computeKpis(cur);set("kpi-entrant",k.entrant);set("kpi-sign",k.signatures);set("kpi-ccmi",k.ccmi);set("kpi-transfo",k.transfo.toFixed(1)+"%");set("kpi-transfo-sub",k.signatures+" sign. / "+k.contacts+" traités");NUMLEAVES.forEach(id=>set("total-"+id,leafTotal(cur,id)));
+    MULTILEAVES.forEach(id=>{const node=LEAFNODE[id],lf=cur.leaves&&cur.leaves[id],rs=(lf&&lf.rows)||[];(node.cols||[]).forEach(c=>set("mtot-"+id+"-"+c.key,rs.reduce((s,r)=>s+(Number(r.vals&&r.vals[c.key])||0),0)));});
+    const stats=noteStats(cur),an=document.getElementById("audit-agnote");if(an)an.innerHTML=(stats.agency==null?"—":stats.agency.toFixed(1))+`<span style="font-size:16px;color:var(--ink-soft)">/10</span>`;
+    const ar=document.getElementById("audit-agrecap");if(ar)ar.innerHTML=agencyRecapHTML(cur);
+    const rt=document.getElementById("audit-rattbl");if(rt)rt.innerHTML=ratiosTableRows(cur);
+    const hsb=document.getElementById("calc-cli.contact.hs");if(hsb)hsb.innerHTML=hsLeafBody(cur);}
+  const obj=a.objectives||{},km=monthKpis(a,state.ym);
+  set("syn-sign",km.signatures);set("syn-ccmi",km.ccmi);set("syn-transfo",km.transfo.toFixed(1)+"%");
+  set("syn-sign-sub",obj.signatures?`objectif ${obj.signatures} · ${Math.round(km.signatures/obj.signatures*100)||0}%`:"pas d'objectif");
+  set("syn-ccmi-sub",obj.ccmi?`objectif ${obj.ccmi} · ${Math.round(km.ccmi/obj.ccmi*100)||0}%`:"pas d'objectif");
+  set("agency-title",a.name);const p=document.getElementById("agency-pill");if(p)p.innerHTML=pillHTML(monthNoteStats(a,state.ym).agency,state.settings.noteThreshold);
+}
+
+/* ============================== FIELD BINDING ============================== */
+function writeField(el){
+  const k=el.dataset.k;if(!k)return false;const a=currentAgency();if(!a)return false;
+  if(k==="agency"){a[el.dataset.f]=el.value;}
+  else if(k==="obj"){a.objectives=a.objectives||{};a.objectives[el.dataset.f]=el.value===""?"":Number(el.value);}
+  else if(k==="emp"){const e=a.employees.find(x=>x.id===el.dataset.id);if(e)e[el.dataset.f]=el.value;}
+  else{const au=currentAudit();if(!au)return false;
+    if(k==="auditdate"){au.date=el.value;}
+    else if(k==="note"){au.note=el.value===""?"":Number(el.value);}
+    else if(k==="rating"){au.empRatings=au.empRatings||{};const id=el.dataset.id;au.empRatings[id]=au.empRatings[id]||{};au.empRatings[id][el.dataset.f]=el.dataset.f==="note"?(el.value===""?"":Number(el.value)):el.value;}
+    else if(k==="leaftext"){const lf=ensureLeaf(au,el.dataset.leaf);lf[el.dataset.f]=el.value;}
+    else if(k==="leafnote"){const lf=ensureLeaf(au,el.dataset.leaf);lf.note=el.value;}
+    else if(k==="row"){const lf=ensureLeaf(au,el.dataset.leaf);const r=(lf.rows||[]).find(x=>x.id===el.dataset.row);if(r){const f=el.dataset.f;r[f]=(f==="val"||f==="note")?(el.value===""?"":Number(el.value)):el.value;}}
+    else if(k==="mval"){const lf=ensureLeaf(au,el.dataset.leaf);const r=(lf.rows||[]).find(x=>x.id===el.dataset.row);if(r){r.vals=r.vals||{};r.vals[el.dataset.col]=el.value===""?"":Number(el.value);}}
+    else return false;}
+  scheduleSave();return true;
+}
+document.body.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="ym-pick"){state.ym=el.value;if(state.route.view==="agency")state.auditId=defaultAuditId(currentAgency());renderApp();return;}
+  if(el.id==="audit-sel"){state.auditId=el.value;renderContent();return;}
+  if(el.id==="thr-range"){state.settings.noteThreshold=Number(el.value);const v=document.getElementById("thr-val");if(v)v.textContent=el.value+"/10";scheduleSave();return;}
+  if(el.id==="bulk"){state.bulk=el.value;return;}
+  if(writeField(el))refreshDerived();
+});
+document.body.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="thr-range"){renderApp();return;}
+  if(el.dataset&&el.dataset.k==="auditdate"){writeField(el);renderContent();return;}
+  if(el.dataset&&el.dataset.k){writeField(el);buildCharts();refreshDerived();}
+});
+
+/* ============================== ACTIONS ============================== */
+function addAgencies(names){const c=names.map(n=>({id:uid(),name:n.trim(),address:"",employees:[],objectives:{},audits:[],documents:[]}));state.agencies.push(...c);scheduleSave();return c;}
+function newAuditDate(){
+  if(todayYM()===state.ym)return todayISO();
+  const p=state.ym.split("-").map(Number),dim=new Date(p[0],p[1],0).getDate(),dd=Math.min(new Date().getDate(),dim);
+  return state.ym+"-"+String(dd).padStart(2,"0");
+}
+async function onImportImage(e){const f=e.target.files&&e.target.files[0];if(!f)return;const st=document.getElementById("imp-status");if(st)st.textContent="Import…";try{const dataURL=await fileToScaledDataURL(f);const id=uid();await STORE.set(docKey(id),JSON.stringify({type:"image",dataURL}));const a=currentAgency();a.documents=a.documents||[];a.documents.unshift({id,name:f.name,kind:"image",importedAt:todayISO()});scheduleSave();renderContent();}catch(err){alert("Import image impossible (stockage peut-être plein) : "+err);}e.target.value="";}
+async function onImportExcel(e){const f=e.target.files&&e.target.files[0];if(!f)return;const st=document.getElementById("imp-status");if(st)st.textContent="Import…";try{const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});const id=uid();await STORE.set(docKey(id),JSON.stringify({type:"table",rows,sheet:wb.SheetNames[0]}));const a=currentAgency();a.documents=a.documents||[];a.documents.unshift({id,name:f.name,kind:"excel",rows:rows.length,importedAt:todayISO()});scheduleSave();renderContent();}catch(err){alert("Import Excel impossible : "+err);}e.target.value="";}
+async function openDoc(id){const a=currentAgency();const doc=(a.documents||[]).find(d=>d.id===id);if(!doc)return;let p=null;try{const r=await STORE.get(docKey(id));p=r?JSON.parse(r.value):null;}catch{}let body=!p?`<div class="muted">Contenu indisponible.</div>`:p.type==="image"?`<img src="${p.dataURL}" alt="" style="width:100%;border-radius:10px">`:`<div style="overflow:auto;max-height:60vh"><table style="border-collapse:collapse;font-size:12px;width:100%"><tbody>${p.rows.slice(0,200).map((row,i)=>`<tr>${row.map(c=>`<td style="border:1px solid var(--line);padding:5px 8px;${i===0?"font-weight:700;background:var(--paper2)":"background:#fff"}">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;openModal(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><b class="disp" style="font-size:16px">${esc(doc.name)}</b><button class="btn ghost sm" data-act="close-modal"><i data-lucide="x"></i></button></div>${body}`,760);}
+function confirmDelDoc(id){const a=currentAgency();const doc=(a.documents||[]).find(d=>d.id===id);if(!doc)return;openModal(`<b class="disp" style="font-size:17px">Supprimer ce document ?</b><p class="muted" style="margin:10px 0 18px">« ${esc(doc.name)} » sera définitivement supprimé. Action irréversible.</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-act="close-modal">Annuler</button><button class="btn pri" data-act="do-del-doc" data-id="${id}" style="background:var(--red);border-color:var(--red)">Supprimer</button></div>`);}
+async function doDelDoc(id){try{await STORE.del(docKey(id));}catch{}const a=currentAgency();a.documents=(a.documents||[]).filter(d=>d.id!==id);scheduleSave();closeModal();renderContent();}
+async function exportBackup(){
+  try{
+    const bundle={app:"reseau-audit",version:2,exportedAt:new Date().toISOString(),data:{version:2,agencies:state.agencies,settings:state.settings},docs:{}};
+    let keys=[];try{const r=await STORE.list("fnet:doc:");keys=(r&&r.keys)||[];}catch{}
+    for(const k of keys){try{const r=await STORE.get(k);if(r)bundle.docs[k]=r.value;}catch{}}
+    const blob=new Blob([JSON.stringify(bundle)],{type:"application/json"});const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");link.href=url;link.download="sauvegarde-reseau-audit-"+todayISO()+".json";document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(e){alert("Export impossible : "+e);}
+}
+async function importBackup(file){
+  try{
+    const txt=await file.text();const bundle=JSON.parse(txt);
+    const data=(bundle&&bundle.data)?bundle.data:bundle;
+    if(!data||!Array.isArray(data.agencies))throw new Error("fichier de sauvegarde non reconnu");
+    if(bundle&&bundle.docs){for(const k of Object.keys(bundle.docs)){try{await STORE.set(k,bundle.docs[k]);}catch{}}}
+    const m=migrate(JSON.parse(JSON.stringify(data)));
+    state.agencies=m.agencies;state.settings=m.settings;
+    await STORE.set(DATA_KEY,JSON.stringify({version:2,agencies:state.agencies,settings:state.settings}));
+    state.route={view:"network",id:null};closeModal();renderApp();
+    alert("Sauvegarde restaurée : "+state.agencies.length+" agence(s).");
+  }catch(e){alert("Import impossible : "+(e.message||e));}
+}
+function confirmDelAudit(id){const a=currentAgency();const au=(a.audits||[]).find(x=>x.id===id);if(!au)return;openModal(`<b class="disp" style="font-size:17px">Supprimer cet audit ?</b><p class="muted" style="margin:10px 0 18px">L'audit du ${fmtDate(au.date)} sera définitivement supprimé de l'historique et des KPI. Action irréversible.</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-act="close-modal">Annuler</button><button class="btn pri" data-act="do-del-audit" data-id="${id}" style="background:var(--red);border-color:var(--red)">Supprimer</button></div>`);}
+function doDelAudit(id){const a=currentAgency();a.audits=(a.audits||[]).filter(x=>x.id!==id);if(state.auditId===id)state.auditId=defaultAuditId(a);state.auditEdit=false;scheduleSave();closeModal();renderContent();}
+function openSettings(){const nt=state.settings.noteThreshold;
+    const storeMsg=STORE.kind==="artifact"?`<span style="color:var(--green)"><b>Enregistrement actif.</b> Tes données sont conservées entre les sessions.</span>`
+      :STORE.kind==="local"?`<span style="color:var(--green)"><b>Enregistrement actif</b> dans ce navigateur, sur cet appareil. Pour retrouver tes données, rouvre <b>le même fichier</b> dans <b>le même navigateur</b>. Exporte une sauvegarde pour les conserver ailleurs.</span>`
+      :`<span style="color:var(--red)"><b>⚠ Enregistrement impossible ici</b> : ce mode d'ouverture ne permet pas de sauvegarder. Télécharge le fichier puis ouvre-le directement dans ton navigateur, sinon les données seront perdues à la fermeture.</span>`;
+    openModal(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><b class="disp" style="font-size:18px">Réglages</b><button class="btn ghost sm" data-act="close-modal"><i data-lucide="x"></i></button></div>
+    <div class="card pad" style="background:var(--paper2);margin-bottom:18px"><div style="display:flex;gap:8px;align-items:flex-start"><i data-lucide="hard-drive" style="margin-top:1px"></i><div class="tiny" style="line-height:1.45">${storeMsg}</div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn sm" data-act="export-backup"><i data-lucide="download"></i> Exporter une sauvegarde</button><button class="btn sm" data-act="import-backup"><i data-lucide="upload"></i> Importer une sauvegarde</button><input type="file" id="file-backup" accept=".json,application/json" hidden></div></div>
+    <span class="lab">Seuil d'alerte « en difficulté » (note moyenne)</span>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><input type="range" id="thr-range" min="0" max="10" step="0.5" value="${nt}" style="flex:1"><b class="disp" id="thr-val" style="width:48px">${nt}/10</b></div>
+    <div class="tiny muted" style="margin-bottom:18px">Sous cette note moyenne, l'agence est signalée en rouge (« en difficulté »).</div><div class="sep"></div>
+    <span class="lab">Créer plusieurs agences (une par ligne)</span>
+    <textarea class="in" id="bulk" rows="5" placeholder="Agence Lyon&#10;Agence Bordeaux&#10;Agence Lille&#10;…">${esc(state.bulk)}</textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn pri" data-act="bulk-add"><i data-lucide="plus"></i> Ajouter les agences</button></div>`);
+    const fb=document.getElementById("file-backup");if(fb)fb.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importBackup(f);e.target.value="";};}
+function openModal(html,maxW){document.getElementById("modal-root").innerHTML=`<div class="modal-bg" data-act="close-modal-bg"><div class="modal" style="${maxW?"max-width:"+maxW+"px":""}">${html}</div></div>`;if(window.lucide)lucide.createIcons();}
+function closeModal(){document.getElementById("modal-root").innerHTML="";}
+
+/* ---------- Export PDF d'un audit (via impression navigateur → Enregistrer en PDF) ---------- */
+function empName(a,id){if(!id)return "Non attribué";const e=(a.employees||[]).find(x=>x.id===id);return e?(e.name||"(sans nom)"):"(salarié supprimé)";}
+function reportLeaf(a,au,node){
+  const lf=(au.leaves||{})[node.id];
+  if(node.kind==="text"){const t=(lf&&lf.text)||"",n=(lf&&lf.note)||"";return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)}</div><div>${t?esc(t):"<span class='pr-mut'>—</span>"}</div>${n?`<div class="pr-note">Commentaire : ${esc(n)}</div>`:""}</div>`;}
+  if(node.kind==="calc"){const total=computeHS(au,null);const per=(a.employees||[]).map(e=>({e,v:computeHS(au,e.id)})).filter(x=>leafTotalEmp(au,"cli.contact.entrant",x.e.id)||leafTotalEmp(au,"cli.contact.traite",x.e.id)||leafTotalEmp(au,"cli.contact.relance",x.e.id));
+    return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)} : <b>${total}</b> <span class="pr-mut">(entrants − traités − à relancer)</span></div>${per.length?`<table class="pr-tb"><tr><th>Salarié</th><th>HS</th></tr>${per.map(x=>`<tr><td>${esc(empName(a,x.e.id))}</td><td>${x.v}</td></tr>`).join("")}</table>`:""}</div>`;}
+  const rows=(lf&&lf.rows)||[];
+  if(!rows.length)return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)}</div><div class="pr-mut">—</div></div>`;
+  if(node.kind==="multi"){const cols=node.cols||[];return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)}</div><table class="pr-tb"><tr><th>Salarié</th>${cols.map(c=>`<th>${esc(c.label)}</th>`).join("")}<th>/10</th><th>Commentaire</th></tr>${rows.map(r=>`<tr><td>${esc(empName(a,r.empId))}</td>${cols.map(c=>`<td>${(r.vals&&r.vals[c.key])??""}</td>`).join("")}<td>${r.note??""}</td><td>${esc(r.comment||"")}</td></tr>`).join("")}</table></div>`;}
+  if(node.kind==="qual"){return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)}</div><table class="pr-tb"><tr><th>Salarié</th><th>/10</th><th>Commentaire</th></tr>${rows.map(r=>`<tr><td>${esc(empName(a,r.empId))}</td><td>${r.note??""}</td><td>${esc(r.comment||"")}</td></tr>`).join("")}</table></div>`;}
+  const total=rows.reduce((s,r)=>s+(Number(r.val)||0),0);
+  return `<div class="pr-leaf"><div class="pr-lt">${esc(node.label)} <span class="pr-mut">(total ${total})</span></div><table class="pr-tb"><tr><th>Salarié</th><th>Quantité</th><th>/10</th><th>Commentaire</th></tr>${rows.map(r=>`<tr><td>${esc(empName(a,r.empId))}</td><td>${r.val??""}</td><td>${r.note??""}</td><td>${esc(r.comment||"")}</td></tr>`).join("")}</table></div>`;
+}
+function reportSection(a,au,node){if(node.children)return `<div class="pr-section"><div class="pr-st">${esc(node.label)}</div>${node.children.map(c=>reportSection(a,au,c)).join("")}</div>`;return reportLeaf(a,au,node);}
+function auditReportHTML(a,au){
+  const k=computeKpis(au),ns=noteStats(au),ag=computeRatios(au,null),pf=v=>v==null?"—":v.toFixed(1)+"%";
+  const ratios=`<table class="pr-tb"><tr><th>Ratio</th><th>Valeur</th></tr><tr><td>Traités / entrants</td><td>${pf(ag.r_traite)}</td></tr><tr><td>RDV / entrants</td><td>${pf(ag.r_rdv)}</td></tr><tr><td>Signatures / entrants</td><td>${pf(ag.r_sign)}</td></tr><tr><td>Signatures / R1</td><td>${pf(ag.r_sign_r1)}</td></tr><tr><td>Résiliations / signatures</td><td>${pf(ag.r_resil)}</td></tr><tr><td>HS / entrants</td><td>${pf(ag.r_hs)}</td></tr></table>`;
+  const perEmp=(a.employees||[]).filter(e=>ns.emp[e.id]).map(e=>`<tr><td>${esc(e.name||"(sans nom)")}</td><td>${ns.emp[e.id].avg.toFixed(1)}/10</td><td>${ns.emp[e.id].count}</td></tr>`).join("");
+  const stLabel=au.status==="validated"?"Validé":au.status==="archived"?"Archivé":"Brouillon";
+  return `<div class="pr-doc">
+    <div class="pr-head"><div><div class="pr-title">${esc(a.name||"Agence")}</div><div class="pr-mut">${esc(a.address||"")}</div></div>
+      <div style="text-align:right"><div style="font-weight:700">Audit du ${fmtDate(au.date)}</div><div class="pr-mut">${stLabel}</div></div></div>
+    <table class="pr-tb" style="margin-bottom:14px"><tr><th>Contacts entrants</th><th>Signatures</th><th>Résiliations</th><th>Taux transfo.</th><th>Note agence</th></tr>
+      <tr><td>${k.entrant}</td><td>${k.signatures}</td><td>${k.ccmi}</td><td>${k.transfo.toFixed(1)}%</td><td>${ns.agency==null?"—":ns.agency.toFixed(1)+"/10"}</td></tr></table>
+    ${AUDIT.map(s=>reportSection(a,au,s)).join("")}
+    <div class="pr-section"><div class="pr-st">Ratios de conversion (agence)</div>${ratios}</div>
+    <div class="pr-section"><div class="pr-st">Notes des salariés</div>${perEmp?`<table class="pr-tb"><tr><th>Salarié</th><th>Moyenne</th><th>Points notés</th></tr>${perEmp}</table>`:`<div class="pr-mut">Aucune note saisie.</div>`}</div>
+    <div class="pr-foot">Document généré le ${fmtDate(todayISO())} · Réseau Audit</div></div>`;
+}
+function exportAuditPDF(){
+  const a=currentAgency(),au=currentAudit();if(!a||!au)return;
+  const root=document.getElementById("print-root");if(!root)return;
+  root.innerHTML=auditReportHTML(a,au);
+  const oldTitle=document.title;document.title="Audit "+(a.name||"agence").replace(/[^\w\-]+/g,"_")+"_"+au.date;
+  document.body.classList.add("printing");
+  const cleanup=()=>{document.body.classList.remove("printing");root.innerHTML="";document.title=oldTitle;window.removeEventListener("afterprint",cleanup);};
+  window.addEventListener("afterprint",cleanup);
+  setTimeout(()=>{window.print();setTimeout(cleanup,1500);},60);
+}
+
+document.body.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;const act=t.dataset.act,id=t.dataset.id,a=currentAgency();
+  switch(act){
+    case"nav-network":state.route={view:"network",id:null};renderApp();break;
+    case"nav-agency":{state.route={view:"agency",id};state.tab="synthese";state.auditEdit=false;state.auditId=defaultAuditId(state.agencies.find(x=>x.id===id));renderApp();break;}
+    case"open-settings":openSettings();break;
+    case"export-backup":exportBackup();break;
+    case"import-backup":{const fb=document.getElementById("file-backup");if(fb)fb.click();break;}
+    case"close-modal":closeModal();break;
+    case"close-modal-bg":if(e.target.classList.contains("modal-bg"))closeModal();break;
+    case"add-agency":{const c=addAgencies(["Nouvelle agence"]);state.route={view:"agency",id:c[0].id};state.tab="synthese";state.auditId=null;renderApp();break;}
+    case"bulk-add":{const names=(state.bulk||"").split("\n").map(s=>s.trim()).filter(Boolean);if(names.length)addAgencies(names);state.bulk="";closeModal();renderApp();break;}
+    case"tab":state.tab=t.dataset.tab;state.auditEdit=false;renderContent();break;
+    case"synthview":state.synthView=t.dataset.view;renderContent();break;
+    case"toggle-section":if(state.closed.has(id))state.closed.delete(id);else state.closed.add(id);renderContent();break;
+    case"toggle-note":if(state.openNotes.has(id))state.openNotes.delete(id);else state.openNotes.add(id);renderContent();break;
+    case"new-audit":{a.audits=a.audits||[];const au={id:uid(),date:newAuditDate(),status:"draft",leaves:{},empRatings:{},note:""};a.audits.push(au);state.ym=au.date.slice(0,7);state.auditId=au.id;state.auditEdit=false;state.auditExpanded.add(au.id);scheduleSave();renderApp();break;}
+    case"validate-audit":{const au=currentAudit();if(au)au.status="validated";scheduleSave();renderContent();break;}
+    case"reopen-audit":{const au=currentAudit();if(au)au.status="draft";scheduleSave();renderContent();break;}
+    case"archive-audit":{const au=currentAudit();if(au)au.status="archived";scheduleSave();renderContent();break;}
+    case"unarchive-audit":{const au=currentAudit();if(au)au.status="validated";scheduleSave();renderContent();break;}
+    case"open-edit":{state.auditId=id;state.auditEdit=true;renderContent();break;}
+    case"audit-list":{state.auditEdit=false;renderContent();break;}
+    case"toggle-audit-exp":{if(state.auditExpanded.has(id))state.auditExpanded.delete(id);else state.auditExpanded.add(id);renderContent();break;}
+    case"pdf-audit":{state.auditId=id;exportAuditPDF();break;}
+    case"toggle-arch":state.archOpen=!state.archOpen;renderContent();break;
+    case"export-pdf":exportAuditPDF();break;
+    case"del-audit":confirmDelAudit(id);break;
+    case"do-del-audit":doDelAudit(id);break;
+    case"add-row":{const au=currentAudit();const leaf=t.dataset.leaf;const lf=ensureLeaf(au,leaf);lf.rows=lf.rows||[];const row={id:uid(),empId:"",note:"",comment:""};if(LEAFKIND[leaf]==="multi")row.vals={};else if(LEAFKIND[leaf]!=="qual")row.val="";lf.rows.push(row);scheduleSave();renderContent();break;}
+    case"del-row":{const au=currentAudit();const lf=ensureLeaf(au,t.dataset.leaf);lf.rows=(lf.rows||[]).filter(r=>r.id!==t.dataset.row);scheduleSave();renderContent();break;}
+    case"reprendre-note":{const au=currentAudit();if(au)au.note=Number(t.dataset.val);scheduleSave();renderContent();break;}
+    case"add-emp":{a.employees.push({id:uid(),name:"",role:""});scheduleSave();renderContent();break;}
+    case"del-emp":{a.employees=a.employees.filter(x=>x.id!==id);scheduleSave();renderContent();break;}
+    case"star":{const au=currentAudit();if(!au)break;au.empRatings=au.empRatings||{};const val=Number(t.dataset.val),eid=t.dataset.emp;au.empRatings[eid]=au.empRatings[eid]||{};const cur=Number(au.empRatings[eid].note);au.empRatings[eid].note=cur===val?val-1:val;scheduleSave();renderContent();break;}
+    case"import-image":document.getElementById("file-img").click();break;
+    case"import-excel":document.getElementById("file-xls").click();break;
+    case"open-doc":openDoc(id);break;
+    case"del-doc":confirmDelDoc(id);break;
+    case"do-del-doc":doDelDoc(id);break;
+  }
+});
+
+/* ============================== BOOT ============================== */
+(async function(){
+  const d=await loadData();
+  if(d){const m=migrate(d);state.agencies=m.agencies;state.settings=m.settings;scheduleSave();}
+  renderApp();
+})();
+</script>
+</body>
+</html>

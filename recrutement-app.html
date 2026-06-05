@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maisons Naturéa — Recrutement franchise</title>
@@ -164,7 +165,7 @@ tr:hover td{background:var(--sand);cursor:pointer}
 .qi select{padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13.5px;background:var(--sand);width:100%;max-width:400px}
 
 /* AVATAR */
-.av{width:56px;height:56px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black','Archivo',sans-serif;font-size:18px;color:var(--gold2);font-weight:900;flex-shrink:0;letter-spacing:.5px}
+.av{width:56px;height:56px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black','Archivo',sans-serif;font-size:18px;color:#E5965C;font-weight:900;flex-shrink:0;letter-spacing:.5px}
 
 /* PORTAL */
 .portal-hero{background:var(--ink);border-radius:16px;padding:28px 32px;margin-bottom:22px;display:flex;align-items:center;gap:22px;background-image:repeating-linear-gradient(135deg,transparent,transparent 50px,rgba(214,147,98,.04) 50px,rgba(214,147,98,.04) 100px)}
@@ -235,39 +236,59 @@ tr:hover td{background:var(--sand);cursor:pointer}
 
 
 /* ============================================================
-   HARMONISATION CHARTE GRAPHIQUE NATURÉA
-   Injection automatique — peut être retirée d'un bloc
+   CHARTE GRAPHIQUE NATURÉA — source : Plaquette commerciale V10
+   Vert du logo #41532A (accent principal) · Terracotta #D69362 (secondaire)
+   Police Archivo (substitut de Gopher)
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap');
-
-/* === HARMONISATION CHARTE NATURÉA === */
-:root {
-  --mist: #FBFAF5 !important;
-  --sand: #EDE5D2 !important;
-  --text: #1E2D10 !important;
-  --ink: #2B4A1A !important;
-  --muted: #6B7A56 !important;
-  --border: #DDD5BF !important;
-  --gold: #E07840 !important;
-  --green: #5A7A3A !important;
-  --purple: #7A5E8D !important;
-  --red: #B8453D !important;
+:root{
+  /* Fonds & neutres */
+  --bg:#FBFAF5!important; --paper:#FBFAF5!important; --paper2:#FFFFFF!important;
+  --surface:#FFFFFF!important; --white:#FFFFFF!important; --card:#FFFFFF!important; --bg4:#FFFFFF!important;
+  --surface-alt:#F2EDE3!important; --cream:#F2EDE3!important; --sand:#F2EDE3!important; --sand2:#E9E1D1!important;
+  --mist:#F6F2E9!important; --faint:#F6F2E9!important; --bg2:#F2EDE3!important; --bg3:#E9E1D1!important;
+  --ink:#1E2A18!important; --text:#1E2A18!important; --ink2:#2E3A26!important; --ink3:#46503C!important;
+  --text2:#46503C!important; --text3:#5E6B4F!important; --ink-soft:#46503C!important; --ink-mute:#9BA889!important;
+  --muted:#5E6B4F!important; --subtle:#9BA889!important;
+  --border:#E2DCCD!important; --border2:#EDE7DA!important; --border-strong:#D8D0BC!important;
+  --line:#E2DCCD!important; --line2:#EDE7DA!important;
+  /* Accent PRINCIPAL = VERT DU LOGO #41532A (toutes les variantes "primaire") */
+  --accent:#41532A!important; --accent-soft:#EAEFE0!important; --accent-ink:#38471F!important;
+  --primary:#41532A!important; --primary-l:#556B36!important; --primary-d:#38471F!important; --primary-soft:#EAEFE0!important;
+  --forest:#41532A!important; --forest2:#38471F!important;
+  --gold:#41532A!important; --gold2:#38471F!important; --gold3:#EAEFE0!important;
+  --blue:#41532A!important; --blue-dark:#38471F!important; --blue-light:#EAEFE0!important;
+  --clay:#41532A!important; --clay-d:#38471F!important; --clay-soft:#EAEFE0!important;
+  --green:#41532A!important; --green-soft:#EAEFE0!important; --ok:#41532A!important;
+  /* Accent SECONDAIRE = ORANGE DU LOGO #D69362 */
+  --wood:#D69362!important; --wood-soft:#F6E7D7!important; --wood-ink:#B87648!important;
+  --wood-l:#E2A982!important; --wood-d:#B87648!important;
+  --orange:#D69362!important; --orange-dark:#B87648!important;
+  --terra:#D69362!important; --terra2:#B87648!important;
+  --petrol:#D69362!important; --petrol-soft:#F6E7D7!important;
+  --purple:#D69362!important;
+  /* Olive / sauge (tertiaire) */
+  --sage:#839049!important; --sage2:#6B7A3A!important; --yellow:#C68B2C!important;
+  /* Sémantique */
+  --warn:#C68B2C!important; --amber:#C68B2C!important; --amber-soft:#F7ECD7!important;
+  --danger:#B8453D!important; --red:#B8453D!important; --red-soft:#F5DEDC!important;
+  /* Familles de police */
+  --sans:'Archivo',system-ui,-apple-system,sans-serif!important;
+  --serif:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --display:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --mono:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
 }
-
-
-/* Force fonts harmonisées */
-html, body, button, input, select, textarea, p, span, td, th, li, a, label, div {
-  font-family: "DM Sans", system-ui, -apple-system, sans-serif !important;
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div, small, strong, b {
+  font-family:'Archivo',system-ui,-apple-system,sans-serif!important;
 }
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Cormorant Garamond", Georgia, serif !important;
-  letter-spacing: -0.3px;
+h1, h2, h3, h4, h5, h6,
+.disp, .kpibig, .brand, .page-title, .kpi-v, .stat-v, [class*="title"], [class*="kpi-v"] {
+  font-family:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  font-weight:800!important; letter-spacing:-0.01em!important;
 }
 code, pre, .mono, [class*="mono"] {
-  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace !important;
+  font-family:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
 }
-
-/* === FIN HARMONISATION === */
+/* === FIN CHARTE NATURÉA === */
 </style>
 </head>
 <body>
@@ -511,14 +532,20 @@ save();
 // ══════════════════════════════════════════
 // MODE / RÔLE (login désactivé temporairement — système d'auth à intégrer plus tard)
 // ══════════════════════════════════════════
+// franchisorSession = true tant que la session a démarré côté franchiseur.
+// Reste true quand le franchiseur bascule en vue candidat pour accompagner.
+// Une vraie session candidat (ouverte par le portail dédié) la laisse à false.
+let franchisorSession=false;
 function setAdminMode(){
   me={role:'admin',email:'admin@maisons-naturea.fr',name:'Franchiseur'};
+  franchisorSession=true;
   applyMode();
   go('dashboard');
 }
-function setCandidateMode(cid){
+function setCandidateMode(cid, asFranchisor){
   const c=DB.find(x=>x.id===cid); if(!c) return;
   me={role:'candidate',email:c.email,name:c.prenom+' '+c.nom,id:c.id};
+  franchisorSession=!!asFranchisor; // true seulement si accompagnement franchiseur
   applyMode();
   go('portal-home');
 }
@@ -536,6 +563,12 @@ function applyMode(){
     document.getElementById('nav-admin').style.display='none';
     document.getElementById('nav-cand').style.display='block';
   }
+  // Le bouton "Changer de vue" reste réservé à une session franchiseur
+  // (y compris quand il bascule en vue candidat pour accompagner).
+  // Une vraie session candidat (portail dédié) ne le voit jamais.
+  document.getElementById('sb-switch').style.display = franchisorSession ? 'flex' : 'none';
+  // Libellé adapté selon la vue courante
+  document.getElementById('sb-switch').textContent = me.role==='candidate' ? '⇄ Revenir vue franchiseur' : '⇄ Changer de vue';
 }
 // Bascule mode candidat : ouvre une mini-modale pour choisir
 function switchToCandidate(){
@@ -543,7 +576,7 @@ function switchToCandidate(){
   const html=`<div class="ov" onclick="closeMini()"></div>
   <div class="mini-pick">
     <h4 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);margin-bottom:14px">Voir l'espace de quel candidat ?</h4>
-    ${DB.map(c=>`<button class="mini-row" onclick="closeMini();setCandidateMode('${c.id}')"><span class="av" style="width:36px;height:36px;font-size:13px">${(c.prenom[0]||'')+(c.nom[0]||'')}</span><span><div style="font-weight:600;color:var(--ink)">${c.prenom} ${c.nom}</div><div style="font-size:11px;color:var(--muted)">${c.email}</div></span></button>`).join('')}
+    ${DB.map(c=>`<button class="mini-row" onclick="closeMini();setCandidateMode('${c.id}',true)"><span class="av" style="width:36px;height:36px;font-size:13px">${(c.prenom[0]||'')+(c.nom[0]||'')}</span><span><div style="font-weight:600;color:var(--ink)">${c.prenom} ${c.nom}</div><div style="font-size:11px;color:var(--muted)">${c.email}</div></span></button>`).join('')}
     <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%" onclick="closeMini()">Annuler</button>
   </div>`;
   const w=document.createElement('div'); w.id='mini-wrap'; w.innerHTML=html; document.body.appendChild(w);
@@ -552,6 +585,8 @@ function closeMini(){ const w=document.getElementById('mini-wrap'); if(w) w.remo
 function backToAdmin(){ setAdminMode(); }
 // Compat : doLogout/doLogin/ql conservés en stub pour ne rien casser
 function doLogin(){} function ql(){} function doLogout(){
+  // Sécurité : aucune bascule possible hors d'une session franchiseur.
+  if(!franchisorSession) return;
   if(me && me.role==='candidate') backToAdmin(); else switchToCandidate();
 }
 
@@ -751,6 +786,7 @@ function buildDocList(containerId, cid, readOnly){
         let questActions='';
         if(questDone){
           questActions=`<button class="doc-btn view" onclick="toggleInlineQuest('${containerId}','${cid}')">👁 Voir réponses</button>`;
+          if(isAdmin) questActions+=`<button class="doc-btn dl" onclick="printQuest('${cid}')">🖨 Imprimer / PDF</button>`;
           if(!isAdmin) questActions+=`<button class="doc-btn upload" onclick="editInlineQuest('${containerId}','${cid}')">✏️ Modifier</button>`;
         } else {
           if(!isAdmin) questActions=`<button class="doc-btn upload" onclick="editInlineQuest('${containerId}','${cid}')">📋 Remplir</button>`;
@@ -827,19 +863,14 @@ function toggleInlineQuest(containerId, cid){
   const panel=document.getElementById('inline-quest-panel-'+containerId);
   if(panel.style.display==='none'||!panel.style.display){
     const c=DB.find(x=>x.id===cid);
-    if(c&&c.questionnaire){
-      const q=c.questionnaire;
-      const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
-      panel.innerHTML=`<div class="pcard" style="margin-top:4px"><h4>📋 Réponses — ${q.date}</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>`;
-      panel.style.display='block';
-    }
+    panel.innerHTML=(c&&c.questionnaire)?qRecapHTML(cid):'';
+    panel.style.display='block';
   } else { panel.style.display='none'; }
 }
 function editInlineQuest(containerId, cid){
   const panel=document.getElementById('inline-quest-panel-'+containerId);
   panel.style.display='block';
   panel.innerHTML=`<div style="margin-top:4px">${qHTML(cid)}</div>`;
-  // Override saveQ to refresh inline after save
   window._inlineQuestCtx={containerId,cid};
 }
 
@@ -1002,77 +1033,416 @@ function startPortalDisc(){
 }
 
 // ══════════════════════════════════════════
-// QUESTIONNAIRE
+// QUESTIONNAIRE — Dossier unique fusionné (CEGC + SMABTP / Réseau Naturéa)
+// Formulaire complet remis au conseil de décision du franchiseur ET aux assureurs.
+// Tous les champs sont optionnels : un candidat peut le compléter progressivement.
+// Piloté par le schéma QFORM ci-dessous (génère le formulaire, le récap et la sauvegarde).
+// ⚠️ Aucun champ ici n'est lu par le portail (seuls statut/date du candidat le sont).
 // ══════════════════════════════════════════
+const OUINON=[['Oui','Oui'],['Non','Non']];
+const QFORM=[
+ {t:'🛡️ Garanties souhaitées', help:"Cochez la ou les garanties envisagées (les assurances construction ne se souscrivent pas sans garantie financière).", f:[
+   {k:'g_livraison',l:'Garantie financière de livraison à prix et délais convenus',type:'check'},
+   {k:'g_achevement',l:"Garantie financière d'achèvement",type:'check'},
+   {k:'g_bonnefin',l:'Garantie de bonne fin',type:'check'},
+   {k:'g_acompte',l:"Garantie de remboursement d'acompte",type:'check'},
+   {k:'g_packco',l:"Assurance construction (RC pro / RC décennale / RC exploitation / Dommages chantier / Dommages-ouvrage)",type:'check'},
+   {k:'g_cnr',l:'Garantie CNR (constructeur non réalisateur) pour porteur de VEFA',type:'check'},
+ ]},
+
+ {t:"🏢 Identité de l'entreprise", f:[
+   {k:'soc_creee',l:'Société déjà créée ?',type:'radio',opts:[['Oui','Oui'],['En cours','En cours de création'],['Non','Non, pas encore']]},
+   {k:'rs',l:'Raison sociale',type:'text'},
+   {k:'enseigne',l:'Enseigne / marque commerciale',type:'text'},
+   {k:'siren',l:'N° SIREN',type:'text'},
+   {k:'ape',l:'Code APE',type:'text'},
+   {k:'tva',l:'N° TVA intracommunautaire',type:'text'},
+   {k:'forme',l:'Forme juridique',type:'text'},
+   {k:'date_creation',l:'Date de création',type:'text',ph:'JJ/MM/AAAA'},
+   {k:'capital',l:'Capital social (€)',type:'num'},
+   {k:'cloture',l:'Date de clôture des exercices',type:'text',ph:'JJ/MM'},
+   {k:'objet',l:'Objet social',type:'area'},
+   {k:'adresse',l:'Adresse du siège social',type:'text'},
+   {k:'cp',l:'Code postal',type:'text'},
+   {k:'ville',l:'Ville',type:'text'},
+   {k:'tel',l:'Téléphone',type:'text'},
+   {k:'portable',l:'Portable',type:'text'},
+   {k:'email',l:'Email',type:'text'},
+   {k:'site',l:'Site internet',type:'text'},
+   {k:'conv_fin',l:'N° de convention financière (éventuel)',type:'text'},
+ ]},
+
+ {t:'👥 Répartition du capital & bénéficiaires effectifs', help:"Personnes détenant directement ou indirectement plus de 25 % du capital ou des droits de vote.", f:(()=>{
+   const a=[]; for(let i=1;i<=5;i++){ a.push({k:'sub_cap'+i,l:'Associé / actionnaire '+i,type:'sub'});
+     a.push({k:'cap'+i+'_nom',l:'Nom et prénom',type:'text'});
+     a.push({k:'cap'+i+'_part',l:'Montant ou % détenu',type:'text'});
+     a.push({k:'cap'+i+'_be',l:'Bénéficiaire effectif ?',type:'radio',opts:OUINON});
+     a.push({k:'cap'+i+'_naiss',l:'Date de naissance',type:'text',ph:'JJ/MM/AAAA'});
+     a.push({k:'cap'+i+'_lieu',l:'Lieu de naissance',type:'text'});
+   } return a;
+ })()},
+
+ {t:'🧑\u200d💼 Effectifs / organigramme', f:[
+   {k:'eff_global',l:'Effectif global salarié',type:'num'},
+   {k:'sub_eff',l:'Détail par service (nombre)',type:'sub'},
+   {k:'eff_direction',l:'Direction',type:'num'},
+   {k:'eff_admin',l:'Administratifs',type:'num'},
+   {k:'eff_commercial',l:'Commerciaux',type:'num'},
+   {k:'eff_commercial_indep',l:'dont indépendants',type:'num'},
+   {k:'eff_bet',l:"Bureau d'études technique (BET)",type:'num'},
+   {k:'eff_conducteurs',l:'Conducteurs de travaux',type:'num'},
+   {k:'eff_ouvriers',l:'Ouvriers / productifs',type:'num'},
+   {k:'salaires_n1',l:'Salaires bruts ouvriers N-1 (€)',type:'num'},
+   {k:'salaires_n2',l:'Salaires bruts ouvriers N-2 (€)',type:'num'},
+ ]},
+
+ {t:'👤 Dirigeant principal', help:"À dupliquer hors appli pour chaque personne participant aux décisions.", f:[
+   {k:'dir_nom',l:'Nom',type:'text'},
+   {k:'dir_prenoms',l:'Prénom(s)',type:'text'},
+   {k:'dir_adresse',l:'Adresse personnelle',type:'text'},
+   {k:'dir_cp',l:'Code postal',type:'text'},
+   {k:'dir_ville',l:'Ville',type:'text'},
+   {k:'dir_mobile',l:'Téléphone mobile',type:'text'},
+   {k:'dir_email',l:'Email professionnel',type:'text'},
+   {k:'dir_ne_le',l:'Né(e) le',type:'text',ph:'JJ/MM/AAAA'},
+   {k:'dir_ne_a',l:'à (lieu)',type:'text'},
+   {k:'dir_fonction',l:"Fonction dans l'entreprise",type:'text'},
+   {k:'dir_depuis',l:'Depuis le',type:'text',ph:'JJ/MM/AAAA'},
+   {k:'dir_anciennete',l:'Ancienneté dans la profession',type:'text'},
+   {k:'dir_qualif',l:'Qualification professionnelle',type:'text'},
+   {k:'dir_diplomes',l:'Diplôme(s) obtenu(s)',type:'text'},
+   {k:'dir_fonctions_prec',l:'Fonctions précédentes (employeurs, villes)',type:'area'},
+   {k:'dir_autres',l:"Fonctions dans d'autres entreprises ?",type:'radio',opts:OUINON},
+   {k:'dir_autres_detail',l:'Si oui, lesquelles ?',type:'area'},
+ ]},
+
+ {t:'🧾 Conseils externes', f:[
+   {k:'sub_ec',l:'Expert-comptable',type:'sub'},
+   {k:'ec_nom',l:'Nom & prénom',type:'text'},
+   {k:'ec_tel',l:'Téléphone',type:'text'},
+   {k:'ec_email',l:'Email',type:'text'},
+   {k:'ec_adresse',l:'Adresse',type:'text'},
+   {k:'ec_cpville',l:'Code postal / ville',type:'text'},
+   {k:'sub_cac',l:'Commissaire aux comptes',type:'sub'},
+   {k:'cac_nom',l:'Nom & prénom',type:'text'},
+   {k:'cac_tel',l:'Téléphone',type:'text'},
+   {k:'cac_email',l:'Email',type:'text'},
+   {k:'cac_adresse',l:'Adresse',type:'text'},
+   {k:'cac_cpville',l:'Code postal / ville',type:'text'},
+ ]},
+
+ {t:'🏷️ Adhésions & labels', f:[
+   {k:'adh_orgpro',l:'Adhésion à une organisation professionnelle ?',type:'radio',opts:OUINON},
+   {k:'adh_orgpro_nom',l:'Si oui, laquelle / lesquelles ?',type:'text'},
+   {k:'marque_nf',l:'Titulaire de la marque NF ?',type:'radio',opts:OUINON},
+   {k:'adh_qualite',l:'Adhésion à une organisation qualité ?',type:'radio',opts:OUINON},
+   {k:'adh_qualite_nom',l:'Si oui, laquelle ?',type:'text'},
+   {k:'adh_franchise',l:'Adhésion à une franchise ?',type:'radio',opts:OUINON},
+   {k:'adh_franchise_nom',l:'Si oui, laquelle ?',type:'text',ph:'Réseau Naturéa'},
+   {k:'relations',l:'Relations privilégiées avec une autre société ?',type:'radio',opts:OUINON},
+   {k:'relations_detail',l:"Si oui, raison sociale et secteur d'activité",type:'area'},
+ ]},
+
+ {t:"📊 Activité & organisation", help:"Répartition du chiffre d'affaires par secteur (%).", f:[
+   {k:'ca_mi_ccmi',l:'Maisons individuelles — contrats de construction (CCMI) %',type:'num'},
+   {k:'ca_mi_vefa',l:'Maisons individuelles — VEFA %',type:'num'},
+   {k:'ca_mi_marche',l:'Maisons individuelles — marché de travaux %',type:'num'},
+   {k:'ca_renovation',l:'Rénovation, etc. %',type:'num'},
+   {k:'ca_batiments',l:'Bâtiments industriels / commerciaux %',type:'num'},
+   {k:'ca_tp',l:'Travaux publics, etc. %',type:'num'},
+   {k:'sub_promo',l:'Autres activités',type:'sub'},
+   {k:'op_vefa',l:'Opérations de promotion ou VEFA ?',type:'radio',opts:OUINON},
+   {k:'op_vefa_pct',l:'Si oui, % du CA du dernier exercice',type:'num'},
+   {k:'autres_ouvrages',l:'Ouvrages autres que maisons individuelles ?',type:'radio',opts:OUINON},
+   {k:'autres_ouvrages_detail',l:'Si oui, nature et % du CA',type:'text'},
+   {k:'autres_travaux',l:'Travaux autres que construction neuve ?',type:'radio',opts:OUINON},
+   {k:'autres_travaux_detail',l:'Si oui, lesquels et % du CA',type:'text'},
+ ]},
+
+ {t:'🧱 Technique de construction', help:"Répartition de la technique employée (%).", f:[
+   {k:'tech_trad',l:'Traditionnelle %',type:'num'},
+   {k:'tech_bois',l:'Bois %',type:'num'},
+   {k:'tech_autre',l:'Autre %',type:'num'},
+   {k:'tech_autre_desc',l:'Si autre, descriptif du mode constructif',type:'area'},
+ ]},
+
+ {t:'🔗 Sous-traitance & conception', f:[
+   {k:'st_mi',l:'Sous-traitance des maisons individuelles',type:'radio',opts:[['100%','100 %'],['Partielle','Partielle'],['Aucune','Aucune']]},
+   {k:'st_mi_pct',l:'Si partielle, % sous-traité',type:'num'},
+   {k:'st_nature',l:'Nature des travaux sous-traités',type:'area'},
+   {k:'gps',l:'Garantie de paiement sous-traitant ?',type:'radio',opts:OUINON},
+   {k:'gps_org',l:'Si oui, auprès de quel organisme ?',type:'text'},
+   {k:'plans',l:'Fournissez-vous les plans ?',type:'radio',opts:OUINON},
+   {k:'plans_systeme',l:'Si oui, quel système informatique ?',type:'text'},
+ ]},
+
+ {t:'⚙️ Gestion (réalisée par)', help:"Pour chaque fonction, indiquez le mode de réalisation.", f:(()=>{
+   const G=[['gest_commercial','Service commercial'],['gest_compta','Comptabilité'],['gest_be','Bureau d\'étude (conception)'],['gest_tech','Services techniques (coordination)'],['gest_sav','Service après-vente']];
+   return G.map(([k,l])=>({k,l,type:'sel',opts:['Salariés','Sous-traité','Mixte']})).concat([{k:'gest_be_diplome',l:'BET — diplôme',type:'text'}]);
+ })()},
+
+ {t:'🔬 Études techniques spécialisées', help:"Réalisées par l'entreprise ou sous-traitées (préciser le sous-traitant).", f:(()=>{
+   const E=[['et_implantation','Implantation'],['et_sol','Sol'],['et_beton','Béton'],['et_thermique','Thermique'],['et_sismique','Sismique']];
+   const a=[]; E.forEach(([k,l])=>{ a.push({k,l,type:'sel',opts:['Entreprise','Sous-traité']}); a.push({k:k+'_st',l:l+' — nom/adresse sous-traitant',type:'text'}); }); return a;
+ })()},
+
+ {t:'📦 Matériaux', f:(()=>{
+   const M=[['mat_parpaings','Parpaings'],['mat_charpente','Charpente'],['mat_couverture','Couverture'],['mat_menuiserie','Menuiserie'],['mat_sanitaire','Sanitaire'],['mat_carrelages','Carrelages']];
+   return M.map(([k,l])=>({k,l,type:'sel',opts:['Achetés par l\'entreprise','Fournis par le réalisateur','Fabriqués par l\'entreprise']}));
+ })()},
+
+ {t:'🛠️ Réalisation par lot', f:(()=>{
+   const R=[['real_maconnerie','Maçonnerie'],['real_charpente','Charpente'],['real_couverture','Couverture'],['real_menuiserie','Menuiserie'],['real_plomberie','Plomberie'],['real_carrelages','Carrelages'],['real_autres','Autres lots']];
+   return R.map(([k,l])=>({k,l,type:'sel',opts:['Totalement salariés','Partiellement salariés','Sous-traité']}));
+ })()},
+
+ {t:'💶 Informations comptables & financières', f:[
+   {k:'marge_moy',l:'Marge brute moyenne pratiquée %',type:'num'},
+   {k:'marge_min',l:'Marge brute minimale acceptée %',type:'num'},
+   {k:'prix_revient_base',l:'Base de calcul du prix de revient & par qui',type:'area'},
+   {k:'methode',l:'Méthode comptable des travaux en cours',type:'radio',opts:[['Achèvement','À l\'achèvement'],['Avancement','À l\'avancement']]},
+   {k:'methode_detail',l:'Détail du calcul des travaux en cours au bilan',type:'area'},
+   {k:'valo_carnet',l:'Valorisez-vous votre carnet de commandes ?',type:'radio',opts:OUINON},
+   {k:'valo_comment',l:'Si oui, comment ?',type:'area'},
+ ]},
+
+ {t:'🏪 Activité commerciale & gamme de prix', f:[
+   {k:'zone',l:"Zone d'activité de l'entreprise",type:'text'},
+   {k:'agences',l:'Agences / bureaux (nombre & localisation)',type:'area'},
+   {k:'temoins',l:'Maisons témoins (nombre & localisation)',type:'area'},
+   {k:'remu_salaries',l:'Rémunération commerciaux salariés',type:'text'},
+   {k:'remu_indep',l:'Rémunération commerciaux indépendants',type:'text'},
+   {k:'prix_moyen',l:'Prix moyen de vente (K€ TTC)',type:'num'},
+   {k:'prix_m2',l:'Prix de vente pratiqué par m² habitable',type:'text'},
+   {k:'rep_inf150',l:'Ventes < 150 K€ TTC (%)',type:'num'},
+   {k:'rep_150_300',l:'Ventes 150 à 300 K€ TTC (%)',type:'num'},
+   {k:'rep_sup300',l:'Ventes > 300 K€ TTC (%)',type:'num'},
+ ]},
+
+ {t:'📝 Contrat CCMI & délais', f:[
+   {k:'acompte',l:'Acompte demandé à la signature ?',type:'radio',opts:OUINON},
+   {k:'acompte_pct',l:'Si oui, quel % ?',type:'num'},
+   {k:'delai_vente_permis',l:'Délai vente → permis (mois)',type:'num'},
+   {k:'delai_permis_ouv',l:'Délai permis → ouverture (mois)',type:'num'},
+   {k:'delai_admin',l:'Délai administratif signature → ouverture chantier (mois)',type:'num'},
+   {k:'duree_constr',l:'Durée de la construction (mois)',type:'num'},
+   {k:'signe_controle',l:'Qui signe et contrôle le contrat définitif ?',type:'text'},
+   {k:'do_clients',l:'Souscrivez-vous la Dommages-Ouvrage pour vos clients ?',type:'radio',opts:OUINON},
+   {k:'do_assureurs',l:'Si oui, nom du/des assureur(s)',type:'text'},
+   {k:'do_refacture',l:'Refacturez-vous cette garantie ?',type:'radio',opts:OUINON},
+   {k:'do_prix',l:'Si oui, à quel prix (€) ?',type:'num'},
+ ]},
+
+ {t:'📈 Activité chiffrée (N-2 / N-1 / N / en cours)', help:"En nombre de maisons, sauf 'ventes en valeur'.", f:(()=>{
+   const ROWS=[['ventes','Ventes acceptées'],['annulees','Ventes annulées'],['ouvertures','Ouvertures de chantiers'],['livraisons','Livraisons'],['prixmoy','Prix de vente moyen TTC (€)'],['ventes_val','Ventes en valeur (K€)']];
+   const COLS=[['n2','N-2'],['n1','N-1'],['n','N'],['ec','En cours']];
+   const a=[]; ROWS.forEach(([rk,rl])=>{ a.push({k:'sub_'+rk,l:rl,type:'sub'}); COLS.forEach(([ck,cl])=>a.push({k:'act_'+rk+'_'+ck,l:cl,type:rk==='prixmoy'?'num':'num'})); }); return a;
+ })()},
+
+ {t:'📚 Carnet de commandes (à la date du dossier)', f:[
+   {k:'sub_cc_ccmi',l:'CCMI',type:'sub'},
+   {k:'cc_ccmi_nb',l:'Maisons signées non commencées — nombre',type:'num'},
+   {k:'cc_ccmi_val',l:'Maisons signées non commencées — valeur (K€)',type:'num'},
+   {k:'cc_chantiers_nb',l:'Chantiers en cours — nombre',type:'num'},
+   {k:'cc_chantiers_val',l:'Chantiers en cours — valeur (K€)',type:'num'},
+   {k:'sub_cc_autres',l:'Autres activités',type:'sub'},
+   {k:'cc_autres_signes_val',l:'Chantiers signés non commencés — valeur (K€)',type:'num'},
+   {k:'cc_autres_encours_val',l:'Chantiers en cours — valeur (K€)',type:'num'},
+   {k:'sub_mnc',l:'Maisons non commencées (détail)',type:'sub'},
+   {k:'mnc_purges_nb',l:'Délais recours tiers purgés — nombre',type:'num'},
+   {k:'mnc_purges_prix',l:'Délais recours tiers purgés — prix vente HT (€)',type:'num'},
+   {k:'mnc_pc_obtenu_nb',l:'PC obtenu, recours tiers en cours — nombre',type:'num'},
+   {k:'mnc_pc_obtenu_prix',l:'PC obtenu, recours tiers en cours — prix vente HT (€)',type:'num'},
+   {k:'mnc_pc_non_nb',l:'PC non obtenu — nombre',type:'num'},
+   {k:'mnc_pc_non_prix',l:'PC non obtenu — prix vente HT (€)',type:'num'},
+ ]},
+
+ {t:'🛡️ Assurances & garanties actuelles', f:[
+   {k:'ga_deja',l:'Bénéficiez-vous déjà d\'une garantie de livraison ?',type:'radio',opts:OUINON},
+   {k:'ga_org',l:'Si oui, auprès de quel(s) organisme(s) ?',type:'text'},
+   {k:'ass_assureur',l:'Nom de votre assureur',type:'text'},
+   {k:'sub_ass',l:'Contrats en cours (compagnie / n° / depuis)',type:'sub'},
+   {k:'ass_rcpro',l:'RC professionnelle',type:'text',ph:'compagnie · n° · depuis'},
+   {k:'ass_rcdec',l:'RC décennale',type:'text',ph:'compagnie · n° · depuis'},
+   {k:'ass_gflpdc',l:'Garantie financière de livraison',type:'text',ph:'compagnie · n° · depuis'},
+   {k:'ass_gps',l:'Garantie paiement sous-traitants',type:'text',ph:'compagnie · n° · depuis'},
+   {k:'ass_pj',l:'Protection juridique',type:'text',ph:'compagnie · n° · depuis'},
+ ]},
+
+ {t:'🏦 Banques', f:[
+   {k:'sub_bq1',l:'Banque n°1',type:'sub'},
+   {k:'bq1_nom',l:'Nom',type:'text'},
+   {k:'bq1_adresse',l:"Adresse de l'agence",type:'text'},
+   {k:'bq1_decouvert',l:'Lignes court terme / autorisation de découvert (€)',type:'num'},
+   {k:'sub_bq2',l:'Banque n°2',type:'sub'},
+   {k:'bq2_nom',l:'Nom',type:'text'},
+   {k:'bq2_adresse',l:"Adresse de l'agence",type:'text'},
+   {k:'bq2_decouvert',l:'Lignes court terme / autorisation de découvert (€)',type:'num'},
+ ]},
+
+ {t:'🔧 Service après-vente', f:[
+   {k:'sav_orga',l:'Avez-vous une organisation particulière ?',type:'area'},
+   {k:'sav_cout',l:'Coût en % du CA hors taxes',type:'num'},
+ ]},
+];
+
+// Liste à plat des champs saisissables (hors sous-titres)
+function QFIELDS(){ const a=[]; QFORM.forEach(s=>s.f.forEach(f=>{ if(f.type!=='sub') a.push(f); })); return a; }
+
+// ── Rendu d'un champ éditable ──
+function qFieldHTML(f,q){
+  const v=q[f.k]||'';
+  if(f.type==='sub') return `<div style="grid-column:1/-1;font-weight:600;color:var(--ink);font-size:13px;margin:10px 0 2px;padding-bottom:5px;border-bottom:1px solid var(--sand2)">${f.l}</div>`;
+  const span=(f.type==='area')?'grid-column:1/-1;':'';
+  let inner='';
+  const base=`padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:var(--sand);width:100%`;
+  if(f.type==='check'){
+    return `<label class="ro" style="grid-column:1/-1;align-items:flex-start;gap:9px;padding:8px 0"><input type="checkbox" id="${f.k}" ${v==='Oui'?'checked':''} style="width:16px;height:16px;accent-color:var(--gold);margin-top:2px"> <span style="font-size:13.5px">${f.l}</span></label>`;
+  }
+  if(f.type==='radio'){
+    inner=`<div class="rg">${f.opts.map(([val,lab])=>`<label class="ro"><input type="radio" name="${f.k}" value="${val}" ${q[f.k]===val?'checked':''}> ${lab}</label>`).join('')}</div>`;
+  } else if(f.type==='sel'){
+    inner=`<select id="${f.k}" style="${base};max-width:420px">${['— Sélectionner —',...f.opts].map(o=>`<option ${q[f.k]===o?'selected':''}>${o}</option>`).join('')}</select>`;
+  } else if(f.type==='area'){
+    inner=`<textarea id="${f.k}" style="${base};min-height:64px;resize:vertical">${v}</textarea>`;
+  } else {
+    inner=`<input type="${f.type==='num'?'number':'text'}" id="${f.k}" value="${String(v).replace(/"/g,'&quot;')}" placeholder="${f.ph||''}" style="${base};max-width:420px">`;
+  }
+  return `<div class="qi" style="${span}"><label>${f.l}</label>${inner}</div>`;
+}
+
 function qHTML(cid){
-  const c=cid?DB.find(x=>x.id===cid):null; const q=c&&c.questionnaire||{};
-  const sel=(id,opts)=>`<select id="${id}" style="padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:var(--sand);width:100%;max-width:400px">${['Sélectionner…',...opts].map(o=>`<option ${q[id]===o?'selected':''}>${o}</option>`).join('')}</select>`;
-  const rg=(name,opts)=>`<div class="rg">${opts.map(([v,l])=>`<label class="ro"><input type="radio" name="${name}" value="${v}" ${q[name]===v?'checked':''}> ${l}</label>`).join('')}</div>`;
+  const c=cid?DB.find(x=>x.id===cid):null; const q=(c&&c.questionnaire)||{};
+  const sections=QFORM.map(s=>`
+    <div class="qs"><div class="qs-title">${s.t}</div>
+      ${s.help?`<p style="font-size:12px;color:var(--muted);margin:-4px 0 12px">${s.help}</p>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">${s.f.map(f=>qFieldHTML(f,q)).join('')}</div>
+    </div>`).join('');
   return `
-  <div class="qs"><div class="qs-title">🏦 Situation financière</div>
-    <div class="qi"><label>Quel est votre apport personnel disponible ?</label>${sel('q1',['< 30 000 €','30 – 50 k€','50 – 80 k€','80 – 120 k€','> 120 k€'])}</div>
-    <div class="qi"><label>Avez-vous déjà obtenu un financement bancaire ?</label>${rg('q2',[['Oui','Oui'],['Non','Non'],['En cours','En cours']])}</div>
-    <div class="qi"><label>Votre situation financière est-elle assainie ?</label>${rg('q3',[['Oui','Oui'],['Non','Non'],['Partiel','Partiellement']])}</div>
-    <div class="qi"><label>Capacité mensuelle de remboursement ?</label>${sel('q4',['< 1 000 €/mois','1 000 – 2 000 €/mois','2 000 – 3 500 €/mois','> 3 500 €/mois'])}</div>
+  <div style="background:var(--sand);border-radius:10px;padding:12px 16px;margin-bottom:18px;border-left:4px solid var(--gold);font-size:12.5px;color:var(--text)">
+    📋 Dossier unique réseau Naturéa (synthèse CEGC + SMABTP). Tous les champs sont facultatifs — complétez ce que vous pouvez, le reste plus tard.
   </div>
-  <div class="qs"><div class="qs-title">🏢 Expérience professionnelle</div>
-    <div class="qi"><label>Avez-vous déjà géré une équipe ou un point de vente ?</label>${rg('q5',[['Oui +5 ans','Oui, +5 ans'],['Oui 1-5 ans','Oui, 1–5 ans'],['Non','Non']])}</div>
-    <div class="qi"><label>Secteur d'activité principal ?</label>${sel('q6',['Commerce','Restauration','Services','Finance','Santé','BTP','Autre'])}</div>
-    <div class="qi"><label>Expérience en franchise ou dans notre secteur ?</label>${rg('q7',[['Oui franchise','Oui, en franchise'],['Oui secteur','Oui, dans le secteur'],['Non','Non']])}</div>
-  </div>
-  <div class="qs"><div class="qs-title">🛡️ Assurances & Couvertures</div>
-    <div class="qi"><label>Prêt à souscrire une RC Pro dès l'ouverture ?</label>${rg('q8',[['Oui','Oui'],['Non','Non'],['Selon coût','Selon le coût']])}</div>
-    <div class="qi"><label>Disposez-vous d'une protection juridique ?</label>${rg('q9',[['Perso','Oui, personnelle'],['Pro','Oui, professionnelle'],['Non','Non']])}</div>
-    <div class="qi"><label>Assurance multirisque professionnelle actuelle ?</label>${rg('q10',[['Oui','Oui'],['Non','Non']])}</div>
-    <div class="qi"><label>Franchise sinistre acceptable ?</label>${sel('q11',['< 500 €','500 – 1 500 €','1 500 – 3 000 €','> 3 000 €'])}</div>
-  </div>
-  <div class="qs"><div class="qs-title">🎯 Motivation & Projet</div>
-    <div class="qi"><label>Principale motivation pour rejoindre le réseau ?</label>${sel('q12',['Indépendance','Notoriété marque','ROI','Accompagnement réseau','Reconversion','Autre'])}</div>
-    <div class="qi"><label>Délai d'ouverture envisagé ?</label>${rg('q13',[['< 6 mois','< 6 mois'],['6-12 mois','6 à 12 mois'],['> 12 mois','> 12 mois']])}</div>
-    <div class="qi"><label>Local ou zone identifié(e) ?</label>${rg('q14',[['Local précis','Oui, local précis'],['Zone','Oui, zone géographique'],['Non','Non, pas encore']])}</div>
-    <div class="qi"><label>Accord familial sur le projet ?</label>${rg('q15',[['Total','Oui, totalement'],['Partiel','Partiellement'],['Non','Non / N/A']])}</div>
-  </div>
-  <div style="display:flex;gap:12px">
+  ${sections}
+  <div style="display:flex;gap:12px;position:sticky;bottom:0;background:var(--mist);padding:12px 0;border-top:1px solid var(--border)">
     <button class="btn btn-primary" onclick="saveQ('${cid||''}')">💾 Enregistrer</button>
     <button class="btn btn-outline" onclick="resetQ()">Réinitialiser</button>
   </div>`;
 }
 
-function rdDetQuest(){
-  const c=DB.find(x=>x.id===detId); const el=document.getElementById('det-quest-body');
-  if(!el)return;
-  if(c&&c.questionnaire){
-    const q=c.questionnaire;
-    const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
-    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Questionnaire complété</strong> le ${q.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="rdDetQuestEdit()">Modifier</button></div>
-    <div class="pgrid"><div class="pcard" style="grid-column:1/-1"><h4>📋 Réponses</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div></div>`;
-  } else {
-    el.innerHTML=`<div style="margin-bottom:18px;background:var(--sand);border-radius:10px;padding:14px 18px;border-left:4px solid var(--gold);font-size:13.5px">📋 Questionnaire non encore rempli par ce candidat.</div><div>${qHTML(detId)}</div>`;
-  }
+// ── Récap lecture seule (franchiseur / assureur) : n'affiche que les champs remplis ──
+function qRecapHTML(cid){
+  const c=DB.find(x=>x.id===cid); const q=(c&&c.questionnaire)||{};
+  const blocks=QFORM.map(s=>{
+    const rows=s.f.filter(f=>f.type!=='sub').map(f=>{
+      let v=q[f.k]; if(v===undefined||v===null||v==='') return '';
+      if(f.type==='check'){ if(v!=='Oui') return ''; v='✔'; }
+      return `<div class="ir"><span class="il">${f.l}</span><span>${v}</span></div>`;
+    }).filter(Boolean);
+    if(!rows.length) return '';
+    return `<div class="pcard" style="margin-bottom:14px"><h4>${s.t}</h4>${rows.join('')}</div>`;
+  }).filter(Boolean);
+  const body=blocks.length?blocks.join(''):`<p style="color:var(--muted);font-size:13px">Aucune réponse renseignée pour le moment.</p>`;
+  return `<div style="margin-top:4px"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">Complété le ${q.date||'—'}</div>${body}</div>`;
 }
-function rdDetQuestEdit(){ const el=document.getElementById('det-quest-body'); if(!el)return; el.innerHTML=qHTML(detId); }
 
-function rdPortalQuest(){
-  const c=DB.find(x=>x.id===me.id); const el=document.getElementById('portal-quest-body');
-  if(!el)return;
-  if(c&&c.questionnaire){
-    const q=c.questionnaire;
-    const rows=[['Apport',q.q1],['Financement bancaire',q.q2],['Finances assainies',q.q3],['Remboursement/mois',q.q4],['Gestion équipe',q.q5],['Secteur',q.q6],['Expé franchise',q.q7],['RC Pro',q.q8],['Protection juridique',q.q9],['Multirisque',q.q10],['Franchise sinistre',q.q11],['Motivation',q.q12],['Délai ouverture',q.q13],['Local / zone',q.q14],['Accord famille',q.q15]];
-    el.innerHTML=`<div style="background:var(--sand);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--green);font-size:13.5px">✅ <strong>Questionnaire complété</strong> le ${q.date} — <button class="btn btn-outline btn-sm" style="margin-left:10px" onclick="rdPortalQuestEdit()">Modifier mes réponses</button></div>
-    <div class="pgrid"><div class="pcard" style="grid-column:1/-1"><h4>📋 Mes réponses</h4>${rows.filter(r=>r[1]).map(r=>`<div class="ir"><span class="il">${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div></div>`;
-  } else {
-    el.innerHTML=qHTML(me.id);
-  }
+// ── Impression / export PDF du dossier (franchiseur uniquement) ──
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function printQuest(cid){
+  if(!(me&&me.role==='admin')){ return; } // sécurité : réservé au franchiseur
+  const c=DB.find(x=>x.id===cid); if(!c){ toast('Candidat introuvable'); return; }
+  const q=c.questionnaire||{};
+  const blocks=QFORM.map(s=>{
+    const rows=s.f.filter(f=>f.type!=='sub').map(f=>{
+      let v=q[f.k]; if(v===undefined||v===null||v==='') return '';
+      if(f.type==='check'){ if(v!=='Oui') return ''; v='Oui'; }
+      return `<tr><td class="lab">${_esc(f.l)}</td><td class="val">${_esc(v)}</td></tr>`;
+    }).filter(Boolean);
+    if(!rows.length) return '';
+    return `<section><h2>${_esc(s.t)}</h2><table>${rows.join('')}</table></section>`;
+  }).filter(Boolean).join('');
+  const corps=blocks||'<p>Aucune réponse renseignée.</p>';
+  const doc=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>Dossier ${_esc(c.prenom+' '+c.nom)} — Maisons Naturéa</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'DM Sans',Arial,Helvetica,sans-serif;color:#1E2D10;margin:0;padding:28px 32px;font-size:12px}
+    .hd{border-bottom:3px solid #E07840;padding-bottom:14px;margin-bottom:22px}
+    .hd .t{font-size:22px;font-weight:700;color:#2B4A1A}
+    .hd .s{font-size:13px;color:#6B7A56;margin-top:4px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px 28px;font-size:12px;color:#1E2D10;margin-top:10px}
+    .meta b{color:#2B4A1A}
+    section{margin-bottom:18px;break-inside:avoid;page-break-inside:avoid}
+    h2{font-size:13.5px;color:#2B4A1A;background:#EDE5D2;padding:7px 10px;border-radius:4px;margin:0 0 6px}
+    table{width:100%;border-collapse:collapse}
+    td{padding:5px 8px;border-bottom:1px solid #E5E0D2;vertical-align:top}
+    td.lab{width:46%;color:#6B7A56}
+    td.val{font-weight:500}
+    .ft{margin-top:24px;border-top:1px solid #DDD5BF;padding-top:10px;font-size:10px;color:#6B7A56}
+    @media print{ body{padding:0} @page{margin:14mm} .noprint{display:none} }
+    .bar{position:fixed;top:0;left:0;right:0;background:#2B4A1A;color:#fff;padding:10px 16px;display:flex;gap:10px;justify-content:flex-end}
+    .bar button{font-family:inherit;font-size:13px;padding:7px 16px;border:none;border-radius:6px;cursor:pointer}
+    .bar .p{background:#E07840;color:#fff}.bar .c{background:rgba(255,255,255,.15);color:#fff}
+    .wrap{margin-top:54px}
+  </style></head><body>
+  <div class="bar noprint"><button class="p" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button><button class="c" onclick="window.close()">Fermer</button></div>
+  <div class="wrap">
+  <div class="hd">
+    <div class="t">Dossier de candidature franchise</div>
+    <div class="s">Synthèse réseau Naturéa — pièce pour conseil de décision &amp; assureurs</div>
+    <div class="meta">
+      <span><b>Candidat :</b> ${_esc(c.prenom+' '+c.nom)}</span>
+      <span><b>Ville :</b> ${_esc(c.ville||'—')} ${_esc(c.cp||'')}</span>
+      <span><b>Email :</b> ${_esc(c.email||'—')}</span>
+      <span><b>Téléphone :</b> ${_esc(c.tel||'—')}</span>
+      <span><b>Statut :</b> ${_esc(c.statut||'—')}</span>
+      <span><b>Questionnaire complété le :</b> ${_esc(q.date||'—')}</span>
+    </div>
+  </div>
+  ${corps}
+  <div class="ft">Document généré le ${_esc(now())} depuis l'application Recrutement franchise — Maisons Naturéa. Informations déclaratives communiquées par le candidat.</div>
+  </div>
+  </body></html>`;
+  const w=window.open('','_blank');
+  if(!w){ toast("Autorisez les pop-ups pour l'impression"); return; }
+  w.document.open(); w.document.write(doc); w.document.close();
 }
+
+// Legacy (onglets dédiés, conservés si présents)
+function rdDetQuest(){ const el=document.getElementById('det-quest-body'); if(!el)return; el.innerHTML=qHTML(detId); }
+function rdDetQuestEdit(){ const el=document.getElementById('det-quest-body'); if(!el)return; el.innerHTML=qHTML(detId); }
+function rdPortalQuest(){ const el=document.getElementById('portal-quest-body'); if(!el)return; el.innerHTML=qHTML(me.id); }
 function rdPortalQuestEdit(){ const el=document.getElementById('portal-quest-body'); if(!el)return; el.innerHTML=qHTML(me.id); }
 
-function gQ(){ return {q1:document.getElementById('q1')?.value||'',q2:document.querySelector('input[name="q2"]:checked')?.value||'',q3:document.querySelector('input[name="q3"]:checked')?.value||'',q4:document.getElementById('q4')?.value||'',q5:document.querySelector('input[name="q5"]:checked')?.value||'',q6:document.getElementById('q6')?.value||'',q7:document.querySelector('input[name="q7"]:checked')?.value||'',q8:document.querySelector('input[name="q8"]:checked')?.value||'',q9:document.querySelector('input[name="q9"]:checked')?.value||'',q10:document.querySelector('input[name="q10"]:checked')?.value||'',q11:document.getElementById('q11')?.value||'',q12:document.getElementById('q12')?.value||'',q13:document.querySelector('input[name="q13"]:checked')?.value||'',q14:document.querySelector('input[name="q14"]:checked')?.value||'',q15:document.querySelector('input[name="q15"]:checked')?.value||'',date:now()}; }
+// ── Collecte des réponses depuis le DOM ──
+function gQ(){
+  const out={};
+  QFIELDS().forEach(f=>{
+    if(f.type==='radio'){ out[f.k]=document.querySelector(`input[name="${f.k}"]:checked`)?.value||''; }
+    else if(f.type==='check'){ out[f.k]=document.getElementById(f.k)?.checked?'Oui':''; }
+    else { const el=document.getElementById(f.k); out[f.k]=el?el.value:''; }
+  });
+  // Selects laissés sur le placeholder → vide
+  QFIELDS().forEach(f=>{ if(f.type==='sel' && out[f.k]==='— Sélectionner —') out[f.k]=''; });
+  out.date=now();
+  return out;
+}
 function saveQ(cid){
   const data=gQ();
-  if(cid){ const c=DB.find(x=>x.id===cid); if(c){ c.questionnaire=data; save(); toast('✅ Questionnaire enregistré'); buildDocList('det-doc-body',cid,false); buildDocList('portal-doc-body',cid,false); rdPortalHome(); return; } }
+  if(cid){ const c=DB.find(x=>x.id===cid); if(c){ c.questionnaire=data; save(); toast('✅ Dossier enregistré'); buildDocList('det-doc-body',cid,false); buildDocList('portal-doc-body',cid,false); rdPortalHome();
+    // referme le panneau d'édition inline et réaffiche le récap
+    const ctx=window._inlineQuestCtx; if(ctx){ const panel=document.getElementById('inline-quest-panel-'+ctx.containerId); if(panel){ panel.innerHTML=qRecapHTML(cid); panel.style.display='block'; } }
+    return; } }
   toast('✅ Réponses enregistrées');
 }
-function resetQ(){ ['q1','q4','q6','q11','q12'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); document.querySelectorAll('input[type="radio"]').forEach(r=>r.checked=false); }
+function resetQ(){
+  if(!confirm('Réinitialiser tout le formulaire ?'))return;
+  QFIELDS().forEach(f=>{
+    if(f.type==='radio'){ document.querySelectorAll(`input[name="${f.k}"]`).forEach(r=>r.checked=false); }
+    else if(f.type==='check'){ const el=document.getElementById(f.k); if(el)el.checked=false; }
+    else if(f.type==='sel'){ const el=document.getElementById(f.k); if(el)el.selectedIndex=0; }
+    else { const el=document.getElementById(f.k); if(el)el.value=''; }
+  });
+}
 
 // ══════════════════════════════════════════
 // PORTAL HOME

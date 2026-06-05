@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <title>Chiffrage Naturéa — Estimateur multi-usines</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -170,6 +171,32 @@ main{max-width:1380px;margin:0 auto;padding:32px 28px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--forest);color:#fff;padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:13px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:100}
 .toast.on{opacity:1;transform:none}
 
+/* Modal générique */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,30,30,.55);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;animation:modalFadeIn .15s ease-out}
+.modal-overlay.on{display:flex}
+@keyframes modalFadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--white);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:560px;width:100%;max-height:90vh;overflow-y:auto;animation:modalSlideIn .2s ease-out}
+@keyframes modalSlideIn{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+.modal-h{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--cream);border-radius:14px 14px 0 0}
+.modal-h h3{margin:0;font-size:16px;color:var(--ink)}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--terra)}
+.modal-b{padding:20px 22px}
+.modal-b .field{margin-bottom:14px}
+.modal-b .field label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:6px}
+.modal-b .field input[type="text"],.modal-b .field input[type="number"],.modal-b .field select,.modal-b .field textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;background:var(--white)}
+.modal-b .field input:focus,.modal-b .field select:focus,.modal-b .field textarea:focus{outline:none;border-color:var(--terra)}
+.modal-b .field textarea{resize:vertical;min-height:60px}
+.modal-b .field .field-hint{font-size:11px;color:var(--faint);margin-top:4px}
+.modal-b .radio-group{display:flex;gap:10px;margin-bottom:6px}
+.modal-b .radio-card{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;background:var(--white);transition:all .15s}
+.modal-b .radio-card.on{border-color:var(--terra);background:#FEF3E2;font-weight:600}
+.modal-b .radio-card:hover{border-color:var(--terra)}
+.modal-actions{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--cream);border-radius:0 0 14px 14px}
+.import-table tr.unmapped td .new-poste-btn{display:inline-block;margin-top:4px;font-size:10.5px;color:var(--terra);background:#FEF3E2;border:1px solid #F5E6D5;padding:3px 8px;border-radius:5px;cursor:pointer;font-weight:600}
+.import-table tr.unmapped td .new-poste-btn:hover{background:var(--terra);color:#fff}
+.custom-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#FEF3E2;color:var(--terra);border:1px solid #F5E6D5;border-radius:3px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--sand2);color:var(--muted);font-size:10px;cursor:help;margin-left:4px;vertical-align:middle;font-style:normal;font-weight:600;border:1px solid var(--border);transition:all .15s}
 .info-i:hover{background:var(--terra);color:#fff;border-color:var(--terra)}
 .auto-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:3px;padding:1px 5px;margin-left:6px;vertical-align:middle;transition:all .2s}
@@ -273,6 +300,61 @@ main{max-width:1380px;margin:0 auto;padding:32px 28px}
 .history-stat-v.up{color:var(--danger)}
 .history-stat-v.down{color:var(--ok)}
 .import-pdfjs-warn{padding:14px 18px;background:#FFF3CD;border:1px solid #FFB300;border-radius:8px;color:#7A4F00;font-size:13px;margin-bottom:18px}
+
+/* ============================================================
+   CHARTE GRAPHIQUE NATURÉA — source : Plaquette commerciale V10
+   Vert du logo #41532A (accent principal) · Terracotta #D69362 (secondaire)
+   Police Archivo (substitut de Gopher)
+   ============================================================ */
+:root{
+  /* Fonds & neutres */
+  --bg:#FBFAF5!important; --paper:#FBFAF5!important; --paper2:#FFFFFF!important;
+  --surface:#FFFFFF!important; --white:#FFFFFF!important; --card:#FFFFFF!important; --bg4:#FFFFFF!important;
+  --surface-alt:#F2EDE3!important; --cream:#F2EDE3!important; --sand:#F2EDE3!important; --sand2:#E9E1D1!important;
+  --mist:#F6F2E9!important; --faint:#F6F2E9!important; --bg2:#F2EDE3!important; --bg3:#E9E1D1!important;
+  --ink:#1E2A18!important; --text:#1E2A18!important; --ink2:#2E3A26!important; --ink3:#46503C!important;
+  --text2:#46503C!important; --text3:#5E6B4F!important; --ink-soft:#46503C!important; --ink-mute:#9BA889!important;
+  --muted:#5E6B4F!important; --subtle:#9BA889!important;
+  --border:#E2DCCD!important; --border2:#EDE7DA!important; --border-strong:#D8D0BC!important;
+  --line:#E2DCCD!important; --line2:#EDE7DA!important;
+  /* Accent PRINCIPAL = VERT DU LOGO #41532A (toutes les variantes "primaire") */
+  --accent:#41532A!important; --accent-soft:#EAEFE0!important; --accent-ink:#38471F!important;
+  --primary:#41532A!important; --primary-l:#556B36!important; --primary-d:#38471F!important; --primary-soft:#EAEFE0!important;
+  --forest:#41532A!important; --forest2:#38471F!important;
+  --gold:#41532A!important; --gold2:#38471F!important; --gold3:#EAEFE0!important;
+  --blue:#41532A!important; --blue-dark:#38471F!important; --blue-light:#EAEFE0!important;
+  --clay:#41532A!important; --clay-d:#38471F!important; --clay-soft:#EAEFE0!important;
+  --green:#41532A!important; --green-soft:#EAEFE0!important; --ok:#41532A!important;
+  /* Accent SECONDAIRE = ORANGE DU LOGO #D69362 */
+  --wood:#D69362!important; --wood-soft:#F6E7D7!important; --wood-ink:#B87648!important;
+  --wood-l:#E2A982!important; --wood-d:#B87648!important;
+  --orange:#D69362!important; --orange-dark:#B87648!important;
+  --terra:#D69362!important; --terra2:#B87648!important;
+  --petrol:#D69362!important; --petrol-soft:#F6E7D7!important;
+  --purple:#D69362!important;
+  /* Olive / sauge (tertiaire) */
+  --sage:#839049!important; --sage2:#6B7A3A!important; --yellow:#C68B2C!important;
+  /* Sémantique */
+  --warn:#C68B2C!important; --amber:#C68B2C!important; --amber-soft:#F7ECD7!important;
+  --danger:#B8453D!important; --red:#B8453D!important; --red-soft:#F5DEDC!important;
+  /* Familles de police */
+  --sans:'Archivo',system-ui,-apple-system,sans-serif!important;
+  --serif:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --display:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  --mono:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
+}
+html, body, button, input, select, textarea, p, span, td, th, li, a, label, div, small, strong, b {
+  font-family:'Archivo',system-ui,-apple-system,sans-serif!important;
+}
+h1, h2, h3, h4, h5, h6,
+.disp, .kpibig, .brand, .page-title, .kpi-v, .stat-v, [class*="title"], [class*="kpi-v"] {
+  font-family:'Archivo','Archivo Black',system-ui,sans-serif!important;
+  font-weight:800!important; letter-spacing:-0.01em!important;
+}
+code, pre, .mono, [class*="mono"] {
+  font-family:'Archivo',ui-monospace,'SF Mono',Consolas,monospace!important;
+}
+/* === FIN CHARTE NATURÉA === */
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -522,6 +604,9 @@ main{max-width:1380px;margin:0 auto;padding:32px 28px}
 </main>
 
 <div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box"></div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -613,15 +698,18 @@ const REFS = {
     }
   },
   lowall: {
-    nom:"LOWALL",couleur:"#2E7D7D",devis_count:12,derniere_maj:"2026-04-17",
+    nom:"LOWALL",couleur:"#2E7D7D",devis_count:15,derniere_maj:"2026-05-11",
     description:"Fabricant panneaux MOB Bouches-du-Rhône (Gardanne 13) — agences PACA. Pas de charpente.",
     postes:{
-      mob:          {label_user:"MOB isolé 45x120 (ITE PSE 100mm)",label_pdf:"Murs Ossature Bois Isolé 45x120",tooltip:"Ossature 45x120, OSB3 13mm, laine de roche/verre 120mm, pare-vapeur, ITE PSE 100+40mm. Tarif standard : 110€/m² (Avignon/84) · 113€/m² (Salon/Toulon). Moy. pondérée 11 devis : 110,82€/m².",unite:"€/m²",moyen:110.82,min:110,max:113,n:11,fiabilite:"haute",visible:true},
+      mob:          {label_user:"MOB isolé 45x120 (ITE PSE 100mm)",label_pdf:"Murs Ossature Bois Isolé 45x120",tooltip:"Ossature 45x120, OSB3 13mm, laine de roche/verre 120mm, pare-vapeur, ITE PSE 100+40mm. Tarif standard : 110€/m² (Avignon/84) · 113€/m² (Salon/Toulon). Moy. 14 devis : 110,64€/m².",unite:"€/m²",moyen:110.64,min:110,max:113,n:14,fiabilite:"haute",visible:true},
       mob_biosource:{label_user:"MOB isolé bio-sourcé (laine de bois + ITE fibre)",label_pdf:"Murs Ossature Bois Isolé 45x120 bio-sourcé",tooltip:"Ossature 45x120, OSB3, laine de bois 120mm, pare-vapeur, ITE fibre de bois 100+40mm (assemblage knapp). Tarif : 132€/m² — 1 seul devis TORDOIR (Avignon). Sur demande spécifique.",unite:"€/m²",moyen:132,min:132,max:132,n:1,fiabilite:"faible",visible:true},
-      mob_ouvert:   {label_user:"MOB non isolé 45x120 (ITE PSE seule)",label_pdf:"Murs Ossature Bois non isolé 45x120",tooltip:"Ossature 45x120, OSB3 13mm, ITE PSE 100+40mm uniquement. Sans laine ni pare-vapeur. Pour garages, locaux techniques ou murs non chauffés. Tarif fixe : 85€/m² sur 5 devis.",unite:"€/m²",moyen:85,min:85,max:85,n:5,fiabilite:"moyenne",visible:true},
-      quincaillerie:{label_user:"Kit quincaillerie",label_pdf:"Kit Quincaillerie",tooltip:"Bandes d'arase 2 joints mousses, équerres E8/2.5 ou AH (sismique), E5/1.5, fixation (tiges+tamis+résine), colle PU+vis mibois, profilé mâle/femelle. 10€/m² d'ossature — fixe sur 12 devis.",unite:"€/m²",moyen:10,min:10,max:10,n:12,fiabilite:"haute",visible:true},
+      mob_ouvert:   {label_user:"MOB non isolé 45x120 (ITE PSE seule)",label_pdf:"Murs Ossature Bois Ouvert 45x120",tooltip:"Ossature 45x120, OSB3 13mm, ITE PSE 100+40mm uniquement. Sans laine ni pare-vapeur. Pour garages, locaux techniques ou pignons non chauffés. Tarif fixe : 85€/m² sur 6 devis.",unite:"€/m²",moyen:85,min:85,max:85,n:6,fiabilite:"moyenne",visible:true},
+      quincaillerie:{label_user:"Kit quincaillerie",label_pdf:"Kit Quincaillerie",tooltip:"Bandes d'arase 2 joints mousses, équerres E8/2.5 ou AH (sismique), E5/1.5, fixation (tiges+tamis+résine), colle PU+vis mibois, profilé mâle/femelle. 10€/m² d'ossature — fixe sur 15 devis.",unite:"€/m²",moyen:10,min:10,max:10,n:15,fiabilite:"haute",visible:true},
+      plancher_45x200:{label_user:"Modules plancher 45×200 (fourniture seule)",label_pdf:"Modules Plancher 45x200",tooltip:"Caisson ouvert : Dalle OSB3 22mm face sup + Chevrons 45×200 + OSB3 9mm sous-face. Fourniture seulement, pose à la charge du chantier. Tarif : 80€/m² — 1 devis JUNK (Toulon). Pour portées courtes/moyennes.",unite:"€/m²",moyen:80,min:80,max:80,n:1,fiabilite:"faible",visible:true},
+      plancher_80x220:{label_user:"Modules plancher 80×220 (fourniture seule)",label_pdf:"Modules Plancher 80x220",tooltip:"Caisson ouvert : Dalle OSB3 22mm face sup + Chevrons 80×220 + OSB3 9mm sous-face. Fourniture seulement, pose à la charge du chantier. Tarif : 90€/m² — 1 devis BRETTON (Toulon). Pour portées longues.",unite:"€/m²",moyen:90,min:90,max:90,n:1,fiabilite:"faible",visible:true},
+      poteaux_poutres:{label_user:"Système poteaux-poutres",label_pdf:"Système Poteaux Poutres",tooltip:"Poteaux 160×160 + poutres 140×360 ou 160×400 (à vérifier en phase EXE). Chiffré au m³ de bois. Tarif fixe : 1 000 €/m³ — 2 devis (BRETTON + JUNK à Toulon).",unite:"€/m³",moyen:1000,min:1000,max:1000,n:2,fiabilite:"moyenne",visible:true},
       fermettes:    {label_user:"Charpente fermette",label_pdf:"",tooltip:"LOWALL ne fabrique pas de charpente. Prévoir charpentier externe.",unite:"forfait",moyen:0,min:0,max:0,n:0,fiabilite:"faible",visible:false},
-      transport:    {label_user:"Transport plateau 13m",label_pdf:"Transport en plateau 13m",tooltip:"Transport depuis Gardanne (13). 1 100€ constaté pour Salon-de-Provence (~45km). Absent des devis Avignon — vérifier selon chantier.",unite:"€",moyen:1100,min:1100,max:1100,n:1,fiabilite:"faible",visible:true}
+      transport:    {label_user:"Transport plateau 13m",label_pdf:"Transport par camion plateau",tooltip:"Transport depuis Gardanne (13). 1 100€/forfait constaté. Plusieurs camions possibles (col de cygne pour murs >3m). Lire sur devis : nb de forfaits × 1 100€.",unite:"€",moyen:1100,min:1100,max:1100,n:4,fiabilite:"moyenne",visible:true}
     }
   }
 };
@@ -705,7 +793,10 @@ const DEVIS_HIST = [
   {usine:"lowall",n:"D2026-52",date:"2026-02-17",total:14760,mob_m2:123,mob_pu:110,client:"KIHN (Avignon — ECOHOME84)"},
   {usine:"lowall",n:"D2026-62",date:"2026-03-09",total:51755,mob_m2:307,mob_pu:110,client:"MISTRAL (Avignon — ECOHOME84)"},
   {usine:"lowall",n:"D2026-86",date:"2026-04-07",total:14040,mob_m2:117,mob_pu:110,client:"STRAPP (Avignon — ECOHOME84)"},
-  {usine:"lowall",n:"D2026-91",date:"2026-04-17",total:15120,mob_m2:126,mob_pu:110,client:"GUIHARD (Avignon — ECOHOME84)"}
+  {usine:"lowall",n:"D2026-91",date:"2026-04-17",total:15120,mob_m2:126,mob_pu:110,client:"GUIHARD (Avignon — ECOHOME84)"},
+  {usine:"lowall",n:"D2026-105",date:"2026-05-07",total:44510,mob_m2:307,mob_pu:110,client:"BENAKSAS (Salon — Naturea)"},
+  {usine:"lowall",n:"D2026-107",date:"2026-05-11",total:46240,mob_m2:262,mob_pu:110,client:"BRETTON (Toulon — MO2B, plancher 80×220)"},
+  {usine:"lowall",n:"D2026-109",date:"2026-05-11",total:29470,mob_m2:200,mob_pu:110,client:"JUNK (Toulon — MO2B, plancher 45×200)"}
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -810,6 +901,10 @@ const FORM_SCHEMAS = {
     {id:"mob_biosource_m2",label:"Surface MOB bio-sourcé (ITE fibre de bois)",unit:"m²",hint:"Laine de bois + ITE fibre de bois — 132 €/m² — sur demande"},
     {section:"🔩 Quincaillerie"},
     {id:"quinc_qty",label:"Kit quincaillerie",unit:"m²",hint:"= MOB auto (10 €/m²)"},
+    {section:"🏗️ Plancher & structure"},
+    {id:"plancher_45x200_m2",label:"Plancher 45×200 (fourniture seule)",unit:"m²",hint:"Caisson ouvert chevrons 45×200 — 80 €/m² — portées courtes/moyennes"},
+    {id:"plancher_80x220_m2",label:"Plancher 80×220 (fourniture seule)",unit:"m²",hint:"Caisson ouvert chevrons 80×220 — 90 €/m² — portées longues"},
+    {id:"poteaux_poutres_m3",label:"Système poteaux-poutres",unit:"m³",hint:"Poteaux 160×160 + poutres 140×360 ou 160×400 — 1 000 €/m³ — lire volume sur devis"},
     {section:"🏠 Charpente"},
     {id:"fermettes",label:"Charpente (non fabriquée)",unit:"forfait",hint:"LOWALL ne fabrique pas de charpente"},
     {section:"🚚 Transport"},
@@ -882,6 +977,9 @@ const FIELD_TO_POSTE = {
     mob_ouvert_m2:{poste:"mob_ouvert",type:"surface"},
     mob_biosource_m2:{poste:"mob_biosource",type:"surface"},
     quinc_qty:{poste:"quincaillerie",type:"surface"},
+    plancher_45x200_m2:{poste:"plancher_45x200",type:"surface"},
+    plancher_80x220_m2:{poste:"plancher_80x220",type:"surface"},
+    poteaux_poutres_m3:{poste:"poteaux_poutres",type:"volume"},
     fermettes:{poste:"fermettes",type:"forfait_qty"},
     transport:{poste:"transport",type:"direct"}
   }
@@ -905,20 +1003,29 @@ function saveOverrides(){
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(OVERRIDES))}catch(e){}
 }
 function getPoste(usineKey,posteCode){
-  const base=REFS[usineKey].postes[posteCode];
+  let base=REFS[usineKey]?.postes[posteCode];
+  // Fallback custom postes
+  if(!base&&isCustomPoste(usineKey,posteCode)){
+    base=getCustomPoste(usineKey,posteCode);
+  }
   if(!base)return null;
   const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode])||{};
   return Object.assign({},base,{
     label_user:ov.label_user!==undefined?ov.label_user:base.label_user,
     tooltip:ov.tooltip!==undefined?ov.tooltip:base.tooltip,
-    visible:ov.visible!==undefined?ov.visible:base.visible
+    visible:ov.visible!==undefined?ov.visible:base.visible,
+    custom:base.custom===true
   });
 }
 
 // Prix calculé en tenant compte des overrides prix
 function getPrixCalcule(usineKey,posteCode,depth=0){
-  if(depth>5)return REFS[usineKey]?.postes[posteCode]?.moyen||0;
-  const base=REFS[usineKey]?.postes[posteCode];
+  if(depth>5){
+    const fb=REFS[usineKey]?.postes[posteCode]||getCustomPoste(usineKey,posteCode);
+    return fb?.moyen||0;
+  }
+  let base=REFS[usineKey]?.postes[posteCode];
+  if(!base)base=getCustomPoste(usineKey,posteCode);
   if(!base)return 0;
   const ov=(OVERRIDES[usineKey]&&OVERRIDES[usineKey][posteCode])||{};
   if(ov.prix_type==='fixe'&&ov.prix_unitaire!==undefined&&ov.prix_unitaire!==''){
@@ -936,10 +1043,155 @@ function hasPrixOverride(usineKey,posteCode){
   return ov.prix_type==='fixe'||ov.prix_type==='ratio';
 }
 
+// ═══════════════════════════════════════════════════════════
+// SYSTÈME CUSTOM_POSTES
+// Postes ajoutés à la volée par le coordinateur lors d'imports
+// Stocke : libellé, unité, prix, section, type de mapping
+// Fusionné dynamiquement avec REFS / FORM_SCHEMAS / FIELD_TO_POSTE
+// ═══════════════════════════════════════════════════════════
+const CUSTOM_POSTES_KEY = "chiffrage_custom_postes_v1";
+let CUSTOM_POSTES = loadCustomPostes();
+
+function loadCustomPostes(){
+  try{const r=localStorage.getItem(CUSTOM_POSTES_KEY);return r?JSON.parse(r):{}}catch(e){return{}}
+}
+function saveCustomPostes(){
+  try{localStorage.setItem(CUSTOM_POSTES_KEY,JSON.stringify(CUSTOM_POSTES))}catch(e){}
+}
+function isCustomPoste(usineKey,posteCode){
+  return !!(CUSTOM_POSTES[usineKey]&&CUSTOM_POSTES[usineKey][posteCode]);
+}
+function getCustomPoste(usineKey,posteCode){
+  if(!isCustomPoste(usineKey,posteCode))return null;
+  return CUSTOM_POSTES[usineKey][posteCode];
+}
+// Retourne tous les codes de postes (base + custom) pour une usine
+function getAllPosteCodes(usineKey){
+  const base=Object.keys(REFS[usineKey]?.postes||{});
+  const custom=Object.keys(CUSTOM_POSTES[usineKey]||{});
+  return [...base,...custom];
+}
+// Retourne un dict {fieldId: {poste, type, section, label, unit, hint}} fusionné
+function getEffectiveFieldMap(usineKey){
+  const base={...FIELD_TO_POSTE[usineKey]};
+  const cp=CUSTOM_POSTES[usineKey]||{};
+  Object.entries(cp).forEach(([code,data])=>{
+    if(data.form_field&&data.form_field.field_id){
+      base[data.form_field.field_id]={poste:code,type:data.form_field.type||'surface'};
+    }
+  });
+  return base;
+}
+// Retourne la liste des champs custom à injecter dans une section donnée du formulaire
+function getCustomFieldsForSection(usineKey,sectionLabel){
+  const cp=CUSTOM_POSTES[usineKey]||{};
+  return Object.entries(cp)
+    .filter(([,data])=>data.form_field&&data.form_field.section===sectionLabel)
+    .map(([code,data])=>({
+      id:data.form_field.field_id,
+      label:data.label_user,
+      unit:data.form_field.unit||'',
+      hint:data.form_field.hint||'',
+      _custom_code:code
+    }));
+}
+// Retourne la liste des sections existantes pour une usine (depuis FORM_SCHEMAS)
+function getUsineSections(usineKey){
+  const schema=FORM_SCHEMAS[usineKey]||[];
+  return schema.filter(i=>i.section).map(i=>i.section);
+}
+// Crée un nouveau poste custom
+function addCustomPoste(usineKey,code,data){
+  if(!CUSTOM_POSTES[usineKey])CUSTOM_POSTES[usineKey]={};
+  CUSTOM_POSTES[usineKey][code]={
+    label_user:data.label_user,
+    label_pdf:data.label_pdf||data.label_user,
+    tooltip:data.tooltip||'',
+    unite:data.unite,
+    moyen:data.moyen||0,
+    min:data.moyen||0,
+    max:data.moyen||0,
+    n:1,
+    fiabilite:'faible',
+    visible:true,
+    custom:true,
+    created_at:new Date().toISOString(),
+    form_field:{
+      field_id:data.form_field.field_id,
+      type:data.form_field.type,
+      section:data.form_field.section,
+      unit:data.form_field.unit||'',
+      hint:data.form_field.hint||''
+    }
+  };
+  saveCustomPostes();
+}
+function deleteCustomPoste(usineKey,code){
+  if(CUSTOM_POSTES[usineKey]&&CUSTOM_POSTES[usineKey][code]){
+    delete CUSTOM_POSTES[usineKey][code];
+    if(Object.keys(CUSTOM_POSTES[usineKey]).length===0)delete CUSTOM_POSTES[usineKey];
+    saveCustomPostes();
+    // Nettoyer aussi les overrides éventuels sur ce poste
+    if(OVERRIDES[usineKey]&&OVERRIDES[usineKey][code]){
+      delete OVERRIDES[usineKey][code];
+      if(Object.keys(OVERRIDES[usineKey]).length===0)delete OVERRIDES[usineKey];
+      saveOverrides();
+    }
+  }
+}
+// Génère un code de poste à partir d'un label (slug)
+function generatePosteCode(usineKey,label){
+  let base=label.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')  // accents
+    .replace(/[^a-z0-9]+/g,'_')
+    .replace(/^_+|_+$/g,'')
+    .substring(0,40);
+  if(!base)base='poste_custom';
+  // Vérifier unicité
+  let code=base,i=2;
+  while(REFS[usineKey]?.postes[code]||CUSTOM_POSTES[usineKey]?.[code]){
+    code=`${base}_${i}`;i++;
+  }
+  return code;
+}
+// Génère un field_id pour le formulaire à partir du code de poste
+function generateFieldId(usineKey,code,unit){
+  const suffix=(unit==='m²'||unit==='m2')?'_m2':
+               (unit==='m³'||unit==='m3')?'_m3':
+               (unit==='ML'||unit==='ml')?'_ml':
+               (unit==='u'||unit==='U')?'_qty':'';
+  let base=code+suffix;
+  // Vérifier unicité dans le map effectif
+  const effMap=getEffectiveFieldMap(usineKey);
+  let fid=base,i=2;
+  while(effMap[fid]){fid=`${base}_${i}`;i++;}
+  return fid;
+}
+// Déduit le type de mapping depuis l'unité PDF
+function deduceMappingType(unite){
+  const u=(unite||'').toLowerCase();
+  if(u==='m2'||u==='m²')return 'surface';
+  if(u==='m3'||u==='m³')return 'volume';
+  if(u==='u'||u==='ml'||u==='frt')return 'unite';
+  if(u==='forfait'||u==='ens')return 'forfait_qty';
+  return 'surface'; // défaut sûr
+}
+// Convertit unité brute PDF en unité d'affichage
+function normalizeUniteForDisplay(unite){
+  const u=(unite||'').toUpperCase();
+  if(u==='M2')return 'm²';
+  if(u==='M3')return 'm³';
+  if(u==='ML')return 'ml';
+  if(u==='U')return 'u';
+  if(u==='ENS'||u==='FRT'||u==='FORFAIT')return 'forfait';
+  return u.toLowerCase();
+}
+
 function setOverride(usineKey,posteCode,field,value){
   if(!OVERRIDES[usineKey])OVERRIDES[usineKey]={};
   if(!OVERRIDES[usineKey][posteCode])OVERRIDES[usineKey][posteCode]={};
-  const base=REFS[usineKey].postes[posteCode];
+  const base=REFS[usineKey]?.postes[posteCode]||getCustomPoste(usineKey,posteCode);
+  if(!base)return;
   const prixFields=['prix_type','prix_unitaire','ratio_source','ratio_value'];
   if(!prixFields.includes(field)&&value===base[field]){
     delete OVERRIDES[usineKey][posteCode][field];
@@ -980,6 +1232,23 @@ function fmtEurR(v){if(v===null||v===undefined||isNaN(v))return"—";return Math
 function fmtNum(v,dec=0){if(v===null||v===undefined||isNaN(v))return"—";return v.toLocaleString("fr-FR",{minimumFractionDigits:dec,maximumFractionDigits:dec})}
 function fmtDateFR(iso){if(!iso)return"—";const d=new Date(iso);return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("on");clearTimeout(window._toastT);window._toastT=setTimeout(()=>t.classList.remove("on"),2500)}
+function openModal(htmlContent){
+  const overlay=document.getElementById('modal-overlay');
+  const box=document.getElementById('modal-box');
+  if(!overlay||!box)return;
+  box.innerHTML=htmlContent;
+  overlay.classList.add('on');
+  // ESC pour fermer
+  document.addEventListener('keydown',_modalKeyHandler);
+}
+function closeModal(){
+  const overlay=document.getElementById('modal-overlay');
+  if(!overlay)return;
+  overlay.classList.remove('on');
+  document.getElementById('modal-box').innerHTML='';
+  document.removeEventListener('keydown',_modalKeyHandler);
+}
+function _modalKeyHandler(e){if(e.key==='Escape')closeModal();}
 function escapeHtml(s){if(s===null||s===undefined)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
 function escapeAttr(s){if(s===null||s===undefined)return"";return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 
@@ -1073,7 +1342,7 @@ function resetFormField(usineKey,fieldId){
 }
 // Trouve les field_id de formulaire qui pointent vers un poste donné
 function getFormFieldsForPoste(usineKey,posteCode){
-  const map=FIELD_TO_POSTE[usineKey];
+  const map=getEffectiveFieldMap(usineKey);
   if(!map)return[];
   return Object.entries(map).filter(([,mp])=>mp.poste===posteCode).map(([fid])=>fid);
 }
@@ -1218,12 +1487,35 @@ function renderUsinePicker(){
   });
 }
 
+// Construit un schema effectif (natif + custom) pour renderForm.
+// Les champs custom sont injectés à la fin de la section où ils sont rangés.
+function buildEffectiveSchema(usineKey){
+  const baseSchema=FORM_SCHEMAS[usineKey]||[];
+  const result=[];
+  let currentSection=null;
+  const flushCustom=()=>{
+    if(!currentSection)return;
+    getCustomFieldsForSection(usineKey,currentSection).forEach(c=>result.push(c));
+  };
+  baseSchema.forEach(item=>{
+    if(item.section){
+      flushCustom();
+      currentSection=item.section;
+      result.push(item);
+    } else {
+      result.push(item);
+    }
+  });
+  flushCustom();
+  return result;
+}
+
 function renderForm(){
   const c=document.getElementById("form-usine");
-  const schema=FORM_SCHEMAS[CURRENT_USINE];
+  const schema=buildEffectiveSchema(CURRENT_USINE);
   let html="";
   let html_buffer="";
-  const map=FIELD_TO_POSTE[CURRENT_USINE];
+  const map=getEffectiveFieldMap(CURRENT_USINE);
   let pendingSection=null,visibleInSection=0,hiddenCharpenteInSection=false;
 
   const isCharpenteSection=s=>s&&s.toLowerCase().includes('charpente');
@@ -1372,7 +1664,7 @@ function attachTooltips(root){
 
 function calcRecap(){
   const u=REFS[CURRENT_USINE];
-  const map=FIELD_TO_POSTE[CURRENT_USINE];
+  const map=getEffectiveFieldMap(CURRENT_USINE);
   const lines=[];let subtotal=0,hasAnyValue=false;
 
   Object.entries(map).forEach(([fieldId,mp])=>{
@@ -1384,9 +1676,11 @@ function calcRecap(){
     const prix=getPrixCalcule(CURRENT_USINE,mp.poste);
     const prixLabel=hasPrixOverride(CURRENT_USINE,mp.poste)?`💶${fmtNum(prix,2)}`:fmtNum(prix,2);
     let amount=0,detail="";
-    if(mp.type==="surface"||mp.type==="unite"){
+    if(mp.type==="surface"||mp.type==="unite"||mp.type==="volume"){
       amount=v*prix;
-      detail=`${fmtNum(v,mp.type==="surface"?1:0)} ${mp.type==="surface"?"m²":"u"} × ${prixLabel} €`;
+      const unitLabel=mp.type==="surface"?"m²":(mp.type==="volume"?"m³":"u");
+      const decimals=mp.type==="unite"?0:(mp.type==="volume"?2:1);
+      detail=`${fmtNum(v,decimals)} ${unitLabel} × ${prixLabel} €`;
     }else if(mp.type==="forfait_qty"){
       amount=v*prix;
       detail=`${v} × ${prixLabel} €`;
@@ -1649,17 +1943,22 @@ function renderRef(){
   let html="";
   Object.entries(REFS).forEach(([key,u])=>{
     let postesHtml="";
-    Object.keys(u.postes).forEach(pkey=>{
+    // Itère sur la liste fusionnée : natifs d'abord, puis custom
+    const allCodes = [...Object.keys(u.postes), ...Object.keys(CUSTOM_POSTES[key]||{})];
+    allCodes.forEach(pkey=>{
       const p=getPoste(key,pkey);
+      if(!p)return;
+      const isCust=isCustomPoste(key,pkey);
       const hasPx=hasPrixOverride(key,pkey);
       const pxCurrent=hasPx?getPrixCalcule(key,pkey):null;
       const unitLabel=p.unite==="forfait"?"forfait":(p.unite==="€/m²"?"€/m²":(p.unite==="€/u"?"€/unité":p.unite));
       const overrideMark=hasOverride(key,pkey)?'<span title="Libellé personnalisé" style="color:var(--terra);font-size:10px;margin-left:6px">●</span>':"";
       const prixMark=hasPx?`<span title="Prix personnalisé" style="color:#1565C0;font-size:10px;margin-left:4px">💶</span>`:"";
+      const customMark=isCust?'<span class="custom-badge">perso</span>':'';
       const pxVal=hasPx?pxCurrent:p.moyen;
       postesHtml+=`<div class="ref-poste">
         <div class="ref-poste-name">
-          ${escapeHtml(p.label_user)}${overrideMark}${prixMark}
+          ${escapeHtml(p.label_user)}${overrideMark}${prixMark}${customMark}
           <span class="unite">${unitLabel} · ${p.n} devis · <span class="fiabilite ${p.fiabilite}">${p.fiabilite}</span></span>
         </div>
         <div>
@@ -1752,8 +2051,12 @@ function renderParametres(){
   let html="";
   Object.entries(REFS).forEach(([usineKey,u])=>{
     let postesHtml="";
-    Object.keys(u.postes).forEach(pkey=>{
-      const baseP=u.postes[pkey];
+    // Liste combinée : codes natifs + custom
+    const allCodes = [...Object.keys(u.postes), ...Object.keys(CUSTOM_POSTES[usineKey]||{})];
+    allCodes.forEach(pkey=>{
+      const baseP=u.postes[pkey]||getCustomPoste(usineKey,pkey);
+      if(!baseP)return;
+      const isCust=isCustomPoste(usineKey,pkey);
       const p=getPoste(usineKey,pkey);
       const isModified=hasOverride(usineKey,pkey);
       const hasPx=hasPrixOverride(usineKey,pkey);
@@ -1761,10 +2064,12 @@ function renderParametres(){
       const prixType=ov.prix_type||'auto';
       const prixCurrent=getPrixCalcule(usineKey,pkey);
 
-      // Dropdown options pour source ratio
-      const otherPostes=Object.keys(u.postes).filter(k=>k!==pkey);
-      const ratioOptions=otherPostes.map(k=>{
-        const lbl=u.postes[k].label_user.substring(0,45);
+      // Dropdown options pour source ratio (natifs + custom autres)
+      const otherCodes=allCodes.filter(k=>k!==pkey);
+      const ratioOptions=otherCodes.map(k=>{
+        const refP=u.postes[k]||getCustomPoste(usineKey,k);
+        if(!refP)return'';
+        const lbl=refP.label_user.substring(0,45);
         return`<option value="${k}"${ov.ratio_source===k?' selected':''}>${lbl}</option>`;
       }).join('');
 
@@ -1806,7 +2111,8 @@ function renderParametres(){
       let hintEditorHtml='';
       if(formFieldsForPoste.length){
         hintEditorHtml=formFieldsForPoste.map(fid=>{
-          const schemaForHint=FORM_SCHEMAS[usineKey];
+          // Cherche dans schema natif + custom
+          const schemaForHint=buildEffectiveSchema(usineKey);
           const baseFieldForHint=schemaForHint?.find(f=>f.id===fid);
           if(!baseFieldForHint)return'';
           const {hint:effectiveHint,hint_visible,modified:hintMod}=getFormFieldData(usineKey,fid);
@@ -1820,12 +2126,26 @@ function renderParametres(){
         }).join('');
       }
 
-      postesHtml+=`<div class="param-poste" data-usine="${usineKey}" data-poste="${pkey}">
+      // Bouton supprimer pour les postes custom
+      const deleteBtn = isCust
+        ? `<button class="reset-btn" style="color:var(--red,#b00);margin-left:auto" onclick="deleteCustomPosteUI('${usineKey}','${pkey}')">🗑 Supprimer ce poste perso</button>`
+        : '';
+      // Badge "perso" dans l'en-tête
+      const customHeaderBadge = isCust ? '<span class="custom-badge">perso</span>' : '';
+      // Date de création pour les custom
+      const createdInfo = isCust && baseP.created_at
+        ? `<span style="margin-left:8px;color:var(--faint);font-size:10.5px">créé le ${fmtDateFR(baseP.created_at.substring(0,10))}</span>`
+        : '';
+
+      postesHtml+=`<div class="param-poste${isCust?' param-poste-custom':''}" data-usine="${usineKey}" data-poste="${pkey}">
         <div style="margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap">
           <strong style="color:var(--ink);font-size:14px">${escapeHtml(p.label_user)}</strong>
+          ${customHeaderBadge}
           <span class="param-poste-code">code · ${pkey}</span>
           ${isModified?'<span class="param-modified">● modifié</span>':''}
           ${hasPx?'<span class="prix-modifie-badge">💶 prix personnalisé</span>':''}
+          ${createdInfo}
+          ${deleteBtn}
         </div>
         <div class="param-poste-grid">
           <div>
@@ -1850,11 +2170,11 @@ function renderParametres(){
           </div>
           <div>
             <div class="param-fld">
-              <label><span style="color:var(--faint)">🔒 Texte reconnu dans les PDF (verrouillé)</span></label>
-              <div class="pdf-source"><span class="lock">🔒</span><span>"${escapeHtml(baseP.label_pdf)}"</span></div>
+              <label><span style="color:var(--faint)">${isCust?'📝 Texte recherché dans les PDF':'🔒 Texte reconnu dans les PDF (verrouillé)'}</span></label>
+              <div class="pdf-source"><span class="lock">${isCust?'📝':'🔒'}</span><span>"${escapeHtml(baseP.label_pdf)}"</span></div>
             </div>
             <div style="font-size:11px;color:var(--faint);line-height:1.5;margin-top:8px">
-              ⓘ Cette chaîne sert à identifier le poste lors de l'extraction automatique des futurs devis ${u.nom}. Elle ne peut pas être modifiée.
+              ⓘ ${isCust?'Poste créé manuellement. Le mapping auto sur les futurs imports utilisera ce label par similarité.':`Cette chaîne sert à identifier le poste lors de l'extraction automatique des futurs devis ${u.nom}. Elle ne peut pas être modifiée.`}
             </div>
             ${hintEditorHtml}
           </div>
@@ -1987,26 +2307,51 @@ function updatePrixPreview(usine,poste){
 
 // Bouton tout réinitialiser
 document.getElementById("btn-reset-all").addEventListener("click",()=>{
-  if(Object.keys(OVERRIDES).length===0){showToast("Aucune personnalisation à réinitialiser");return;}
-  if(confirm("Réinitialiser TOUTES les personnalisations (libellés et prix) ?\n\nLes valeurs reviendront aux données d'origine.")){
-    OVERRIDES={};saveOverrides();renderParametres();renderForm();calcRecap();
+  const hasOv = Object.keys(OVERRIDES).length > 0;
+  const hasCustom = Object.keys(CUSTOM_POSTES).length > 0;
+  const hasFormOv = typeof FORM_OVERRIDES !== 'undefined' && Object.keys(FORM_OVERRIDES||{}).length > 0;
+  if(!hasOv && !hasCustom && !hasFormOv){showToast("Aucune personnalisation à réinitialiser");return;}
+  let msg = "Réinitialiser TOUTES les personnalisations ?\n\n";
+  if(hasOv) msg += "• Libellés, prix et tooltips modifiés\n";
+  if(hasFormOv) msg += "• Hints du formulaire modifiés\n";
+  if(hasCustom) msg += "• Postes personnalisés créés à la volée (sera supprimés)\n";
+  msg += "\nLes valeurs reviendront aux données d'origine.";
+  if(confirm(msg)){
+    OVERRIDES={};saveOverrides();
+    CUSTOM_POSTES={};saveCustomPostes();
+    if(typeof FORM_OVERRIDES !== 'undefined'){
+      Object.keys(FORM_OVERRIDES).forEach(k=>delete FORM_OVERRIDES[k]);
+      if(typeof saveFormOverrides==='function')saveFormOverrides();
+    }
+    renderParametres();renderRef();renderForm();calcRecap();
     showToast("✓ Toutes les personnalisations supprimées");
   }
 });
 
-// Export overrides
+// Export overrides + custom postes + form overrides
 document.getElementById("btn-export-overrides").addEventListener("click",()=>{
-  if(Object.keys(OVERRIDES).length===0){showToast("Aucune personnalisation à exporter");return;}
-  const data=JSON.stringify({version:2,exportedAt:new Date().toISOString(),overrides:OVERRIDES},null,2);
+  const hasOv = Object.keys(OVERRIDES).length > 0;
+  const hasCustom = Object.keys(CUSTOM_POSTES).length > 0;
+  const hasFormOv = typeof FORM_OVERRIDES !== 'undefined' && Object.keys(FORM_OVERRIDES||{}).length > 0;
+  if(!hasOv && !hasCustom && !hasFormOv){showToast("Aucune personnalisation à exporter");return;}
+  const payload = {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    overrides: OVERRIDES,
+    custom_postes: CUSTOM_POSTES,
+    form_overrides: (typeof FORM_OVERRIDES !== 'undefined') ? FORM_OVERRIDES : {}
+  };
+  const data=JSON.stringify(payload,null,2);
   const blob=new Blob([data],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
   a.href=url;a.download="chiffrage-naturea-perso-"+new Date().toISOString().slice(0,10)+".json";
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast("📤 Fichier exporté");
+  const nbCust = hasCustom ? Object.values(CUSTOM_POSTES).reduce((a,b)=>a+Object.keys(b).length,0) : 0;
+  showToast(`📤 Exporté (${nbCust} poste${nbCust>1?'s':''} perso inclus)`);
 });
 
-// Import overrides
+// Import overrides + custom postes + form overrides
 document.getElementById("btn-import-overrides").addEventListener("click",()=>document.getElementById("file-import-overrides").click());
 document.getElementById("file-import-overrides").addEventListener("change",e=>{
   const file=e.target.files[0];if(!file)return;
@@ -2014,10 +2359,23 @@ document.getElementById("file-import-overrides").addEventListener("change",e=>{
   reader.onload=()=>{
     try{
       const data=JSON.parse(reader.result);
-      if(!data.overrides)throw new Error("Format invalide");
-      if(!confirm("Remplacer les personnalisations actuelles par celles du fichier ?"))return;
-      OVERRIDES=data.overrides;saveOverrides();renderParametres();renderForm();calcRecap();
-      showToast("📥 Personnalisations importées");
+      if(!data.overrides && !data.custom_postes)throw new Error("Format invalide (clé 'overrides' ou 'custom_postes' manquante)");
+      const nbCust = data.custom_postes ? Object.values(data.custom_postes).reduce((a,b)=>a+Object.keys(b).length,0) : 0;
+      const nbOv = data.overrides ? Object.values(data.overrides).reduce((a,b)=>a+Object.keys(b).length,0) : 0;
+      let msg = "Remplacer les personnalisations actuelles par celles du fichier ?\n\n";
+      msg += `• ${nbOv} override(s) prix/libellé\n`;
+      msg += `• ${nbCust} poste(s) personnalisé(s)\n`;
+      if(data.form_overrides) msg += `• Hints de formulaire personnalisés\n`;
+      if(!confirm(msg))return;
+      OVERRIDES=data.overrides||{};saveOverrides();
+      CUSTOM_POSTES=data.custom_postes||{};saveCustomPostes();
+      if(data.form_overrides && typeof FORM_OVERRIDES !== 'undefined'){
+        Object.keys(FORM_OVERRIDES).forEach(k=>delete FORM_OVERRIDES[k]);
+        Object.assign(FORM_OVERRIDES, data.form_overrides);
+        if(typeof saveFormOverrides==='function')saveFormOverrides();
+      }
+      renderParametres();renderRef();renderForm();calcRecap();
+      showToast(`📥 Importé (${nbCust} poste${nbCust>1?'s':''} perso)`);
     }catch(err){alert("Erreur lors de la lecture du fichier : "+err.message);}
   };
   reader.readAsText(file);
@@ -2154,7 +2512,9 @@ function suggestMapping(usineKey, posteDetecte){
   if(!REFS[usineKey]) return null;
   const target = posteDetecte.label_pdf.toLowerCase().replace(/[^a-zà-ÿ0-9 ]/g,'');
   let best = null, bestScore = 0;
-  Object.entries(REFS[usineKey].postes).forEach(([code, p]) => {
+  // Fusionne postes natifs + custom pour la recherche
+  const allPostes = {...REFS[usineKey].postes, ...(CUSTOM_POSTES[usineKey]||{})};
+  Object.entries(allPostes).forEach(([code, p]) => {
     const labels = [p.label_pdf, p.label_user].filter(Boolean).map(l =>
       l.toLowerCase().replace(/[^a-zà-ÿ0-9 ]/g,'')
     );
@@ -2302,12 +2662,27 @@ function renderImportPreview(){
 
   let rowsHtml = '';
   postes.forEach((p, i) => {
-    const posteOptions = usineKey ? ['<option value="">— ne pas mapper —</option>'].concat(
-      Object.entries(REFS[usineKey].postes).map(([code, ref]) => {
+    // Dropdown : postes natifs + postes custom (séparés par un groupe)
+    let posteOptions = '';
+    if(usineKey){
+      posteOptions = '<option value="">— ne pas mapper —</option>';
+      // Natifs
+      Object.entries(REFS[usineKey].postes).forEach(([code, ref]) => {
         const sel = code === p.mapped ? ' selected' : '';
-        return `<option value="${code}"${sel}>${escapeHtml(ref.label_user.substring(0,55))}</option>`;
-      })
-    ).join('') : '';
+        posteOptions += `<option value="${code}"${sel}>${escapeHtml(ref.label_user.substring(0,55))}</option>`;
+      });
+      // Custom (si présents)
+      const customs = CUSTOM_POSTES[usineKey] || {};
+      const customEntries = Object.entries(customs);
+      if(customEntries.length){
+        posteOptions += `<optgroup label="➕ Postes personnalisés">`;
+        customEntries.forEach(([code, ref]) => {
+          const sel = code === p.mapped ? ' selected' : '';
+          posteOptions += `<option value="${code}"${sel}>${escapeHtml(ref.label_user.substring(0,55))}</option>`;
+        });
+        posteOptions += `</optgroup>`;
+      }
+    }
     let deltaHtml = '<span class="delta-pill unmap">non mappé</span>';
     if(p.mapped && p.ancien_pu !== null){
       if(Math.abs(p.delta_pct) < 0.1) deltaHtml = '<span class="delta-pill same">= 0%</span>';
@@ -2318,10 +2693,19 @@ function renderImportPreview(){
       deltaHtml = '<span class="delta-pill new">nouveau</span>';
     }
     const rowClass = !p.mapped ? 'unmapped' : (p.applique ? 'applied' : '');
+    // Bouton "Créer/Rattacher" sur les lignes non mappées (uniquement si usine sélectionnée)
+    const createBtn = (!p.mapped && usineKey)
+      ? `<button class="new-poste-btn" onclick="openCreatePosteModalFromImport(${i})">➕ Créer ce poste / rattacher</button>`
+      : '';
+    // Badge custom si le mapping pointe sur un poste custom
+    const customBadge = (p.mapped && isCustomPoste(usineKey, p.mapped))
+      ? '<span class="custom-badge">perso</span>'
+      : '';
     rowsHtml += `<tr class="${rowClass}" data-idx="${i}">
       <td><input type="checkbox" class="apply-cb" ${p.mapped && p.ancien_pu !== null ? '' : 'disabled'}></td>
-      <td><div style="font-weight:500">${escapeHtml(p.label_pdf)}</div>
-          <div style="font-size:10.5px;color:var(--faint);margin-top:2px">${p.unite} · ${fmtNum(p.qte, p.qte%1?2:0)} × ${fmtNum(p.pu,2)} = ${fmtEurR(p.total)}</div></td>
+      <td><div style="font-weight:500">${escapeHtml(p.label_pdf)}${customBadge}</div>
+          <div style="font-size:10.5px;color:var(--faint);margin-top:2px">${p.unite} · ${fmtNum(p.qte, p.qte%1?2:0)} × ${fmtNum(p.pu,2)} = ${fmtEurR(p.total)}</div>
+          ${createBtn}</td>
       <td>${usineKey ? `<select class="map-sel">${posteOptions}</select>` : '—'}</td>
       <td class="col-num">${p.ancien_pu !== null ? fmtNum(p.ancien_pu, 2)+' €' : '<span style="color:var(--faint)">—</span>'}</td>
       <td class="col-num"><strong>${fmtNum(p.pu, 2)} €</strong></td>
@@ -2523,6 +2907,208 @@ function applyImport(){
   if(typeof renderForm === 'function') renderForm();
   if(typeof calcRecap === 'function') calcRecap();
 }
+
+// ═══════════════════════════════════════════════════════════
+// MODAL « Créer / Rattacher » un poste depuis l'import
+// ═══════════════════════════════════════════════════════════
+window.openCreatePosteModalFromImport = function(idx){
+  if(!CURRENT_IMPORT || !CURRENT_IMPORT.usine) return;
+  const usineKey = CURRENT_IMPORT.usine;
+  const poste = CURRENT_IMPORT.postes[idx];
+  if(!poste) return;
+  openCreatePosteModal(usineKey, poste, (createdCode) => {
+    // Callback après création/rattachement : on mappe la ligne
+    poste.mapped = createdCode;
+    poste.ancien_pu = getPrixCalcule(usineKey, createdCode);
+    poste.delta_pct = (poste.ancien_pu && poste.pu) ? ((poste.pu - poste.ancien_pu) / poste.ancien_pu * 100) : 0;
+    renderImportPreview();
+  });
+};
+
+// Modal réutilisable : ouvre le formulaire de création / rattachement.
+// onValidate(code) est appelé avec le code du poste créé ou rattaché.
+function openCreatePosteModal(usineKey, posteDetecte, onValidate){
+  const sections = getUsineSections(usineKey);
+  const uniteNorm = posteDetecte ? normalizeUniteForDisplay(posteDetecte.unite) : 'm²';
+  const typeDeduit = posteDetecte ? deduceMappingType(posteDetecte.unite) : 'surface';
+  const prefilledLabel = posteDetecte ? posteDetecte.label_pdf : '';
+  const prefilledPu = posteDetecte ? posteDetecte.pu : 0;
+
+  // Liste des postes existants (natifs + custom) pour le mode "rattacher"
+  const allPostes = {...REFS[usineKey].postes, ...(CUSTOM_POSTES[usineKey]||{})};
+  const existingOptions = Object.entries(allPostes)
+    .map(([code, p]) => {
+      const isCust = isCustomPoste(usineKey, code);
+      return `<option value="${code}">${escapeHtml(p.label_user)}${isCust?' (perso)':''}</option>`;
+    }).join('');
+
+  const sectionOptions = sections.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+  const unitOptions = ['m²','m³','ml','u','forfait'].map(u =>
+    `<option value="${u}"${u===uniteNorm?' selected':''}>${u}</option>`
+  ).join('');
+
+  const html = `
+    <div class="modal-h">
+      <h3>➕ Nouvel élément pour ${escapeHtml(REFS[usineKey].nom)}</h3>
+      <button class="modal-close" onclick="closeModal()" title="Fermer">×</button>
+    </div>
+    <div class="modal-b">
+      ${posteDetecte ? `
+      <div style="background:var(--cream);padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:3px">Ligne détectée dans le PDF :</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted)">${escapeHtml(prefilledLabel)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:3px">${posteDetecte.unite} · ${fmtNum(posteDetecte.qte, 2)} × ${fmtNum(prefilledPu, 2)} € = ${fmtEurR(posteDetecte.total)}</div>
+      </div>` : ''}
+
+      <div class="radio-group">
+        <div class="radio-card on" data-mode="new" onclick="_switchModalMode('new')">
+          <div style="font-weight:700;margin-bottom:2px">➕ Créer un nouveau poste</div>
+          <div style="color:var(--muted);font-size:11px">Pour un produit qui n'existe pas encore</div>
+        </div>
+        <div class="radio-card" data-mode="link" onclick="_switchModalMode('link')">
+          <div style="font-weight:700;margin-bottom:2px">🔗 Rattacher à un poste existant</div>
+          <div style="color:var(--muted);font-size:11px">Quand l'usine renomme un produit</div>
+        </div>
+      </div>
+
+      <!-- Mode CRÉER -->
+      <div id="modal-mode-new" style="margin-top:16px">
+        <div class="field">
+          <label>Libellé affiché</label>
+          <input type="text" id="new-label" value="${escapeAttr(prefilledLabel)}" placeholder="Ex. Modules plancher 80×220">
+          <div class="field-hint">Apparaîtra dans le formulaire et le référentiel</div>
+        </div>
+        <div class="field" style="display:flex;gap:10px">
+          <div style="flex:1">
+            <label>Unité</label>
+            <select id="new-unite">${unitOptions}</select>
+          </div>
+          <div style="flex:1">
+            <label>Section du formulaire</label>
+            <select id="new-section">
+              ${sectionOptions}
+              <option value="__new__">+ Créer une nouvelle section</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" id="new-section-name-wrap" style="display:none">
+          <label>Nom de la nouvelle section</label>
+          <input type="text" id="new-section-name" placeholder="Ex. 🪟 Menuiseries">
+          <div class="field-hint">Emoji recommandé en début pour l'icône</div>
+        </div>
+        <div class="field">
+          <label>Prix unitaire (€)</label>
+          <input type="number" id="new-prix" value="${prefilledPu}" step="0.01" min="0">
+          <div class="field-hint">Sera affiché en €/${uniteNorm} dans le référentiel</div>
+        </div>
+        <div class="field">
+          <label>Tooltip (optionnel)</label>
+          <textarea id="new-tooltip" placeholder="Description courte affichée au survol du ⓘ dans le formulaire"></textarea>
+        </div>
+      </div>
+
+      <!-- Mode RATTACHER -->
+      <div id="modal-mode-link" style="margin-top:16px;display:none">
+        <div class="field">
+          <label>Rattacher cette ligne au poste existant :</label>
+          <select id="link-poste">
+            <option value="">— choisir un poste —</option>
+            ${existingOptions}
+          </select>
+          <div class="field-hint">Aucun nouveau poste ne sera créé. La ligne sera juste mappée sur le poste choisi.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" id="modal-validate">✓ Valider</button>
+    </div>
+  `;
+  openModal(html);
+
+  // Affiche/cache champ "nom nouvelle section"
+  document.getElementById('new-section').addEventListener('change', e => {
+    document.getElementById('new-section-name-wrap').style.display = (e.target.value === '__new__') ? '' : 'none';
+  });
+
+  document.getElementById('modal-validate').addEventListener('click', () => {
+    const activeMode = document.querySelector('.radio-card.on').dataset.mode;
+    if(activeMode === 'link'){
+      const code = document.getElementById('link-poste').value;
+      if(!code){ showToast('⚠️ Choisis un poste à rattacher'); return; }
+      closeModal();
+      if(onValidate) onValidate(code);
+      showToast('🔗 Ligne rattachée au poste existant');
+      return;
+    }
+    // Mode CRÉER
+    const label = document.getElementById('new-label').value.trim();
+    const unite = document.getElementById('new-unite').value;
+    let section = document.getElementById('new-section').value;
+    if(section === '__new__'){
+      section = document.getElementById('new-section-name').value.trim();
+      if(!section){ showToast('⚠️ Donne un nom à la nouvelle section'); return; }
+    }
+    const prix = parseFloat(document.getElementById('new-prix').value) || 0;
+    const tooltip = document.getElementById('new-tooltip').value.trim();
+    if(!label){ showToast('⚠️ Le libellé est obligatoire'); return; }
+    if(prix <= 0){ showToast('⚠️ Le prix unitaire doit être > 0'); return; }
+
+    const code = generatePosteCode(usineKey, label);
+    const type = deduceMappingType(unite);
+    const fieldId = generateFieldId(usineKey, code, unite);
+    const uniteRef = (unite==='m²'||unite==='m³'||unite==='ml'||unite==='u')?`€/${unite}`:(unite==='forfait'?'forfait':`€/${unite}`);
+
+    addCustomPoste(usineKey, code, {
+      label_user: label,
+      label_pdf: posteDetecte ? posteDetecte.label_pdf : label,
+      tooltip: tooltip,
+      unite: uniteRef,
+      moyen: prix,
+      form_field: {
+        field_id: fieldId,
+        type: type,
+        section: section,
+        unit: unite,
+        hint: posteDetecte ? `Détecté depuis import (${fmtNum(prix,2)} €/${unite})` : ''
+      }
+    });
+
+    closeModal();
+    if(onValidate) onValidate(code);
+    showToast(`✓ Poste « ${label} » créé pour ${REFS[usineKey].nom}`);
+  });
+}
+
+// Bascule entre les 2 modes de la modal (nouveau / rattacher)
+window._switchModalMode = function(mode){
+  document.querySelectorAll('.modal-b .radio-card').forEach(c => {
+    c.classList.toggle('on', c.dataset.mode === mode);
+  });
+  document.getElementById('modal-mode-new').style.display = (mode === 'new') ? '' : 'none';
+  document.getElementById('modal-mode-link').style.display = (mode === 'link') ? '' : 'none';
+};
+
+// Suppression d'un poste custom depuis l'écran Paramètres
+window.deleteCustomPosteUI = function(usineKey, code){
+  const p = getCustomPoste(usineKey, code);
+  if(!p) return;
+  if(!confirm(`Supprimer le poste personnalisé « ${p.label_user} » de ${REFS[usineKey].nom} ?\n\nLes éventuels overrides associés seront aussi nettoyés. Les chiffrages déjà sauvegardés ne sont pas impactés.`)) return;
+  deleteCustomPoste(usineKey, code);
+  // Re-render toutes les vues qui pourraient le montrer
+  if(typeof renderParametres === 'function') renderParametres();
+  if(typeof renderRef === 'function') renderRef();
+  if(CURRENT_USINE === usineKey){
+    // Nettoyer la valeur saisie sur ce champ s'il y en avait une
+    const allFid = Object.keys(CURRENT_VALUES);
+    allFid.forEach(fid => {
+      if(fid.startsWith(code+'_') || fid === code) delete CURRENT_VALUES[fid];
+    });
+    if(typeof renderForm === 'function') renderForm();
+    if(typeof calcRecap === 'function') calcRecap();
+  }
+  showToast('🗑 Poste supprimé');
+};
 
 // === Historique ===
 function loadHistory(){
