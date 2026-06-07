@@ -1,4 +1,4 @@
-@import './codir-modal.shared.scss';
+@use './codir-modal.shared.scss' as *;
 
 .grid-2,
 .grid-3 {

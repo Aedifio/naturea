@@ -57,7 +57,7 @@
             class="in"
             style="width: 100%; margin-top: 10px"
             [disabled]="locked()"
-            [ngModel]="currentAudit()!.empRatings[em.id]?.comment ?? ''"
+            [ngModel]="currentAudit()!.empRatings[em.id].comment ?? ''"
             (ngModelChange)="updateRating(em.id, $event)"
             placeholder="Commentaire de synthèse sur le salarié…"
           />

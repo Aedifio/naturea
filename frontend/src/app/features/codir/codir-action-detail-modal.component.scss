@@ -1,5 +1,5 @@
-@import './codir-member-modal.component.scss';
-@import './codir-modal.shared.scss';
+@use './codir-member-modal.component.scss' as *;
+@use './codir-modal.shared.scss' as *;
 
 .modal-wide {
   max-width: 760px;

@@ -1,5 +1,11 @@
+@use './styles/app-ui' as *;
+@use './app/features/recrutement/recrutement-ui' as *;
+@use './app/features/ossature/ossature-ui' as *;
+@use './app/features/audit-technique/audit-technique-ui' as *;
+@use './app/features/audit-commerce/audit-commerce-ui' as *;
+@use './app/features/chiffrage/chiffrage-ui' as *;
+
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87..125,300..900&family=Archivo+Black&display=swap');
-@import './styles/app-ui';
 
 /* === CHARTE OFFICIELLE MAISONS NATURÉA (portail V16) === */
 :root {
@@ -492,9 +498,3 @@ code {
 }
 
 a, a:hover {text-decoration:none}
-
-@import './app/features/recrutement/recrutement-ui';
-@import './app/features/ossature/ossature-ui';
-@import './app/features/audit-technique/audit-technique-ui';
-@import './app/features/audit-commerce/audit-commerce-ui';
-@import './app/features/chiffrage/chiffrage-ui';

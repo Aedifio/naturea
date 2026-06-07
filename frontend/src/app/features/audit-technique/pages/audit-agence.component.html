@@ -25,7 +25,7 @@
         <div class="metric-label">Nombre d'audits</div>
         <div class="metric-value" style="color: var(--primary)">{{ a.audits.length }}</div>
         <div class="metric-sub">
-          {{ a.audits.length ? 'Dernier : ' + fmtDate(sortedAudits()[0]?.date) : 'Aucun audit' }}
+          {{ a.audits.length ? 'Dernier : ' + fmtDate(sortedAudits()[0].date) : 'Aucun audit' }}
         </div>
       </div>
       <div class="metric">

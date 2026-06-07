@@ -7,9 +7,8 @@ import { AuthService } from './core/auth/auth.service';
 import { SupabaseStorageAdapter } from './core/storage/supabase-storage.adapter';
 import { STORAGE_ADAPTER } from './core/storage/storage.interface';
 
-function initAuth(auth: AuthService): () => void {
-  void auth.init();
-  return () => undefined;
+function initAuth(auth: AuthService): () => Promise<void> {
+  return () => auth.init();
 }
 
 registerLocaleData(localeFr);

@@ -1,20 +1,19 @@
 /* Ported from ossature-app.html */
 .ossature-app{
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  
-    /* Vert sapin Naturéa officiel #355222 (anciennement vert kaki #355222) */
-    --blue: #355222; --blue-light: #e2e8da; --blue-dark: #243919;
-    /* Terracotta Naturéa officiel #d69362 (anciennement #C8823A) */
-    --orange: #d69362; --orange-dark: #b87648;
-    /* Sémantique harmonisée */
-    --green: #2f8557; --purple: #7a5e8d; --yellow: #c98f37;
-    /* Fonds naturels */
-    --bg: #f7f4ec; --white: #ffffff; --border: #e3dccc;
-    /* Textes */
-    --text: #1f2e25; --muted: #4f5f56; --faint: #8a948c;
-    --shadow: 0 2px 14px rgba(53,82,34,.08);
-    --shadow-hover: 0 6px 28px rgba(53,82,34,.18);
+  /* Vert sapin Naturéa officiel #355222 (anciennement vert kaki #355222) */
+  --blue: #355222; --blue-light: #e2e8da; --blue-dark: #243919;
+  /* Terracotta Naturéa officiel #d69362 (anciennement #C8823A) */
+  --orange: #d69362; --orange-dark: #b87648;
+  /* Sémantique harmonisée */
+  --green: #2f8557; --purple: #7a5e8d; --yellow: #c98f37;
+  /* Fonds naturels */
+  --bg: #f7f4ec; --white: #ffffff; --border: #e3dccc;
+  /* Textes */
+  --text: #1f2e25; --muted: #4f5f56; --faint: #8a948c;
+  --shadow: 0 2px 14px rgba(53,82,34,.08);
+  --shadow-hover: 0 6px 28px rgba(53,82,34,.18);
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Archivo', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 
   /* ── Header ── */

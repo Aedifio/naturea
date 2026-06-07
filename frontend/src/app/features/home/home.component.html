@@ -63,9 +63,9 @@
             <div class="app-card-name">Ossature</div>
           </div>
           <app-kpi-grid [items]="[
-            { label: 'Devis demandés', value: dash.ossature.devisDemande ?? 0 },
-            { label: 'Devis reçus', value: dash.ossature.devisEnvoye ?? 0 },
-            { label: 'Commandes', value: dash.ossature.commande ?? 0, tone: 'green' }
+            { label: 'Devis demandés', value: dash.ossature.devisDemande },
+            { label: 'Devis reçus', value: dash.ossature.devisEnvoye },
+            { label: 'Commandes', value: dash.ossature.commande, tone: 'green' }
           ]" />
           @if (canAccess('OSSATURE')) {
             <div class="app-card-foot">
@@ -82,9 +82,9 @@
             <div class="app-card-name">Chiffrage</div>
           </div>
           <app-kpi-grid [items]="[
-            { label: 'Devis chiffrés', value: dash.chiffrage.total ?? 0 },
-            { label: 'Ce mois', value: dash.chiffrage.moisCount ?? 0, tone: 'green' },
-            { label: 'Montant HT', value: formatEur(dash.chiffrage.montant ?? 0) }
+            { label: 'Devis chiffrés', value: dash.chiffrage.total },
+            { label: 'Ce mois', value: dash.chiffrage.moisCount, tone: 'green' },
+            { label: 'Montant HT', value: formatEur(dash.chiffrage.montant) }
           ]" />
           @if (canAccess('CHIFFRAGE')) {
             <div class="app-card-foot">

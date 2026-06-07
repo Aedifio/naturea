@@ -74,7 +74,7 @@ Project: **naturea** (`eu-west-3`, ref `rrhaubqmcetgmjhqweyr`)
 
 ### 2. Create Auth users
 
-Create users in **Authentication → Users** matching [`portal_users`](supabase/seed/portal_users.sql), or run [`auth_users.sql`](supabase/seed/auth_users.sql) in the SQL Editor.
+Create users in **Authentication → Users** matching [`portal_users`], or run [`auth_users.sql`] in the SQL Editor.
 
 Then link profiles:
 
@@ -101,20 +101,6 @@ Six private buckets are created by migration `20250608120000_storage_auth_seed.s
 ### 4. API keys
 
 Copy **Project URL** and **anon public key** into Render env vars. Never expose the `service_role` key in the Angular app.
-
-## Demo accounts
-
-After Auth users are created and linked:
-
-| Email | Password | Role |
-|-------|----------|------|
-| `animateur@maisons-naturea.fr` | `anim2026!` | Animateur |
-| `directeur@maisons-naturea.fr` | `codir2026!` | Codir |
-| `test.franchise@naturea.fr` | `test2026!` | Franchisé |
-| `commercial.a@naturea.fr` | `comm2026!` | Commercial |
-| `admin.a@naturea.fr` | `adm2026!` | Assistant·e admin |
-
-See [`supabase/seed/auth_users.sql`](supabase/seed/auth_users.sql) for demo passwords.
 
 ## Architecture
 

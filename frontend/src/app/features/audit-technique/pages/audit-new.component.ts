@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import type { EcartType } from '../audit-technique.models';
 import { ECARTS, NEW_AUDIT_STEPS } from '../constants/audit-technique.constants';
@@ -14,7 +14,7 @@ import { scoreColor, scoreLabel } from '../utils/audit-score.util';
 @Component({
   selector: 'app-audit-new',
   standalone: true,
-  imports: [FormsModule, RouterLink, AuditScoreRingComponent],
+  imports: [FormsModule, AuditScoreRingComponent],
   templateUrl: './audit-new.component.html',
 })
 export class AuditNewComponent {

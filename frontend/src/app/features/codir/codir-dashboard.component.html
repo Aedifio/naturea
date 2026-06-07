@@ -46,8 +46,8 @@
       } @else {
         @for (a of s.overdueList.slice(0, 5); track a.id) {
           <div class="app-list-row">
-            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0]?.color || 'var(--accent)'" style="width: 28px; height: 28px">
-              {{ codir.initials(codir.actionOwners(a)[0]?.name || a.ownerLabel || '?') }}
+            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0].color || 'var(--accent)'" style="width: 28px; height: 28px">
+              {{ codir.initials(codir.actionOwners(a)[0].name || a.ownerLabel || '?') }}
             </span>
             <div class="app-grow">
               <div class="app-truncate app-action-title">{{ a.title }}</div>
@@ -75,8 +75,8 @@
       } @else {
         @for (a of s.upcomingList.slice(0, 5); track a.id) {
           <div class="app-list-row">
-            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0]?.color || 'var(--accent)'" style="width: 28px; height: 28px">
-              {{ codir.initials(codir.actionOwners(a)[0]?.name || a.ownerLabel || '?') }}
+            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0].color || 'var(--accent)'" style="width: 28px; height: 28px">
+              {{ codir.initials(codir.actionOwners(a)[0].name || a.ownerLabel || '?') }}
             </span>
             <div class="app-grow">
               <div class="app-truncate app-action-title">{{ a.title }}</div>
