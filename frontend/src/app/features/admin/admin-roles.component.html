@@ -1,0 +1,82 @@
+<app-page-hero
+  kicker="Administration"
+  titleHtml="Permissions par <em>rôle</em>"
+  [subtitleHtml]="subtitleHtml"
+/>
+
+<app-admin-modules active="permissions" />
+
+<div class="card">
+  <div class="chd">
+    <div class="chl">
+      <div class="ci ci-perms">🔐</div>
+      <h3>Matrice rôles × applications</h3>
+    </div>
+    <div class="chd-actions">
+      <button type="button" class="btn-secondary" (click)="load()" [disabled]="loading() || saving()">
+        ↻ Actualiser
+      </button>
+      <button type="button" class="btn-save" (click)="saveAll()" [disabled]="loading() || saving()">
+        {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+
+  @if (saveOk()) {
+    <p class="banner-ok">Permissions enregistrées.</p>
+  }
+  @if (saveError()) {
+    <p class="banner-err">{{ saveError() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="status-msg">Chargement…</p>
+  } @else if (loadError()) {
+    <p class="status-msg status-err">{{ loadError() }}</p>
+  } @else if (!roleNames().length) {
+    <p class="status-msg">Aucune permission configurée.</p>
+  } @else {
+    <div class="matrix-wrap">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th class="col-role">Rôle</th>
+            @for (app of apps; track app.code) {
+              <th class="col-app" [title]="app.desc">
+                <span class="app-icon">{{ app.icon }}</span>
+                <span class="app-lbl">{{ app.navLabel }}</span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of roleNames(); track role) {
+            <tr>
+              <td class="col-role">
+                <span class="role-badge {{ roleClass(role) }}">{{ role }}</span>
+              </td>
+              @for (app of apps; track app.code) {
+                <td class="col-app">
+                  <select
+                    class="perm-select"
+                    [ngModel]="cellValue(role, app.code)"
+                    (ngModelChange)="setCell(role, app.code, $event)"
+                  >
+                    @for (opt of permOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="matrix-legend">
+      <strong>Légende :</strong>
+      — = pas d'accès · Lecture = consultation · Écriture = modification · Admin = accès complet
+    </p>
+  }
+</div>

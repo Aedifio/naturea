@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { RecrutSession } from '../recrutement.models';
 import { RecrutementDataService } from './recrutement-data.service';
 import { RecrutementToastService } from './recrutement-toast.service';
@@ -7,6 +8,7 @@ import { RecrutementToastService } from './recrutement-toast.service';
 @Injectable({ providedIn: 'root' })
 export class RecrutementModeService {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   private readonly data = inject(RecrutementDataService);
   private readonly toast = inject(RecrutementToastService);
 
@@ -26,10 +28,11 @@ export class RecrutementModeService {
   );
 
   setAdminMode(): void {
+    const user = this.auth.currentUser();
     this._session.set({
       role: 'admin',
-      email: 'admin@maisons-naturea.fr',
-      name: 'Franchiseur',
+      email: user?.email ?? '',
+      name: user?.name ?? 'Franchiseur',
     });
     this._franchisorSession.set(true);
   }

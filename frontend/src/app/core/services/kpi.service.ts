@@ -1,16 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { findAgency, KpiItem } from '../models/kpi.model';
-import { StorageKey } from '../models/storage-keys';
-import { StorageService } from '../storage/storage.service';
+import { CodirDataService } from './codir-data.service';
+import { RecrutementDataService } from '../../features/recrutement/services/recrutement-data.service';
+import { OssatureDataService } from '../../features/ossature/services/ossature-data.service';
+import { AuditTechniqueDataService } from '../../features/audit-technique/services/audit-technique-data.service';
+import { AuditCommerceDataService } from '../../features/audit-commerce/services/audit-commerce-data.service';
+import { ChiffrageDataService } from '../../features/chiffrage/services/chiffrage-data.service';
 
 @Injectable({ providedIn: 'root' })
 export class KpiService {
-  constructor(private readonly storage: StorageService) {}
+  private readonly codir = inject(CodirDataService);
+  private readonly recrutement = inject(RecrutementDataService);
+  private readonly ossature = inject(OssatureDataService);
+  private readonly auditTechnique = inject(AuditTechniqueDataService);
+  private readonly auditCommerce = inject(AuditCommerceDataService);
+  private readonly chiffrage = inject(ChiffrageDataService);
 
   calcCodirKPI(): KpiItem[] | null {
-    const data = this.storage.get<{ actions?: Array<{ status: string; deadline?: string }> }>(StorageKey.CodirData);
-    if (!data?.actions?.length) return null;
-    const actions = data.actions;
+    const actions = this.codir.actions();
+    if (!actions.length) return null;
     const week = actions.filter((a) => {
       const days = this.codirDaysUntil(a.deadline);
       return a.status !== 'done' && days !== null && days >= 0 && days <= 7;
@@ -29,8 +37,8 @@ export class KpiService {
   }
 
   calcRecrutKPI(): KpiItem[] | null {
-    const db = this.storage.get<Array<{ statut: string }>>(StorageKey.Recrutement);
-    if (!Array.isArray(db) || !db.length) return null;
+    const db = this.recrutement.candidates();
+    if (!db.length) return null;
     return [
       { label: 'Total candidats', value: db.length },
       { label: 'Nouveaux', value: db.filter((c) => c.statut === 'Nouveau').length, tone: 'amber' },
@@ -40,8 +48,8 @@ export class KpiService {
   }
 
   calcOssatureKPI(): KpiItem[] | null {
-    const orders = this.storage.get<Array<{ statut: string; surface?: string | number }>>(StorageKey.OssatureOrders);
-    if (!Array.isArray(orders) || !orders.length) return null;
+    const orders = this.ossature.orders();
+    if (!orders.length) return null;
     const active = orders.filter((o) => o.statut !== 'Annulée');
     const livrees = active.filter((o) => o.statut === 'Expédition validée');
     const m2Total = active.reduce((a, o) => a + this.parseM2(o.surface), 0);
@@ -55,37 +63,30 @@ export class KpiService {
   }
 
   calcAuditKPI(): KpiItem[] | null {
-    const data = this.storage.get<{ agences?: Array<{ audits?: Array<{ corps?: Array<{ note?: number | null }> }> }> }>(
-      StorageKey.AuditTechnique,
-    );
-    if (!data?.agences?.length) return null;
-    const allAudits = data.agences.flatMap((a) => a.audits ?? []);
+    const agences = this.auditTechnique.agences();
+    if (!agences.length) return null;
+    const allAudits = agences.flatMap((a) => a.audits);
     if (!allAudits.length) return null;
     const score = this.auditAvg(allAudits);
-    const audited = data.agences.filter((a) => this.auditAvg(a.audits) !== null);
-    const nonAudited = data.agences.length - audited.length;
+    const audited = agences.filter((a) => this.auditAvg(a.audits) !== null);
+    const nonAudited = agences.length - audited.length;
     return [
       {
         label: 'Score réseau',
         value: score !== null ? `${score.toFixed(2)}/5` : '—',
         tone: score === null ? 'muted' : score >= 4 ? 'green' : score >= 3 ? 'amber' : 'red',
       },
-      { label: 'Agences auditées', value: `${audited.length}/${data.agences.length}` },
+      { label: 'Agences auditées', value: `${audited.length}/${agences.length}` },
       { label: 'Audits total', value: allAudits.length },
       { label: 'Non auditées', value: nonAudited, tone: nonAudited ? 'amber' : 'green' },
     ];
   }
 
   calcAuditComKPI(): KpiItem[] | null {
-    const data = this.storage.get<{
-      agencies?: Array<{
-        objectives?: { signatures?: number };
-        audits?: Array<{ date?: string; leaves?: Record<string, { rows?: Array<{ val?: number; note?: number; empId?: string }> }> }>;
-      }>;
-      settings?: { noteThreshold?: number };
-    }>(StorageKey.AuditCommerce);
-    if (!data?.agencies?.length) return null;
-    const th = Number(data.settings?.noteThreshold) || 5;
+    const agencies = this.auditCommerce.agencies();
+    const settings = this.auditCommerce.settings();
+    if (!agencies.length) return null;
+    const th = Number(settings.noteThreshold) || 5;
     const ym = new Date().toISOString().slice(0, 7);
     let totSign = 0;
     let totObj = 0;
@@ -94,7 +95,7 @@ export class KpiService {
     let sumTransfo = 0;
     let anyAudit = false;
 
-    for (const a of data.agencies) {
+    for (const a of agencies) {
       const monthAudits = (a.audits ?? []).filter((au) => au.date?.slice(0, 7) === ym);
       let c = 0;
       let s = 0;
@@ -103,7 +104,7 @@ export class KpiService {
         s += this.leafTotal(au, 'cli.signatures');
       }
       totSign += s;
-      totObj += Number(a.objectives?.signatures) || 0;
+      totObj += Number(a.objectives?.['signatures']) || 0;
       sumTransfo += c > 0 ? (s / c) * 100 : 0;
       if (monthAudits.length) {
         audited++;
@@ -114,24 +115,22 @@ export class KpiService {
     }
     if (!anyAudit) return null;
     const pctObj = totObj > 0 ? Math.round((totSign / totObj) * 100) : null;
-    const transfo = data.agencies.length ? sumTransfo / data.agencies.length : 0;
+    const transfo = agencies.length ? sumTransfo / agencies.length : 0;
     return [
       {
         label: 'Signatures / objectif',
         value: pctObj == null ? '—' : `${pctObj}%`,
         tone: pctObj == null ? 'muted' : pctObj >= 100 ? 'green' : pctObj >= 80 ? 'amber' : 'red',
       },
-      { label: 'Agences auditées', value: `${audited}/${data.agencies.length}` },
+      { label: 'Agences auditées', value: `${audited}/${agencies.length}` },
       { label: 'Agences en difficulté', value: trouble, tone: trouble ? 'red' : 'green' },
       { label: 'Taux de transfo.', value: `${transfo.toFixed(1)}%` },
     ];
   }
 
   calcChiffrageKPI(): KpiItem[] | null {
-    const projets = this.storage.get<Array<{ date?: string; agence?: string }>>(StorageKey.ChiffrageProjets);
-    const history = this.storage.get<Array<{ date_import?: string; postes?: Array<{ applique?: boolean; delta_pct?: number }> }>>(
-      StorageKey.ChiffrageTarifsHistory,
-    ) ?? [];
+    const projets = this.chiffrage.projets();
+    const history = this.chiffrage.getTarifsHistory();
     const cutoff = Date.now() - 30 * 86400000;
     const deltas: number[] = [];
     for (const h of history) {
@@ -142,19 +141,18 @@ export class KpiService {
       }
     }
     const avgDelta = deltas.length ? deltas.reduce((s, x) => s + x, 0) / deltas.length : null;
-    const projList = Array.isArray(projets) ? projets : [];
-    if (!projList.length && !deltas.length) return null;
+    if (!projets.length && !deltas.length) return null;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const last7 = new Date(today);
     last7.setDate(last7.getDate() - 7);
-    const recents = projList.filter((p) => {
+    const recents = projets.filter((p) => {
       if (!p.date) return false;
       const d = new Date(p.date);
       return !isNaN(d.getTime()) && d >= last7;
     });
-    const agencesActives = new Set(projList.map((p) => p.agence).filter((a) => a && a !== '(siège)'));
+    const agencesActives = new Set(projets.map((p) => p.agence).filter((a) => a && a !== '(siège)'));
     let varValue = '—';
     let varTone: KpiItem['tone'] = 'muted';
     if (avgDelta !== null) {
@@ -162,7 +160,7 @@ export class KpiService {
       varTone = avgDelta > 5 ? 'red' : avgDelta > 0 ? 'amber' : 'green';
     }
     return [
-      { label: 'Devis brouillons', value: projList.length },
+      { label: 'Devis brouillons', value: projets.length },
       { label: 'Sur 7j', value: recents.length, tone: recents.length ? 'green' : 'muted' },
       {
         label: 'Agences actives',
@@ -174,10 +172,8 @@ export class KpiService {
   }
 
   calcFranchiseAuditTech(name: string) {
-    const d = this.storage.get<{ agences?: Array<{ nom: string; audits?: Array<{ date?: string; corps?: Array<{ note?: number; ecart?: string; rectifStatus?: string }> }> }> }>(
-      StorageKey.AuditTechnique,
-    );
-    const ag = findAgency(d?.agences, name, (a) => a.nom);
+    const agences = this.auditTechnique.agences();
+    const ag = findAgency(agences, name, (a) => a.nom);
     if (!ag) return { found: false as const };
     const audits = ag.audits ?? [];
     const perAudit = audits
@@ -199,17 +195,11 @@ export class KpiService {
   }
 
   calcFranchiseAuditCom(name: string) {
-    const d = this.storage.get<{
-      settings?: { noteThreshold?: number };
-      agencies?: Array<{
-        name: string;
-        objectives?: { signatures?: number };
-        audits?: Array<{ date?: string; leaves?: Record<string, { rows?: Array<{ val?: number; note?: number | string; empId?: string }> }> }>;
-      }>;
-    }>(StorageKey.AuditCommerce);
-    const ag = findAgency(d?.agencies, name, (a) => a.name);
+    const agencies = this.auditCommerce.agencies();
+    const settings = this.auditCommerce.settings();
+    const ag = findAgency(agencies, name, (a) => a.name);
     if (!ag) return { found: false as const };
-    const th = Number(d?.settings?.noteThreshold) || 5;
+    const th = Number(settings.noteThreshold) || 5;
     const ym = new Date().toISOString().slice(0, 7);
     const yyyy = String(new Date().getFullYear());
     const audits = ag.audits ?? [];
@@ -237,12 +227,12 @@ export class KpiService {
       contactsAnnee: sum(inYear, 'cli.contact.entrant'),
       ventesMois: sum(inMonth, 'cli.signatures'),
       ventesAnnee: sum(inYear, 'cli.signatures'),
-      objMois: Number(ag.objectives?.signatures) || 0,
+      objMois: Number(ag.objectives?.['signatures']) || 0,
     };
   }
 
   calcFranchiseOssature(name: string) {
-    const orders = this.storage.get<Array<{ franchise?: string; statut?: string }>>(StorageKey.OssatureOrders) ?? [];
+    const orders = this.ossature.orders();
     const t = normAgency(name);
     const mine = orders.filter((o) => {
       const n = normAgency(o.franchise);
@@ -260,8 +250,7 @@ export class KpiService {
   }
 
   calcFranchiseChiffrage(name: string) {
-    const projets = this.storage.get<Array<{ agence?: string; date?: string; total?: number }>>(StorageKey.ChiffrageProjets);
-    if (!Array.isArray(projets)) return { found: false, total: 0, moisCount: 0, montant: 0 };
+    const projets = this.chiffrage.projets();
     const t = normAgency(name);
     const mine = projets.filter((p) => {
       const n = normAgency(p.agence);
@@ -305,7 +294,7 @@ export class KpiService {
     return sc2.reduce((a, b) => a + b, 0) / sc2.length;
   }
 
-  private leafTotal(au: { leaves?: Record<string, { rows?: Array<{ val?: number }> }> }, id: string): number {
+  private leafTotal(au: { leaves?: Record<string, { rows?: Array<{ val?: string | number }> }> }, id: string): number {
     const lf = au.leaves?.[id];
     if (!lf?.rows) return 0;
     return lf.rows.reduce((s, r) => s + (Number(r.val) || 0), 0);

@@ -1,8 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
 import { NewOrderInput, OssatureOrder } from '../ossature.models';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { StorageService } from '../../../core/storage/storage.service';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
 import {
   sendDevisRetourEmail,
   sendEmailCommandeConfirmee,
@@ -236,31 +235,38 @@ export const OSSATURE_SEED: OssatureOrder[] = [
 
 @Injectable({ providedIn: 'root' })
 export class OssatureDataService {
-  private readonly storage = inject(StorageService);
+  private readonly supabase = inject(SupabaseService);
   private readonly toast = inject(OssatureToastService);
+  private readonly _orders = signal<OssatureOrder[]>([]);
   private readonly _version = signal(0);
-  private migrated = false;
 
   readonly orders = computed(() => {
     this._version();
-    const raw = this.storage.get<OssatureOrder[]>(StorageKey.OssatureOrders) ?? [];
-    if (!this.migrated) {
-      this.migrated = true;
-      const migrated = this.migrateStatuts(raw);
-      if (migrated !== raw) {
-        this.storage.set(StorageKey.OssatureOrders, migrated);
-      }
-      return migrated;
-    }
-    return raw;
+    return this._orders();
   });
+
+  async load(): Promise<void> {
+    const { data, error } = await this.supabase.from('ossature_orders').select('*').order('created', { ascending: false });
+    if (error) {
+      console.error('[Ossature] load failed', error);
+      return;
+    }
+    const list = (data ?? []).map((r) => this.rowToOrder(r as Record<string, unknown>));
+    const migrated = this.migrateStatuts(list);
+    this._orders.set(migrated);
+    this._version.update((v) => v + 1);
+    if (migrated !== list) void this.save(migrated);
+  }
 
   bump(): void {
     this._version.update((v) => v + 1);
   }
 
-  save(list: OssatureOrder[]): void {
-    this.storage.set(StorageKey.OssatureOrders, list);
+  async save(list: OssatureOrder[]): Promise<void> {
+    const rows = list.map((o) => this.orderToRow(o));
+    const { error } = await this.supabase.from('ossature_orders').upsert(rows);
+    if (error) throw error;
+    this._orders.set(list);
     this.bump();
   }
 
@@ -322,7 +328,7 @@ export class OssatureDataService {
       updated = { ...o, ...patch };
       return updated;
     });
-    this.save(list);
+    void this.save(list);
     return updated;
   }
 
@@ -342,7 +348,7 @@ export class OssatureDataService {
       created: todayIso(),
       annee: new Date().getFullYear(),
     };
-    this.save([order, ...this.orders()]);
+    void this.save([order, ...this.orders()]);
     sendEmailUsine(order);
     return order;
   }
@@ -589,5 +595,53 @@ export class OssatureDataService {
 
   ordersEnRetardPlans(): OssatureOrder[] {
     return this.orders().filter((o) => planFabDelaiDepasse(o));
+  }
+
+  private static readonly ORDER_COLUMNS = new Set([
+    'id', 'franchise', 'reference', 'surface', 'plancher', 'site', 'statut',
+    'livraison', 'permis', 'docs', 'docs_date', 'created', 'annee',
+  ]);
+
+  private orderToRow(order: OssatureOrder): Record<string, unknown> {
+    const payload: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(order)) {
+      if (!OssatureDataService.ORDER_COLUMNS.has(k)) payload[k] = v;
+    }
+    return {
+      id: order.id,
+      franchise: order.franchise,
+      reference: order.reference,
+      surface: order.surface,
+      plancher: order.plancher ?? null,
+      site: order.site,
+      statut: order.statut,
+      livraison: order.livraison,
+      permis: order.permis ?? null,
+      docs: order.docs ?? [],
+      docs_date: order.docs_date ?? null,
+      created: order.created,
+      annee: order.annee ?? new Date().getFullYear(),
+      payload,
+    };
+  }
+
+  private rowToOrder(row: Record<string, unknown>): OssatureOrder {
+    const payload = (row['payload'] as Record<string, unknown>) ?? {};
+    const base: Record<string, unknown> = {
+      id: row['id'],
+      franchise: row['franchise'],
+      reference: row['reference'],
+      surface: row['surface'],
+      plancher: row['plancher'],
+      site: row['site'],
+      statut: row['statut'],
+      livraison: row['livraison'],
+      permis: row['permis'],
+      docs: row['docs'],
+      docs_date: row['docs_date'],
+      created: row['created'],
+      annee: row['annee'],
+    };
+    return { ...payload, ...base } as unknown as OssatureOrder;
   }
 }

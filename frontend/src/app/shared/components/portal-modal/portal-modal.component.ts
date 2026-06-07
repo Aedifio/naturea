@@ -301,11 +301,11 @@ export class PortalModalComponent {
     }
   }
 
-  saveActu(): void {
+  async saveActu(): Promise<void> {
     if (this.actuForm.invalid) return;
     const v = this.actuForm.getRawValue();
     const cat = ACTU_CATS.find((c) => c.value === v.cat)!;
-    this.content.addActu({
+    await this.content.addActu({
       cat: v.cat!,
       lbl: cat.lbl,
       date: this.content.formatActuDate(v.date!),
@@ -321,11 +321,11 @@ export class PortalModalComponent {
     this.close.emit();
   }
 
-  saveEvent(): void {
+  async saveEvent(): Promise<void> {
     if (this.eventForm.invalid) return;
     const v = this.eventForm.getRawValue();
     const tag = EVENT_TAGS.find((t) => t.value === v.tag)!;
-    this.content.addEvent({
+    await this.content.addEvent({
       dateIso: v.date!,
       tag: v.tag!,
       tlbl: tag.lbl,
@@ -341,10 +341,10 @@ export class PortalModalComponent {
     this.close.emit();
   }
 
-  saveNewsletter(): void {
+  async saveNewsletter(): Promise<void> {
     if (this.nlForm.invalid) return;
     const v = this.nlForm.getRawValue();
-    this.content.saveNewsletter({
+    await this.content.saveNewsletter({
       type: 'text',
       name: v.name!.trim(),
       content: v.body!.trim(),

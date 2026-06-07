@@ -1,6 +1,6 @@
 # Maisons Naturéa — Portail Réseau
 
-Angular 19 SPA for the Naturéa franchise network portal (Chiffrage, Audit, Codir, Recrutement, etc.). Data is stored in the browser (`localStorage`) — no backend required for the demo.
+Angular 19 SPA for the Naturéa franchise network portal. **Data and files are stored in [Supabase](https://supabase.com)** (Postgres + Storage + Auth).
 
 ## Local development
 
@@ -10,7 +10,22 @@ npm ci
 npm start
 ```
 
-Open [http://localhost:4200](http://localhost:4200).
+Open [http://localhost:4200](http://localhost:4200). Supabase credentials are in `frontend/src/environments/environment.ts`.
+
+## Database & seeds
+
+Migrations live in [`supabase/migrations/`](supabase/migrations/). Demo data is seeded into normalized tables by `20250612120000_seed_normalized_tables.sql`.
+
+To regenerate JSON sources and the seed migration:
+
+```bash
+node scripts/generate-seeds.mjs
+node scripts/export-normalized-seed.mjs   # writes supabase/migrations/20250612120000_seed_normalized_tables.sql
+```
+
+Apply migrations with Supabase CLI (`supabase db push`) or the Supabase Dashboard SQL editor.
+
+Manual auth setup (not in migrations): [`supabase/seed/auth_users.sql`](supabase/seed/auth_users.sql), [`supabase/seed/portal_users.sql`](supabase/seed/portal_users.sql).
 
 ## Production build
 
@@ -22,45 +37,74 @@ npm run build
 
 Output: `frontend/dist/frontend/browser/`
 
+For Render, env vars are injected before build via `scripts/write-environment.mjs`.
+
 ## Deploy on Render.com
 
-This repo includes a [Render Blueprint](https://render.com/docs/infrastructure-as-code) (`render.yaml`) configured as a **Static Site** with SPA routing.
+See [`render.yaml`](render.yaml). Build command:
 
-### One-click (Blueprint)
-
-1. Push this repo to GitHub.
-2. In [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**.
-3. Connect `Aedifio/naturea` (or your fork) and apply the blueprint.
-4. Render builds from `frontend/`, publishes `dist/frontend/browser/` (relative to the root directory), and rewrites all routes to `index.html`.
-
-### Manual static site
+```bash
+cd .. && node scripts/write-environment.mjs && cd frontend && npm ci && npm run build
+```
 
 | Setting | Value |
 |--------|--------|
 | Root directory | `frontend` |
-| Build command | `npm ci && npm run build` |
 | Publish directory | `dist/frontend/browser` |
-| Node version | `20` (env var `NODE_VERSION`) |
+| Rewrite rule | `/*` → `/index.html` |
 
-When **Root directory** is `frontend`, the publish path is relative to that folder — not the repo root. Do not prefix it with `frontend/`.
+### Render environment variables
 
-Add a **Rewrite** rule: `/*` → `/index.html` (Settings → Redirects/Rewrites).
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | `https://rrhaubqmcetgmjhqweyr.supabase.co` |
+| `SUPABASE_ANON_KEY` | Anon/public key from Supabase Dashboard → Settings → API |
+| `NODE_VERSION` | `20` |
 
-### Troubleshooting: publish directory not found
+## Supabase manual configuration
 
-If the build succeeds but deploy fails with:
+Project: **naturea** (`eu-west-3`, ref `rrhaubqmcetgmjhqweyr`)
 
-```text
-Publish directory frontend/dist/frontend/browser does not exist!
+### 1. Authentication
+
+- Enable **Email** provider
+- Disable email confirmation for demo (or configure SMTP)
+- **Site URL**: your Render URL (e.g. `https://naturea-portal.onrender.com`)
+- **Redirect URLs**: `http://localhost:4200/**`, production URL
+
+### 2. Create Auth users
+
+Create users in **Authentication → Users** matching [`portal_users`](supabase/seed/portal_users.sql), or run [`auth_users.sql`](supabase/seed/auth_users.sql) in the SQL Editor.
+
+Then link profiles:
+
+```sql
+UPDATE portal_users pu
+SET auth_user_id = au.id
+FROM auth.users au
+WHERE lower(pu.email) = lower(au.email);
 ```
 
-Update **Publish directory** in the Render Dashboard to `dist/frontend/browser` (not `frontend/dist/frontend/browser`), then trigger a manual deploy.
+### 3. Storage
 
-PR preview environments are enabled in the blueprint.
+Six private buckets are created by migration `20250608120000_storage_auth_seed.sql`:
+
+| Bucket | Use |
+|--------|-----|
+| `audit-commerce` | Excel/image imports |
+| `recrutement` | Candidat documents |
+| `audit-technique` | Chantier photos |
+| `ossature` | Devis, plans, signatures |
+| `chiffrage` | PDF tarif imports |
+| `portal` | Newsletter PDF |
+
+### 4. API keys
+
+Copy **Project URL** and **anon public key** into Render env vars. Never expose the `service_role` key in the Angular app.
 
 ## Demo accounts
 
-Authentication is client-side only. Use any of these accounts on the login page:
+After Auth users are created and linked:
 
 | Email | Password | Role |
 |-------|----------|------|
@@ -70,8 +114,11 @@ Authentication is client-side only. Use any of these accounts on the login page:
 | `commercial.a@naturea.fr` | `comm2026!` | Commercial |
 | `admin.a@naturea.fr` | `adm2026!` | Assistant·e admin |
 
-See `frontend/src/app/core/models/permissions.model.ts` for the full seed user list.
+See [`supabase/seed/auth_users.sql`](supabase/seed/auth_users.sql) for demo passwords.
 
-## Environment variables
+## Architecture
 
-None required today. When Supabase or another backend is wired in, add build-time or runtime variables in the Render service settings.
+- **Auth**: Supabase Auth → `portal_users` profile
+- **App data**: normalized Postgres tables (`portal_actus`, `recrutement_candidats`, `codir_*`, etc.)
+- **Legacy KV**: `app_kv_store` retained for audit-commerce document metadata and auth session cache only
+- **Files**: Supabase Storage + `portal_files` metadata

@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import type { EcartType } from '../audit-technique.models';
 import { ECARTS, NEW_AUDIT_STEPS } from '../constants/audit-technique.constants';
 import { AuditScoreRingComponent } from '../components/audit-score-ring.component';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { AuditTechniqueDataService } from '../services/audit-technique-data.service';
 import { AuditTechniqueDraftService } from '../services/audit-technique-draft.service';
 import { scoreColor, scoreLabel } from '../utils/audit-score.util';
@@ -21,6 +22,7 @@ export class AuditNewComponent {
   private readonly data = inject(AuditTechniqueDataService);
   private readonly draft = inject(AuditTechniqueDraftService);
   private readonly router = inject(Router);
+  private readonly files = inject(FileStorageService);
 
   readonly agenceId = toSignal(
     this.route.paramMap.pipe(map((p) => Number(p.get('agenceId')))),
@@ -119,16 +121,27 @@ export class AuditNewComponent {
     const files = (e.target as HTMLInputElement).files;
     if (!files?.length) return;
     Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        const current = this.draft.data()?.corps.find((x) => x.id === id);
-        if (!current) return;
-        this.draft.patchCorps(id, { photos: [...current.photos, result] });
-      };
-      reader.readAsDataURL(file);
+      void this.uploadPhoto(id, c.photos, file);
     });
     (e.target as HTMLInputElement).value = '';
+  }
+
+  private async uploadPhoto(corpsId: number, _existing: string[], file: File): Promise<void> {
+    const agenceId = this.agenceId();
+    const path = `agence-${agenceId}/corps-${corpsId}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    try {
+      const uploaded = await this.files.upload('audit-technique', path, file, {
+        appSlot: 'AUDIT',
+        entityType: 'corps',
+        entityId: String(corpsId),
+        kind: 'photo',
+      });
+      const current = this.draft.data()?.corps.find((x) => x.id === corpsId);
+      if (!current) return;
+      this.draft.patchCorps(corpsId, { photos: [...current.photos, uploaded.signedUrl] });
+    } catch (err) {
+      console.warn('[AuditNew] photo upload failed', err);
+    }
   }
 
   removePhoto(idx: number): void {

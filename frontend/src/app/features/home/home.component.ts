@@ -75,19 +75,19 @@ export class HomeComponent {
     this.modalOpen.set(false);
   }
 
-  deleteActu(id: number): void {
+  async deleteActu(id: number): Promise<void> {
     if (!confirm('Supprimer cette actualité ?')) return;
-    this.content.deleteActu(id);
+    await this.content.deleteActu(id);
   }
 
-  deleteEvent(id: number): void {
+  async deleteEvent(id: number): Promise<void> {
     if (!confirm('Supprimer cet événement ?')) return;
-    this.content.deleteEvent(id);
+    await this.content.deleteEvent(id);
   }
 
-  deleteNewsletter(): void {
+  async deleteNewsletter(): Promise<void> {
     if (!confirm('Supprimer la newsletter actuelle ?')) return;
-    this.content.saveNewsletter(null);
+    await this.content.saveNewsletter(null);
   }
 
   onNewsletterPdf(event: Event): void {
@@ -96,7 +96,7 @@ export class HomeComponent {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      this.content.saveNewsletter({
+      void this.content.saveNewsletter({
         type: 'pdf',
         content: String(reader.result),
         name: file.name.replace(/\.pdf$/i, ''),

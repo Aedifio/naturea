@@ -173,17 +173,13 @@ export class RecrutDocListComponent {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.data.setDocument(this.candidateId(), key, {
-        name: file.name,
-        dataUrl: String(reader.result),
-        type: file.type,
-      });
+    void this.data.uploadDocument(this.candidateId(), key, file).then(() => {
       this.toast.show(`📄 ${file.name} ajouté`);
       input.value = '';
-    };
-    reader.readAsDataURL(file);
+    }).catch(() => {
+      this.toast.show('⚠️ Échec du dépôt du fichier');
+      input.value = '';
+    });
   }
 
   deleteDoc(key: string): void {

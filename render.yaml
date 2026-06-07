@@ -5,16 +5,21 @@ services:
     name: naturea-portal
     runtime: static
     rootDir: frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: cd .. && node scripts/write-environment.mjs && cd frontend && npm ci && npm run build
     staticPublishPath: dist/frontend/browser
     previews:
       generation: automatic
     buildFilter:
       paths:
         - frontend/**
+        - scripts/**
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
     headers:
       - path: /*
         name: X-Content-Type-Options

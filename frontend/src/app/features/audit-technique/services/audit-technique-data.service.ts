@@ -1,8 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import auditAgencesDef from '../../../core/data/audit-agences-def.json';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { StorageService } from '../../../core/storage/storage.service';
-import type { Agence, Audit, AuditTechniqueState, CorpsAvg, UrgentEcart } from '../audit-technique.models';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
+import type { Agence, Audit, AuditTechniqueState, CorpsAvg, CorpsMetier, UrgentEcart } from '../audit-technique.models';
 import { CORPS, createEmptyCorps } from '../constants/audit-technique.constants';
 import { auditAvg, avgAudits } from '../utils/audit-score.util';
 
@@ -14,8 +13,8 @@ function emptyState(): AuditTechniqueState {
 
 @Injectable({ providedIn: 'root' })
 export class AuditTechniqueDataService {
-  private readonly storage = inject(StorageService);
-  private readonly _state = signal<AuditTechniqueState>(this.load());
+  private readonly supabase = inject(SupabaseService);
+  private readonly _state = signal<AuditTechniqueState>(emptyState());
 
   readonly state = this._state.asReadonly();
   readonly agences = computed(() => this._state().agences);
@@ -36,15 +35,114 @@ export class AuditTechniqueDataService {
     () => this.getAllUrgents().filter((u) => u.rectifStatus !== 'corrige').length,
   );
 
-  private load(): AuditTechniqueState {
-    const raw = this.storage.get<AuditTechniqueState>(StorageKey.AuditTechnique);
-    if (raw?.agences?.length) return raw;
-    return emptyState();
+  async load(): Promise<void> {
+    const [agenciesRes, auditsRes, corpsRes] = await Promise.all([
+      this.supabase.from('audit_technique_agencies').select('*').order('id'),
+      this.supabase.from('audit_technique_audits').select('*'),
+      this.supabase.from('audit_technique_corps').select('*'),
+    ]);
+
+    if (agenciesRes.error) {
+      console.error('[AuditTechnique] load failed', agenciesRes.error);
+      this._state.set(emptyState());
+      return;
+    }
+
+    const corpsByAudit = new Map<string, CorpsMetier[]>();
+    for (const c of corpsRes.data ?? []) {
+      const list = corpsByAudit.get(c.audit_id) ?? [];
+      list.push({
+        id: c.corps_id,
+        code: c.code,
+        label: c.label,
+        note: c.note != null ? Number(c.note) : null,
+        ecart: c.ecart,
+        commentaire: c.commentaire ?? '',
+        photos: c.photos ?? [],
+        rectifStatus: c.rectif_status,
+        rectifNote: c.rectif_note ?? '',
+      });
+      corpsByAudit.set(c.audit_id, list);
+    }
+
+    const auditsByAgence = new Map<number, Audit[]>();
+    for (const a of auditsRes.data ?? []) {
+      const payload = (a.payload ?? {}) as Record<string, string>;
+      const auditId = Number(a.id) || Date.parse(a.id);
+      const audit: Audit = {
+        id: auditId,
+        date: a.audit_date,
+        auditeur: payload['auditeur'] ?? '',
+        chantiers: payload['chantiers'] ?? '',
+        participants: payload['participants'] ?? '',
+        commentaires: payload['commentaires'] ?? '',
+        corps: corpsByAudit.get(a.id) ?? createEmptyCorps(),
+      };
+      const list = auditsByAgence.get(a.agence_id) ?? [];
+      list.push(audit);
+      auditsByAgence.set(a.agence_id, list);
+    }
+
+    const agences: Agence[] = (agenciesRes.data ?? []).map((ag) => ({
+      id: ag.id,
+      nom: ag.nom,
+      ville: ag.ville ?? '',
+      adresse: ag.adresse ?? '',
+      audits: auditsByAgence.get(ag.id) ?? [],
+    }));
+
+    if (!agences.length) {
+      this._state.set(emptyState());
+      return;
+    }
+    this._state.set({ agences });
   }
 
   private persist(state: AuditTechniqueState): void {
     this._state.set(state);
-    this.storage.set(StorageKey.AuditTechnique, state);
+    void this.persistToDb(state);
+  }
+
+  private async persistToDb(state: AuditTechniqueState): Promise<void> {
+    for (const ag of state.agences) {
+      await this.supabase.from('audit_technique_agencies').upsert({
+        id: ag.id,
+        nom: ag.nom,
+        ville: ag.ville,
+        adresse: ag.adresse,
+      });
+
+      for (const au of ag.audits) {
+        const auditId = String(au.id);
+        await this.supabase.from('audit_technique_audits').upsert({
+          id: auditId,
+          agence_id: ag.id,
+          audit_date: au.date,
+          payload: {
+            auditeur: au.auditeur,
+            chantiers: au.chantiers,
+            participants: au.participants,
+            commentaires: au.commentaires,
+          },
+        });
+
+        const corpsRows = au.corps.map((c) => ({
+          audit_id: auditId,
+          corps_id: c.id,
+          code: c.code,
+          label: c.label,
+          note: c.note,
+          ecart: c.ecart,
+          rectif_status: c.rectifStatus,
+          rectif_note: c.rectifNote,
+          commentaire: c.commentaire,
+          photos: c.photos,
+        }));
+        if (corpsRows.length) {
+          await this.supabase.from('audit_technique_corps').upsert(corpsRows, { onConflict: 'audit_id,corps_id' });
+        }
+      }
+    }
   }
 
   getAgence(id: number): Agence | undefined {

@@ -7,6 +7,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { HomeComponent } from './features/home/home.component';
 import { ReseauComponent } from './features/reseau/reseau.component';
 import { AdminComponent } from './features/admin/admin.component';
+import { AdminRolesComponent } from './features/admin/admin-roles.component';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,7 @@ export const routes: Routes = [
           { path: 'home', component: HomeComponent },
           { path: 'reseau', component: ReseauComponent, canActivate: [permissionGuard('RESEAU')] },
           { path: 'admin', component: AdminComponent, canActivate: [permissionGuard('ADMIN')] },
+          { path: 'admin/roles', component: AdminRolesComponent, canActivate: [permissionGuard('ADMIN')] },
         ],
       },
       {

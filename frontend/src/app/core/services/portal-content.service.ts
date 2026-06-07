@@ -1,6 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
-import { StorageKey } from '../models/storage-keys';
-import { StorageService } from '../storage/storage.service';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { SupabaseService } from '../supabase/supabase.service';
 
 export interface Actu {
   id: number;
@@ -29,168 +28,167 @@ export interface Newsletter {
   date: string;
 }
 
-export const DEFAULT_ACTUS: Actu[] = [
-  {
-    id: 1,
-    cat: 'reseau',
-    lbl: 'Réseau',
-    date: '28 avril 2026',
-    title: 'Lancement du programme Qualité 2026',
-    body: "Le nouveau référentiel qualité entre en vigueur dès le 1er mai. Tous les franchisés doivent mettre à jour leur manuel opératoire d'ici le 15 mai.",
-  },
-  {
-    id: 2,
-    cat: 'comm',
-    lbl: 'Communication',
-    date: '22 avril 2026',
-    title: 'Nouvelle campagne nationale : « Vivez naturellement »',
-    body: 'La campagne printanière démarre le 5 mai. Supports disponibles dans Documentation > Communication.',
-  },
-  {
-    id: 3,
-    cat: 'rh',
-    lbl: 'RH & Formation',
-    date: '15 avril 2026',
-    title: 'Formation vendeur certifié — mai',
-    body: 'Inscriptions ouvertes pour les sessions du 20 mai (en ligne) et du 12 juin (Lyon). 12 personnes max.',
-  },
-  {
-    id: 4,
-    cat: 'ops',
-    lbl: 'Opérations',
-    date: '8 avril 2026',
-    title: 'Mise à jour OssatureTrack v3.2',
-    body: 'Nouvelle version avec le module ossature bois amélioré. Mise à jour automatique ce week-end.',
-  },
-];
-
-export const DEFAULT_EVENTS: PortalEvent[] = [
-  { id: 1, day: '12', mon: 'Mai', title: 'Convention réseau annuelle', detail: 'Hôtel Mercure — Lyon · 9h–18h', tag: 'event', tlbl: 'Événement' },
-  {
-    id: 2,
-    day: '20',
-    mon: 'Mai',
-    title: 'Formation vendeur certifié (en ligne)',
-    detail: 'Zoom · 9h–17h · 12 participants max',
-    tag: 'formation',
-    tlbl: 'Formation',
-  },
-  {
-    id: 3,
-    day: '28',
-    mon: 'Mai',
-    title: 'Réunion coordination qualité',
-    detail: 'Siège Maisons Naturéa · 14h–17h',
-    tag: 'reunion',
-    tlbl: 'Réunion',
-  },
-  {
-    id: 4,
-    day: '03',
-    mon: 'Juin',
-    title: 'Visite franchisé — Bordeaux',
-    detail: 'Agence Bordeaux Lac · journée entière',
-    tag: 'visite',
-    tlbl: 'Visite franchisé',
-  },
-  {
-    id: 5,
-    day: '12',
-    mon: 'Juin',
-    title: 'Formation vendeur certifié (Lyon)',
-    detail: 'Espace formation Lyon · 9h–17h',
-    tag: 'formation',
-    tlbl: 'Formation',
-  },
-  { id: 6, day: '19', mon: 'Juin', title: 'Codir réseau T2', detail: 'Visioconférence · 10h–12h', tag: 'reunion', tlbl: 'Réunion' },
-];
-
 const MOIS = ['Jan', 'Fév', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+
+interface ActuRow {
+  id: number;
+  legacy_id: number | null;
+  cat: string;
+  lbl: string;
+  date_label: string;
+  title: string;
+  body: string;
+}
+
+interface EventRow {
+  id: number;
+  legacy_id: number | null;
+  event_day: string;
+  event_month: string;
+  title: string;
+  detail: string;
+  tag: string;
+  tag_label: string;
+  event_date: string | null;
+}
+
+interface NewsletterRow {
+  id: number;
+  type: 'pdf' | 'text' | null;
+  content: string | null;
+  name: string | null;
+  date_label: string | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PortalContentService {
-  private readonly _version = signal(0);
+  private readonly supabase = inject(SupabaseService);
+  private readonly _actus = signal<Actu[]>([]);
+  private readonly _events = signal<PortalEvent[]>([]);
+  private readonly _newsletter = signal<Newsletter | null>(null);
+  private readonly _ready = signal(false);
 
-  readonly actus = computed(() => {
-    this._version();
-    return this.readActus();
-  });
+  readonly actus = computed(() => this._actus());
+  readonly events = computed(() => this._events());
+  readonly newsletter = computed(() => this._newsletter());
+  readonly ready = this._ready.asReadonly();
 
-  readonly events = computed(() => {
-    this._version();
-    return this.readEvents();
-  });
+  async load(): Promise<void> {
+    const [actusRes, eventsRes, nlRes] = await Promise.all([
+      this.supabase.from('portal_actus').select('*').order('legacy_id', { ascending: false }),
+      this.supabase.from('portal_events').select('*').order('event_date', { ascending: true, nullsFirst: false }),
+      this.supabase.from('portal_newsletter').select('*').eq('id', 1).maybeSingle(),
+    ]);
 
-  readonly newsletter = computed(() => {
-    this._version();
-    return this.storage.get<Newsletter>(StorageKey.Newsletter);
-  });
+    if (actusRes.error) console.error('[PortalContent] actus load failed', actusRes.error);
+    else this._actus.set((actusRes.data as ActuRow[] ?? []).map((r) => this.rowToActu(r)));
 
-  constructor(private readonly storage: StorageService) {}
+    if (eventsRes.error) console.error('[PortalContent] events load failed', eventsRes.error);
+    else this._events.set((eventsRes.data as EventRow[] ?? []).map((r) => this.rowToEvent(r)));
 
-  addActu(input: { cat: string; lbl: string; date: string; title: string; body: string }): void {
-    const actus = this.readActus();
-    const newId = actus.length ? Math.max(...actus.map((a) => a.id)) + 1 : 1;
-    this.storage.set(StorageKey.Actus, [{ id: newId, ...input }, ...actus]);
-    this._version.update((v) => v + 1);
+    if (nlRes.error) console.error('[PortalContent] newsletter load failed', nlRes.error);
+    else {
+      const row = nlRes.data as NewsletterRow | null;
+      this._newsletter.set(row?.type && row.content ? {
+        type: row.type,
+        content: row.content,
+        name: row.name ?? '',
+        date: row.date_label ?? '',
+      } : null);
+    }
+
+    this._ready.set(true);
   }
 
-  deleteActu(id: number): void {
-    this.storage.set(
-      StorageKey.Actus,
-      this.readActus().filter((a) => a.id !== id),
-    );
-    this._version.update((v) => v + 1);
+  async addActu(input: { cat: string; lbl: string; date: string; title: string; body: string }): Promise<void> {
+    const legacyId = this._actus().length
+      ? Math.max(...this._actus().map((a) => a.id)) + 1
+      : 1;
+    const { error } = await this.supabase.from('portal_actus').insert({
+      legacy_id: legacyId,
+      cat: input.cat,
+      lbl: input.lbl,
+      date_label: input.date,
+      title: input.title,
+      body: input.body,
+    });
+    if (error) throw error;
+    await this.load();
   }
 
-  addEvent(input: { dateIso: string; tag: string; tlbl: string; title: string; detail: string }): void {
-    const events = this.readEvents();
+  async deleteActu(id: number): Promise<void> {
+    const { error } = await this.supabase.from('portal_actus').delete().eq('legacy_id', id);
+    if (error) throw error;
+    await this.load();
+  }
+
+  async addEvent(input: { dateIso: string; tag: string; tlbl: string; title: string; detail: string }): Promise<void> {
+    const events = this._events();
     const d = new Date(input.dateIso);
-    const day = String(d.getDate()).padStart(2, '0');
-    const mon = MOIS[d.getMonth()];
-    const newId = events.length ? Math.max(...events.map((e) => e.id)) + 1 : 1;
-    const item: PortalEvent = {
-      id: newId,
-      day,
-      mon,
+    const legacyId = events.length ? Math.max(...events.map((e) => e.id)) + 1 : 1;
+    const { error } = await this.supabase.from('portal_events').insert({
+      legacy_id: legacyId,
+      event_day: String(d.getDate()).padStart(2, '0'),
+      event_month: MOIS[d.getMonth()],
       title: input.title,
       detail: input.detail,
       tag: input.tag,
-      tlbl: input.tlbl,
-      _ts: d.getTime(),
-    };
-    const next = [...events, item].sort((a, b) => (a._ts ?? 0) - (b._ts ?? 0));
-    this.storage.set(StorageKey.Events, next);
-    this._version.update((v) => v + 1);
+      tag_label: input.tlbl,
+      event_date: input.dateIso.slice(0, 10),
+    });
+    if (error) throw error;
+    await this.load();
   }
 
-  deleteEvent(id: number): void {
-    this.storage.set(
-      StorageKey.Events,
-      this.readEvents().filter((e) => e.id !== id),
-    );
-    this._version.update((v) => v + 1);
+  async deleteEvent(id: number): Promise<void> {
+    const { error } = await this.supabase.from('portal_events').delete().eq('legacy_id', id);
+    if (error) throw error;
+    await this.load();
   }
 
-  saveNewsletter(nl: Newsletter | null): void {
-    if (nl) this.storage.set(StorageKey.Newsletter, nl);
-    else this.storage.remove(StorageKey.Newsletter);
-    this._version.update((v) => v + 1);
+  async saveNewsletter(nl: Newsletter | null): Promise<void> {
+    if (nl) {
+      const { error } = await this.supabase.from('portal_newsletter').upsert({
+        id: 1,
+        type: nl.type,
+        content: nl.content,
+        name: nl.name,
+        date_label: nl.date,
+      });
+      if (error) throw error;
+    } else {
+      const { error } = await this.supabase.from('portal_newsletter').delete().eq('id', 1);
+      if (error) throw error;
+    }
+    await this.load();
   }
 
   formatActuDate(iso: string): string {
     return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
-  private readActus(): Actu[] {
-    const v = this.storage.get<Actu[]>(StorageKey.Actus);
-    if (Array.isArray(v) && v.length) return v;
-    return DEFAULT_ACTUS;
+  private rowToActu(row: ActuRow): Actu {
+    return {
+      id: row.legacy_id ?? row.id,
+      cat: row.cat,
+      lbl: row.lbl,
+      date: row.date_label,
+      title: row.title,
+      body: row.body,
+    };
   }
 
-  private readEvents(): PortalEvent[] {
-    const v = this.storage.get<PortalEvent[]>(StorageKey.Events);
-    if (Array.isArray(v) && v.length) return v;
-    return DEFAULT_EVENTS;
+  private rowToEvent(row: EventRow): PortalEvent {
+    const ts = row.event_date ? new Date(row.event_date).getTime() : undefined;
+    return {
+      id: row.legacy_id ?? row.id,
+      day: row.event_day,
+      mon: row.event_month,
+      title: row.title,
+      detail: row.detail,
+      tag: row.tag,
+      tlbl: row.tag_label,
+      _ts: ts,
+    };
   }
 }

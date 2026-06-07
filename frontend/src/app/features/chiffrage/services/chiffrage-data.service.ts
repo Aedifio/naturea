@@ -1,7 +1,6 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { StorageService } from '../../../core/storage/storage.service';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
 import { DEVIS_HIST } from '../constants/chiffrage-devis-hist.constants';
 import { FIELD_TO_POSTE, FORM_SCHEMAS } from '../constants/chiffrage-form.constants';
 import { REFS } from '../constants/chiffrage-refs.constants';
@@ -16,38 +15,100 @@ import type {
   FormOverridesStore,
   HeaderStats,
   ImportHistoryEntry,
+  ImportHistoryPoste,
   OverridesStore,
   PosteOverride,
   PosteRef,
   UsineKey,
   UsineRef,
 } from '../chiffrage.models';
+import { EMPTY_CHARPENTE_EXT } from '../chiffrage.models';
 
 @Injectable({ providedIn: 'root' })
 export class ChiffrageDataService {
-  private readonly storage = inject(StorageService);
-  private readonly auth = inject(AuthService);
+  private readonly supabase = inject(SupabaseService);
+  private readonly injector = inject(Injector);
 
-  readonly overrides = signal<OverridesStore>(
-    this.storage.getOrDefault<OverridesStore>(StorageKey.ChiffrageOverrides, {}),
-  );
-  readonly customPostes = signal<CustomPostesStore>(
-    this.storage.getOrDefault<CustomPostesStore>(StorageKey.ChiffrageCustomPostes, {}),
-  );
-  readonly formOverrides = signal<FormOverridesStore>(
-    this.storage.getOrDefault<FormOverridesStore>(StorageKey.ChiffrageFormOverrides, {}),
-  );
-  readonly projets = signal<ChiffrageProjet[]>(
-    this.storage.getOrDefault<ChiffrageProjet[]>(StorageKey.ChiffrageProjets, []),
-  );
+  readonly overrides = signal<OverridesStore>({});
+  readonly customPostes = signal<CustomPostesStore>({});
+  readonly formOverrides = signal<FormOverridesStore>({});
+  readonly projets = signal<ChiffrageProjet[]>([]);
+  private readonly _tarifsHistory = signal<ImportHistoryEntry[]>([]);
+
+  async load(): Promise<void> {
+    const [ovRes, cpRes, foRes, projRes, histRes] = await Promise.all([
+      this.supabase.from('chiffrage_overrides').select('data').eq('id', 1).maybeSingle(),
+      this.supabase.from('chiffrage_custom_postes').select('data').eq('id', 1).maybeSingle(),
+      this.supabase.from('chiffrage_form_overrides').select('data').eq('id', 1).maybeSingle(),
+      this.supabase.from('chiffrage_projets').select('*').order('projet_date', { ascending: false }),
+      this.supabase.from('chiffrage_tarifs_imports').select('*').order('date_import', { ascending: false }),
+    ]);
+
+    this.overrides.set((ovRes.data?.data as OverridesStore) ?? {});
+    this.customPostes.set((cpRes.data?.data as CustomPostesStore) ?? {});
+    this.formOverrides.set((foRes.data?.data as FormOverridesStore) ?? {});
+
+    this.projets.set(
+      (projRes.data ?? []).map((p) => ({
+        id: Number(p.id),
+        nom: p.nom,
+        ref: p.ref ?? '',
+        usine: p.usine as UsineKey,
+        usineLabel: p.usine_label ?? '',
+        total: Number(p.total),
+        agence: p.agence ?? '',
+        date: p.projet_date,
+        user_name: p.user_name ?? '',
+        values: p.values ?? {},
+        charpente_ext: (p.charpente_ext as ChiffrageProjet['charpente_ext']) ?? { ...EMPTY_CHARPENTE_EXT },
+        lines: p.lines ?? [],
+      })),
+    );
+
+    const imports = histRes.data ?? [];
+    if (imports.length) {
+      const { data: postes } = await this.supabase.from('chiffrage_tarifs_postes').select('*');
+      const postesByImport = new Map<string, ImportHistoryEntry['postes']>();
+      for (const row of postes ?? []) {
+        const list = postesByImport.get(row.import_id) ?? [];
+        list.push({
+          label_pdf: row.label_pdf ?? '',
+          unite: row.unite ?? '',
+          qte: Number(row.qte) || 0,
+          pu: Number(row.pu) || 0,
+          total: Number(row.total) || 0,
+          mapped: row.mapped ?? null,
+          ancien_pu: row.ancien_pu != null ? Number(row.ancien_pu) : null,
+          delta_pct: row.delta_pct != null ? Number(row.delta_pct) : null,
+          applique: Boolean(row.applique),
+        } satisfies ImportHistoryPoste);
+        postesByImport.set(row.import_id, list);
+      }
+      this._tarifsHistory.set(
+        imports.map((h) => ({
+          id: h.id,
+          date_import: h.date_import,
+          filename: h.filename ?? '',
+          usine: h.usine ?? '',
+          devis_num: h.devis_num ?? '',
+          devis_date: h.devis_date ?? '',
+          client: h.client ?? '',
+          total_ht: h.total_ht != null ? Number(h.total_ht) : null,
+          postes: postesByImport.get(h.id) ?? [],
+        })),
+      );
+    } else {
+      this._tarifsHistory.set([]);
+    }
+  }
 
   /** Re-read persisted state (matches chiffrage-app.html loadMesProjets on each tab open). */
   hydrateFromStorage(): void {
-    this.projets.set(this.readProjetsFromStorage());
+    void this.load();
   }
 
   readProjetsFromStorage(): ChiffrageProjet[] {
-    return this.storage.getOrDefault<ChiffrageProjet[]>(StorageKey.ChiffrageProjets, []);
+    return this.projets();
   }
 
   readonly headerStats = computed<HeaderStats>(() => {
@@ -427,21 +488,60 @@ export class ChiffrageDataService {
   saveProjet(projet: ChiffrageProjet): void {
     const list = [projet, ...this.projets()];
     this.projets.set(list);
-    this.storage.set(StorageKey.ChiffrageProjets, list);
+    void this.supabase.from('chiffrage_projets').upsert({
+      id: projet.id,
+      projet_date: projet.date,
+      nom: projet.nom,
+      ref: projet.ref,
+      usine: projet.usine,
+      usine_label: projet.usineLabel,
+      total: projet.total,
+      agence: projet.agence,
+      user_name: projet.user_name,
+      values: projet.values ?? {},
+      lines: projet.lines ?? [],
+    });
   }
 
   deleteProjet(id: number): void {
     const list = this.projets().filter((p) => p.id !== id);
     this.projets.set(list);
-    this.storage.set(StorageKey.ChiffrageProjets, list);
+    void this.supabase.from('chiffrage_projets').delete().eq('id', id);
   }
 
   getTarifsHistory(): ImportHistoryEntry[] {
-    return this.storage.get<ImportHistoryEntry[]>(StorageKey.ChiffrageTarifsHistory) ?? [];
+    return this._tarifsHistory();
   }
 
   saveTarifsHistory(list: ImportHistoryEntry[]): void {
-    this.storage.set(StorageKey.ChiffrageTarifsHistory, list);
+    this._tarifsHistory.set(list);
+    void this.persistTarifsHistory(list);
+  }
+
+  private async persistTarifsHistory(list: ImportHistoryEntry[]): Promise<void> {
+    for (const entry of list) {
+      await this.supabase.from('chiffrage_tarifs_imports').upsert({
+        id: String(entry.id),
+        date_import: entry.date_import,
+        filename: entry.filename,
+        usine: entry.usine,
+        devis_num: entry.devis_num,
+        devis_date: entry.devis_date,
+        client: entry.client,
+        total_ht: entry.total_ht,
+      });
+      if (entry.postes?.length) {
+        await this.supabase.from('chiffrage_tarifs_postes').delete().eq('import_id', String(entry.id));
+        await this.supabase.from('chiffrage_tarifs_postes').insert(
+          entry.postes.map((p) => ({
+            import_id: String(entry.id),
+            label_pdf: p.label_pdf,
+            applique: p.applique ?? false,
+            delta_pct: p.delta_pct,
+          })),
+        );
+      }
+    }
   }
 
   deleteTarifImport(id: number): void {
@@ -511,18 +611,18 @@ export class ChiffrageDataService {
   }
 
   getActiveAgence(): string | null {
-    return this.auth.currentUser()?.franchise ?? null;
+    return this.injector.get(AuthService).currentUser()?.franchise ?? null;
   }
 
   private persistOverrides(): void {
-    this.storage.set(StorageKey.ChiffrageOverrides, this.overrides());
+    void this.supabase.from('chiffrage_overrides').upsert({ id: 1, data: this.overrides() });
   }
 
   private persistCustomPostes(): void {
-    this.storage.set(StorageKey.ChiffrageCustomPostes, this.customPostes());
+    void this.supabase.from('chiffrage_custom_postes').upsert({ id: 1, data: this.customPostes() });
   }
 
   private persistFormOverrides(): void {
-    this.storage.set(StorageKey.ChiffrageFormOverrides, this.formOverrides());
+    void this.supabase.from('chiffrage_form_overrides').upsert({ id: 1, data: this.formOverrides() });
   }
 }

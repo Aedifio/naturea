@@ -2,6 +2,8 @@ export interface StoredDocument {
   name: string;
   dataUrl: string | null;
   type: string;
+  storagePath?: string;
+  storageBucket?: string;
 }
 
 export interface DiscResult {

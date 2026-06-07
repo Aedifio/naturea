@@ -1,56 +1,11 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { DOC_CATS } from '../constants/recrutement-doc.constants';
 import { Candidate, DiscResult, QuestionnaireData, StoredDocument } from '../recrutement.models';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { StorageService } from '../../../core/storage/storage.service';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
 
 export const ALL_DOC_KEYS = DOC_CATS.flatMap((c) => c.docs.map((d) => d.k));
 export const TOTAL_DOCS = ALL_DOC_KEYS.length;
-
-export const RECRUTEMENT_SEED: Candidate[] = [
-  {
-    id: 'd1',
-    prenom: 'Jean',
-    nom: 'Dupont',
-    email: 'jean.dupont@email.com',
-    password: 'candidat123',
-    tel: '06 12 34 56 78',
-    ville: 'Lyon',
-    cp: '69001',
-    budget: '65000',
-    zone: 'Auvergne-Rhône-Alpes',
-    source: 'LinkedIn',
-    statut: 'RDV planifié',
-    stars: 4,
-    date: '15/04/2026',
-    notes: '8 ans en grande distribution. Très motivé.',
-    documents: {},
-    disc: null,
-    questionnaire: null,
-  },
-  {
-    id: 'd2',
-    prenom: 'Marie',
-    nom: 'Martin',
-    email: 'marie.martin@email.com',
-    password: 'candidat456',
-    tel: '07 23 45 67 89',
-    ville: 'Bordeaux',
-    cp: '33000',
-    budget: '80000',
-    zone: 'Nouvelle-Aquitaine',
-    source: 'Salon franchise',
-    statut: 'Qualifié',
-    stars: 5,
-    date: '10/04/2026',
-    notes: 'Ancienne responsable réseau. Profil prioritaire.',
-    documents: {
-      cv: { name: 'cv_marie_martin.pdf', dataUrl: null, type: 'application/pdf' },
-    },
-    disc: null,
-    questionnaire: null,
-  },
-];
 
 const STATUS_BADGE: Record<string, string> = {
   Nouveau: 'b-new',
@@ -61,18 +16,36 @@ const STATUS_BADGE: Record<string, string> = {
   Refusé: 'b-no',
 };
 
+interface CandidatRow {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  tel: string | null;
+  ville: string | null;
+  cp: string | null;
+  budget: string | null;
+  zone: string | null;
+  source: string | null;
+  statut: string;
+  stars: number | null;
+  date_label: string | null;
+  notes: string | null;
+  documents: Record<string, StoredDocument>;
+  disc: DiscResult | null;
+  questionnaire: QuestionnaireData | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RecrutementDataService {
-  private readonly storage = inject(StorageService);
-  private readonly _version = signal(0);
+  private readonly supabase = inject(SupabaseService);
+  private readonly files = inject(FileStorageService);
+  private readonly _candidates = signal<Candidate[]>([]);
 
-  readonly candidates = computed(() => {
-    this._version();
-    return this.storage.get<Candidate[]>(StorageKey.Recrutement) ?? [];
-  });
+  readonly candidates = computed(() => this._candidates());
 
   readonly dashboardStats = computed(() => {
-    const list = this.candidates();
+    const list = this._candidates();
     return {
       total: list.length,
       nouveaux: list.filter((c) => c.statut === 'Nouveau').length,
@@ -81,52 +54,91 @@ export class RecrutementDataService {
     };
   });
 
-  bump(): void {
-    this._version.update((v) => v + 1);
+  async load(): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('recrutement_candidats')
+      .select('*')
+      .order('date_label', { ascending: false });
+    if (error) {
+      console.error('[Recrutement] load failed', error);
+      return;
+    }
+    this._candidates.set((data as CandidatRow[] ?? []).map((r) => this.rowToCandidate(r)));
   }
 
-  save(list: Candidate[]): void {
-    this.storage.set(StorageKey.Recrutement, list);
-    this.bump();
+  async save(list: Candidate[]): Promise<void> {
+    const rows = list.map((c) => this.candidateToRow(c));
+    const { error } = await this.supabase.from('recrutement_candidats').upsert(rows);
+    if (error) throw error;
+    this._candidates.set(list);
   }
 
   getById(id: string): Candidate | undefined {
-    return this.candidates().find((c) => c.id === id);
+    return this._candidates().find((c) => c.id === id);
   }
 
-  updateCandidate(id: string, patch: Partial<Candidate>): void {
-    const list = this.candidates().map((c) => (c.id === id ? { ...c, ...patch } : c));
-    this.save(list);
+  async updateCandidate(id: string, patch: Partial<Candidate>): Promise<void> {
+    const list = this._candidates().map((c) => (c.id === id ? { ...c, ...patch } : c));
+    await this.save(list);
   }
 
-  addCandidate(candidate: Candidate): void {
-    this.save([...this.candidates(), candidate]);
+  async addCandidate(candidate: Candidate): Promise<void> {
+    const { error } = await this.supabase.from('recrutement_candidats').insert(this.candidateToRow(candidate));
+    if (error) throw error;
+    await this.load();
   }
 
-  setDocument(candidateId: string, key: string, doc: StoredDocument): void {
-    const list = this.candidates().map((c) => {
-      if (c.id !== candidateId) return c;
-      return { ...c, documents: { ...c.documents, [key]: doc } };
+  async setDocument(candidateId: string, key: string, doc: StoredDocument): Promise<void> {
+    const c = this.getById(candidateId);
+    if (!c) return;
+    await this.updateCandidate(candidateId, {
+      documents: { ...c.documents, [key]: doc },
     });
-    this.save(list);
   }
 
-  deleteDocument(candidateId: string, key: string): void {
-    const list = this.candidates().map((c) => {
-      if (c.id !== candidateId) return c;
-      const documents = { ...c.documents };
-      delete documents[key];
-      return { ...c, documents };
+  async uploadDocument(candidateId: string, key: string, file: File): Promise<void> {
+    const path = `${candidateId}/${key}/${Date.now()}-${file.name}`;
+    const uploaded = await this.files.upload('recrutement', path, file, {
+      appSlot: 'RECRUT',
+      entityType: 'candidat',
+      entityId: candidateId,
+      kind: key,
     });
-    this.save(list);
+    await this.setDocument(candidateId, key, {
+      name: file.name,
+      type: file.type,
+      dataUrl: uploaded.signedUrl,
+      storagePath: uploaded.path,
+      storageBucket: uploaded.bucket,
+    });
   }
 
-  setDisc(candidateId: string, disc: DiscResult): void {
-    this.updateCandidate(candidateId, { disc });
+  async resolveDocumentUrl(doc: StoredDocument): Promise<string | null> {
+    if (doc.dataUrl) return doc.dataUrl;
+    if (doc.storagePath && doc.storageBucket) {
+      return this.files.getSignedUrl(doc.storageBucket as 'recrutement', doc.storagePath);
+    }
+    return null;
   }
 
-  setQuestionnaire(candidateId: string, questionnaire: QuestionnaireData): void {
-    this.updateCandidate(candidateId, { questionnaire });
+  async deleteDocument(candidateId: string, key: string): Promise<void> {
+    const c = this.getById(candidateId);
+    if (!c) return;
+    const documents = { ...c.documents };
+    delete documents[key];
+    await this.updateCandidate(candidateId, { documents });
+  }
+
+  async setDisc(candidateId: string, disc: DiscResult): Promise<void> {
+    await this.updateCandidate(candidateId, { disc });
+  }
+
+  async setQuestionnaire(candidateId: string, questionnaire: QuestionnaireData): Promise<void> {
+    await this.updateCandidate(candidateId, { questionnaire });
+  }
+
+  bump(): void {
+    void this.load();
   }
 
   initials(prenom?: string, nom?: string): string {
@@ -166,8 +178,53 @@ export class RecrutementDataService {
 
   emailTaken(email: string, excludeId?: string): boolean {
     const normalized = email.trim().toLowerCase();
-    return this.candidates().some(
+    return this._candidates().some(
       (c) => c.email.toLowerCase() === normalized && c.id !== excludeId,
     );
+  }
+
+  private rowToCandidate(row: CandidatRow): Candidate {
+    return {
+      id: row.id,
+      prenom: row.prenom,
+      nom: row.nom,
+      email: row.email,
+      password: '',
+      tel: row.tel ?? '',
+      ville: row.ville ?? '',
+      cp: row.cp ?? '',
+      budget: row.budget ?? '',
+      zone: row.zone ?? '',
+      source: row.source ?? '',
+      statut: row.statut,
+      stars: row.stars ?? 0,
+      date: row.date_label ?? '',
+      notes: row.notes ?? '',
+      documents: row.documents ?? {},
+      disc: row.disc,
+      questionnaire: row.questionnaire,
+    };
+  }
+
+  private candidateToRow(c: Candidate): Record<string, unknown> {
+    return {
+      id: c.id,
+      prenom: c.prenom,
+      nom: c.nom,
+      email: c.email,
+      tel: c.tel || null,
+      ville: c.ville || null,
+      cp: c.cp || null,
+      budget: c.budget || null,
+      zone: c.zone || null,
+      source: c.source || null,
+      statut: c.statut,
+      stars: c.stars,
+      date_label: c.date || null,
+      notes: c.notes || null,
+      documents: c.documents ?? {},
+      disc: c.disc,
+      questionnaire: c.questionnaire,
+    };
   }
 }

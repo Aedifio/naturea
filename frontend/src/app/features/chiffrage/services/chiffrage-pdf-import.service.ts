@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import type {
   CurrentImportState,
   ImportHistoryEntry,
@@ -24,6 +25,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 export class ChiffragePdfImportService {
   private readonly data = inject(ChiffrageDataService);
   private readonly toast = inject(ChiffrageToastService);
+  private readonly files = inject(FileStorageService);
 
   readonly pdfJsReady = signal(true);
   readonly queue = signal<ImportQueueEntry[]>([]);
@@ -228,6 +230,18 @@ export class ChiffragePdfImportService {
       const usine = detectUsineFromText(text);
       const meta = extractMetadata(text);
       const postes = parsePostes(text);
+      const importId = `imp-${Date.now()}`;
+      try {
+        const path = `imports/${importId}/${fileEntry.file.name.replace(/\s+/g, '_')}`;
+        await this.files.upload('chiffrage', path, fileEntry.file, {
+          appSlot: 'CHIFFRAGE',
+          entityType: 'import',
+          entityId: importId,
+          kind: 'pdf',
+        });
+      } catch (uploadErr) {
+        console.warn('[ChiffragePdfImport] storage upload failed', uploadErr);
+      }
       this.updateQueueEntry(fileEntry, {
         status: 'ok',
         parsed: { usine, meta, postes, text },

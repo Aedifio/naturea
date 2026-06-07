@@ -116,7 +116,7 @@ export class RecrutNewCandidateComponent {
     notes: '',
   };
 
-  save(): void {
+  async save(): Promise<void> {
     const prenom = this.form.prenom.trim();
     const nom = this.form.nom.trim();
     const email = this.form.email.trim().toLowerCase();
@@ -158,7 +158,7 @@ export class RecrutNewCandidateComponent {
       disc: null,
       questionnaire: null,
     };
-    this.data.addCandidate(candidate);
+    await this.data.addCandidate(candidate);
     this.toast.show(`✅ Compte candidat créé — ${email}`);
     void this.router.navigate(['/apps/recrutement/crm']);
   }

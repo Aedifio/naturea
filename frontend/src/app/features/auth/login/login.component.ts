@@ -24,15 +24,31 @@ export class LoginComponent {
     password: ['', Validators.required],
   });
 
-  submit(): void {
+  async submit(): Promise<void> {
     this.error.set(null);
     if (this.form.invalid) return;
     const { email, password } = this.form.getRawValue();
-    const result = this.auth.login(email, password);
+
+    const result = await this.auth.login(email, password);
     if (result.ok) {
-      void this.router.navigate(['/home']);
+      await this.offerCredentialSave(email, password);
+      await this.router.navigate(['/home']);
     } else {
       this.error.set(result.error ?? 'Email ou mot de passe incorrect.');
+    }
+  }
+
+  /** Prompt browser / password manager to save credentials (SPA login). */
+  private async offerCredentialSave(email: string, password: string): Promise<void> {
+    const PasswordCredentialCtor = (
+      globalThis as { PasswordCredential?: new (init: { id: string; password: string; name?: string }) => Credential }
+    ).PasswordCredential;
+    if (!PasswordCredentialCtor) return;
+    try {
+      const cred = new PasswordCredentialCtor({ id: email, password, name: email });
+      await navigator.credentials.store(cred);
+    } catch {
+      // User dismissed or browser blocked — ignore
     }
   }
 }

@@ -1,6 +1,7 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import * as XLSX from 'xlsx';
 import type { Agency, DocMeta, DocPayload, StoredDoc, TableDocPayload } from '../audit-commerce.models';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { AuditCommerceDataService } from '../services/audit-commerce-data.service';
 import { AuditCommerceUiService } from '../services/audit-commerce-ui.service';
 import { todayISO, uid } from '../utils/audit-commerce.utils';
@@ -31,11 +32,17 @@ function fileToScaledDataURL(file: File, maxW = 1400, q = 0.82): Promise<string>
   standalone: true,
   templateUrl: './audit-com-docs-tab.component.html',
 })
-export class AuditComDocsTabComponent {
+export class AuditComDocsTabComponent implements OnInit {
   readonly agency = input.required<Agency>();
 
   readonly data = inject(AuditCommerceDataService);
   readonly ui = inject(AuditCommerceUiService);
+  readonly files = inject(FileStorageService);
+  readonly resolvedImageUrl = signal<string | null>(null);
+
+  ngOnInit(): void {
+    void this.data.ensureDocsHydrated();
+  }
 
   readonly fmtDate = (iso: string) => {
     const [y, m, d] = iso.split('-');
@@ -56,9 +63,23 @@ export class AuditComDocsTabComponent {
     this.ui.importStatus.set('Import…');
     try {
       const dataURL = await fileToScaledDataURL(f);
+      const blob = await this.files.dataUrlToBlob(dataURL);
       const id = uid();
+      const path = `${this.agency().id}/${id}/${f.name.replace(/\s+/g, '_')}`;
+      const uploaded = await this.files.upload('audit-commerce', path, blob, {
+        appSlot: 'AUDIT_COM',
+        entityType: 'agency',
+        entityId: this.agency().id,
+        kind: 'image',
+        storageKey: `fnet:doc:${id}`,
+      });
       const meta: DocMeta = { id, name: f.name, kind: 'image', importedAt: todayISO() };
-      this.data.addDocument(this.agency().id, meta, { type: 'image', dataURL });
+      this.data.addDocument(this.agency().id, meta, {
+        type: 'image',
+        dataURL: uploaded.signedUrl,
+        storagePath: uploaded.path,
+        storageBucket: uploaded.bucket,
+      });
       this.ui.importStatus.set('');
     } catch (err) {
       alert(`Import image impossible : ${err}`);
@@ -89,6 +110,12 @@ export class AuditComDocsTabComponent {
 
   openDoc(id: string): void {
     this.ui.docViewerId.set(id);
+    const doc = this.data.getDoc(id);
+    if (doc) {
+      void this.data.resolveDocImageUrl(doc).then((url) => this.resolvedImageUrl.set(url));
+    } else {
+      this.resolvedImageUrl.set(null);
+    }
   }
 
   confirmDelete(id: string): void {
@@ -114,7 +141,9 @@ export class AuditComDocsTabComponent {
 
   readonly viewerImage = computed((): DocPayload | null => {
     const doc = this.viewerDoc();
-    return doc?.type === 'image' ? doc : null;
+    if (doc?.type !== 'image') return null;
+    const url = this.resolvedImageUrl() ?? doc.dataURL;
+    return url ? { type: 'image', dataURL: url } : doc;
   });
 
   readonly viewerTable = computed((): TableDocPayload | null => {

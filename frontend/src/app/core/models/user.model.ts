@@ -13,7 +13,8 @@ export type PermissionLevel = 'R' | 'RW' | 'ADMIN' | null;
 export interface PortalUser {
   id: number;
   email: string;
-  password: string;
+  /** Legacy seed field — not used at runtime with Supabase Auth. */
+  password?: string;
   name: string;
   role: string;
   franchise: string;

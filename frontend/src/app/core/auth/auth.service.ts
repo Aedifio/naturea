@@ -1,64 +1,123 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { PERMS, SEED_USERS } from '../models/permissions.model';
 import { StorageKey } from '../models/storage-keys';
+import { PortalPermissionsService } from '../services/portal-permissions.service';
+import { AppDataBootstrapService } from '../services/app-data-bootstrap.service';
 import {
   ActiveUser,
   AppCode,
-  AuthSession,
   PermissionLevel,
   PortalUser,
 } from '../models/user.model';
+import { SupabaseStorageAdapter } from '../storage/supabase-storage.adapter';
 import { StorageService } from '../storage/storage.service';
+import { SupabaseService } from '../supabase/supabase.service';
+
+interface PortalUserRow {
+  legacy_id: number | null;
+  name: string;
+  role: string;
+  franchise: string;
+  actif: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly supabase = inject(SupabaseService);
+  private readonly permissions = inject(PortalPermissionsService);
+  private readonly dataBootstrap = inject(AppDataBootstrapService);
+  private readonly storage = inject(StorageService);
+  private readonly storageAdapter = inject(SupabaseStorageAdapter);
+  private readonly router = inject(Router);
+
   private readonly userSignal = signal<PortalUser | null>(null);
+  private readonly readySignal = signal(false);
 
   readonly currentUser = this.userSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
+  readonly authReady = this.readySignal.asReadonly();
 
-  constructor(
-    private readonly storage: StorageService,
-    private readonly router: Router,
-  ) {
-    this.restoreSession();
+  /** Called from APP_INITIALIZER — restores session and hydrates KV cache. */
+  async init(): Promise<void> {
+    try {
+      const { data } = await this.supabase.auth.getSession();
+      if (data.session) {
+        await this.storageAdapter.hydrate();
+        await this.loadProfileFromSession();
+        try {
+          await this.permissions.load();
+          await this.dataBootstrap.loadAll();
+        } catch (err) {
+          console.error('[Auth] data load failed', err);
+        }
+      }
+    } catch (err) {
+      console.error('[Auth] init failed', err);
+    } finally {
+      this.readySignal.set(true);
+    }
+
+    this.supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await this.storageAdapter.hydrate();
+        await this.loadProfileFromSession();
+        try {
+          await this.permissions.load();
+          await this.dataBootstrap.loadAll();
+        } catch (err) {
+          console.error('[Auth] data load failed', err);
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        this.userSignal.set(null);
+        this.storageAdapter.clearCache();
+      }
+    });
   }
 
-  login(email: string, password: string): { ok: boolean; error?: string } {
-    const user = SEED_USERS.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
-    );
-    if (!user) {
+  async login(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+    const { data, error } = await this.supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
       return { ok: false, error: 'Email ou mot de passe incorrect.' };
     }
-    if (!user.actif) {
-      return { ok: false, error: 'Ce compte est désactivé.' };
+    if (!data.session) {
+      return { ok: false, error: 'Session non établie.' };
     }
-    this.setSession(user);
+    await this.storageAdapter.hydrate();
+    const loaded = await this.loadProfileFromSession();
+    if (!loaded) {
+      await this.supabase.auth.signOut();
+      return { ok: false, error: 'Profil portail introuvable pour ce compte.' };
+    }
+    try {
+      await this.permissions.load();
+      await this.dataBootstrap.loadAll();
+    } catch (err) {
+      console.error('[Auth] data load failed', err);
+    }
     return { ok: true };
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.userSignal.set(null);
-    this.storage.remove(StorageKey.AuthSession);
-    this.storage.remove(StorageKey.ActiveUser);
+    this.storageAdapter.clearCache();
+    await this.supabase.auth.signOut();
     void this.router.navigate(['/login']);
   }
 
   getPermission(appCode: AppCode): PermissionLevel {
     const user = this.userSignal();
     if (!user) return null;
-    const rolePerms = PERMS[user.role];
-    if (!rolePerms) return null;
-    return rolePerms[appCode] ?? null;
+    return this.permissions.getPermission(user.role, appCode);
   }
 
   canAccess(appCode: AppCode): boolean {
     return this.getPermission(appCode) !== null;
   }
 
-  /** Read-only access from role dashboard (audits) even when nav permission is null. */
   canReadApp(appCode: AppCode): boolean {
     if (this.canAccess(appCode)) return true;
     const user = this.userSignal();
@@ -72,7 +131,57 @@ export class AuthService {
     return this.userSignal()?.role === 'Animateur';
   }
 
-  /** Writes naturea_active_user for legacy app contract (Chiffrage reads this). */
+  /** Refresh portal profile after admin edits the current user. */
+  async reloadProfile(): Promise<void> {
+    await this.loadProfileFromSession();
+  }
+
+  /** Resolves when session bootstrap completes (max 8s wait). */
+  whenReady(): Promise<void> {
+    if (this.readySignal()) return Promise.resolve();
+    return Promise.race([
+      new Promise<void>((resolve) => {
+        const id = setInterval(() => {
+          if (this.readySignal()) {
+            clearInterval(id);
+            resolve();
+          }
+        }, 10);
+      }),
+      new Promise<void>((resolve) => setTimeout(resolve, 8000)),
+    ]);
+  }
+
+  private async loadProfileFromSession(): Promise<boolean> {
+    const { data: authData } = await this.supabase.auth.getUser();
+    const authUser = authData.user;
+    if (!authUser?.id || !authUser.email) return false;
+
+    const { data: row, error } = await this.supabase
+      .from('portal_users')
+      .select('legacy_id, name, role, franchise, actif')
+      .eq('auth_user_id', authUser.id)
+      .maybeSingle();
+
+    if (error || !row || !row.actif) return false;
+
+    const user = this.mapPortalUser(row as PortalUserRow, authUser.email);
+    this.userSignal.set(user);
+    this.syncActiveUser(user);
+    return true;
+  }
+
+  private mapPortalUser(row: PortalUserRow, email: string): PortalUser {
+    return {
+      id: row.legacy_id ?? 0,
+      email,
+      name: row.name,
+      role: row.role as PortalUser['role'],
+      franchise: row.franchise,
+      actif: row.actif,
+    };
+  }
+
   private syncActiveUser(user: PortalUser): void {
     const active: ActiveUser = {
       name: user.name,
@@ -81,22 +190,5 @@ export class AuthService {
       email: user.email,
     };
     this.storage.set(StorageKey.ActiveUser, active);
-  }
-
-  private setSession(user: PortalUser): void {
-    this.userSignal.set(user);
-    const session: AuthSession = { userId: user.id, email: user.email };
-    this.storage.set(StorageKey.AuthSession, session);
-    this.syncActiveUser(user);
-  }
-
-  private restoreSession(): void {
-    const session = this.storage.get<AuthSession>(StorageKey.AuthSession);
-    if (!session) return;
-    const user = SEED_USERS.find((u) => u.id === session.userId && u.actif);
-    if (user) {
-      this.userSignal.set(user);
-      this.syncActiveUser(user);
-    }
   }
 }

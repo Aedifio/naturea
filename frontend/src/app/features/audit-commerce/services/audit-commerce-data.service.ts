@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { StorageService } from '../../../core/storage/storage.service';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
 import type {
   Agency,
   Audit,
@@ -93,22 +93,102 @@ function migrate(data: Partial<AuditCommerceState> | null): AuditCommerceState {
 
 @Injectable({ providedIn: 'root' })
 export class AuditCommerceDataService {
-  private readonly storage = inject(StorageService);
-  private readonly _state = signal<AuditCommerceState>(this.load());
+  private readonly supabase = inject(SupabaseService);
+  private readonly files = inject(FileStorageService);
+  private readonly docCache = new Map<string, StoredDoc>();
+  private docsHydrated = false;
+  private readonly _state = signal<AuditCommerceState>(emptyState());
 
   readonly state = this._state.asReadonly();
   readonly agencies = computed(() => this._state().agencies);
   readonly settings = computed(() => this._state().settings);
 
-  private load(): AuditCommerceState {
-    const raw = this.storage.get<AuditCommerceState>(StorageKey.AuditCommerce);
-    if (raw?.agencies?.length) return migrate(raw);
-    return emptyState();
+  async load(): Promise<void> {
+    const [settingsRes, agenciesRes, auditsRes] = await Promise.all([
+      this.supabase.from('audit_commerce_settings').select('*').eq('id', 1).maybeSingle(),
+      this.supabase.from('audit_commerce_agencies').select('*').order('name'),
+      this.supabase.from('audit_commerce_audits').select('*').order('audit_date'),
+    ]);
+
+    if (agenciesRes.error) {
+      console.error('[AuditCommerce] load failed', agenciesRes.error);
+      this._state.set(emptyState());
+      return;
+    }
+
+    const auditsByAgency = new Map<string, Audit[]>();
+    for (const a of auditsRes.data ?? []) {
+      const audit: Audit = {
+        id: a.id,
+        date: a.audit_date,
+        status: a.status as Audit['status'],
+        leaves: a.leaves ?? {},
+        empRatings: a.emp_ratings ?? {},
+        note: a.note ?? '',
+      };
+      Object.keys(audit.leaves).forEach((id) => {
+        audit.leaves[id] = normLeaf(id, audit.leaves[id]);
+      });
+      const list = auditsByAgency.get(a.agency_id) ?? [];
+      list.push(audit);
+      auditsByAgency.set(a.agency_id, list);
+    }
+
+    const agencies: Agency[] = (agenciesRes.data ?? []).map((ag) => ({
+      id: ag.id,
+      name: ag.name,
+      address: '',
+      employees: ag.employees ?? [],
+      objectives: ag.objectives ?? {},
+      documents: ag.documents ?? [],
+      audits: auditsByAgency.get(ag.id) ?? [],
+    }));
+
+    const settingsRow = settingsRes.data;
+    const state = migrate({
+      version: 2,
+      agencies,
+      settings: settingsRow
+        ? { threshold: Number(settingsRow.threshold), noteThreshold: Number(settingsRow.note_threshold) }
+        : { threshold: 0.8, noteThreshold: 5 },
+    });
+    this._state.set(state);
   }
 
   private persist(state: AuditCommerceState): void {
     this._state.set(state);
-    this.storage.set(StorageKey.AuditCommerce, state);
+    void this.persistToDb(state);
+  }
+
+  private async persistToDb(state: AuditCommerceState): Promise<void> {
+    await this.supabase.from('audit_commerce_settings').upsert({
+      id: 1,
+      version: state.version,
+      threshold: state.settings.threshold,
+      note_threshold: state.settings.noteThreshold,
+    });
+
+    for (const ag of state.agencies) {
+      await this.supabase.from('audit_commerce_agencies').upsert({
+        id: ag.id,
+        name: ag.name,
+        objectives: ag.objectives ?? {},
+        employees: ag.employees ?? [],
+        documents: ag.documents ?? [],
+      });
+
+      for (const au of ag.audits) {
+        await this.supabase.from('audit_commerce_audits').upsert({
+          id: au.id,
+          agency_id: ag.id,
+          audit_date: au.date,
+          status: au.status,
+          leaves: au.leaves,
+          emp_ratings: au.empRatings,
+          note: au.note != null ? String(au.note) : null,
+        });
+      }
+    }
   }
 
   getAgency(id: string): Agency | undefined {
@@ -242,44 +322,62 @@ export class AuditCommerceDataService {
     return defaultAuditId(this.getAgency(agencyId), ym);
   }
 
-  /* ---- Documents (raw localStorage keys fnet:doc:*) ---- */
+  /* ---- Documents (Supabase app_kv_store + Storage) ---- */
   private docKey(id: string): string {
     return `${DOC_KEY_PREFIX}${id}`;
   }
 
-  setDoc(id: string, payload: StoredDoc): void {
-    try {
-      localStorage.setItem(this.docKey(id), JSON.stringify(payload));
-    } catch (e) {
-      console.warn('[AuditCommerce] doc write failed', e);
-      throw e;
+  async ensureDocsHydrated(): Promise<void> {
+    if (this.docsHydrated) return;
+    const { data, error } = await this.supabase
+      .from('app_kv_store')
+      .select('storage_key, data')
+      .like('storage_key', `${DOC_KEY_PREFIX}%`);
+    if (error) {
+      console.warn('[AuditCommerce] doc hydrate failed', error);
+      return;
     }
+    for (const row of data ?? []) {
+      const id = row.storage_key.replace(DOC_KEY_PREFIX, '');
+      this.docCache.set(id, row.data as StoredDoc);
+    }
+    this.docsHydrated = true;
+  }
+
+  setDoc(id: string, payload: StoredDoc): void {
+    this.docCache.set(id, payload);
+    void this.supabase
+      .from('app_kv_store')
+      .upsert({ storage_key: this.docKey(id), data: payload as object }, { onConflict: 'storage_key' })
+      .then(({ error }) => {
+        if (error) console.warn('[AuditCommerce] doc write failed', error);
+      });
   }
 
   getDoc(id: string): StoredDoc | null {
-    try {
-      const raw = localStorage.getItem(this.docKey(id));
-      return raw ? (JSON.parse(raw) as StoredDoc) : null;
-    } catch {
-      return null;
+    return this.docCache.get(id) ?? null;
+  }
+
+  async resolveDocImageUrl(doc: StoredDoc): Promise<string | null> {
+    if (doc.type !== 'image') return null;
+    if (doc.dataURL) return doc.dataURL;
+    if (doc.storagePath && doc.storageBucket) {
+      return this.files.getSignedUrl(doc.storageBucket as 'audit-commerce', doc.storagePath);
     }
+    return null;
   }
 
   deleteDoc(id: string): void {
-    try {
-      localStorage.removeItem(this.docKey(id));
-    } catch {
-      /* ignore */
+    const existing = this.docCache.get(id);
+    if (existing?.type === 'image' && existing.storagePath && existing.storageBucket) {
+      void this.files.delete(existing.storageBucket as 'audit-commerce', existing.storagePath);
     }
+    this.docCache.delete(id);
+    void this.supabase.from('app_kv_store').delete().eq('storage_key', this.docKey(id));
   }
 
   listDocKeys(): string[] {
-    const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith(DOC_KEY_PREFIX)) keys.push(k);
-    }
-    return keys;
+    return [...this.docCache.keys()].map((id) => this.docKey(id));
   }
 
   addDocument(agencyId: string, meta: DocMeta, payload: StoredDoc): void {
@@ -302,6 +400,7 @@ export class AuditCommerceDataService {
   }
 
   async exportBackup(): Promise<void> {
+    await this.ensureDocsHydrated();
     const bundle: BackupBundle = {
       app: 'reseau-audit',
       version: 2,
@@ -310,12 +409,9 @@ export class AuditCommerceDataService {
       docs: {},
     };
     for (const k of this.listDocKeys()) {
-      try {
-        const v = localStorage.getItem(k);
-        if (v) bundle.docs[k] = v;
-      } catch {
-        /* skip */
-      }
+      const id = k.replace(DOC_KEY_PREFIX, '');
+      const doc = this.getDoc(id);
+      if (doc) bundle.docs[k] = JSON.stringify(doc);
     }
     const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -336,7 +432,8 @@ export class AuditCommerceDataService {
       if ('docs' in bundle && bundle.docs) {
         for (const k of Object.keys(bundle.docs)) {
           try {
-            localStorage.setItem(k, bundle.docs[k]);
+            const id = k.replace(DOC_KEY_PREFIX, '');
+            this.setDoc(id, JSON.parse(bundle.docs[k]) as StoredDoc);
           } catch {
             /* skip */
           }

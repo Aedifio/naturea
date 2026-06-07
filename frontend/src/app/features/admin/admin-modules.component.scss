@@ -1,0 +1,64 @@
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.admin-tile {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+
+  &:hover {
+    border-color: var(--sage2);
+    background: var(--sand);
+  }
+}
+
+.admin-tile-active {
+  border-color: var(--forest);
+  background: var(--sand);
+  box-shadow: 0 0 0 1px var(--forest);
+  cursor: default;
+}
+
+.admin-tile-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  background: var(--sand);
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.admin-tile-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-tile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.admin-tile-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}

@@ -3,12 +3,13 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { DemoDataSeedService } from './core/services/demo-data-seed.service';
-import { LocalStorageAdapter } from './core/storage/local-storage.adapter';
+import { AuthService } from './core/auth/auth.service';
+import { SupabaseStorageAdapter } from './core/storage/supabase-storage.adapter';
 import { STORAGE_ADAPTER } from './core/storage/storage.interface';
 
-function initDemoData(seed: DemoDataSeedService): () => void {
-  return () => seed.seedIfNeeded();
+function initAuth(auth: AuthService): () => void {
+  void auth.init();
+  return () => undefined;
 }
 
 registerLocaleData(localeFr);
@@ -18,11 +19,11 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
-    { provide: STORAGE_ADAPTER, useClass: LocalStorageAdapter },
+    { provide: STORAGE_ADAPTER, useClass: SupabaseStorageAdapter },
     {
       provide: APP_INITIALIZER,
-      useFactory: initDemoData,
-      deps: [DemoDataSeedService],
+      useFactory: initAuth,
+      deps: [AuthService],
       multi: true,
     },
   ],

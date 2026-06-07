@@ -1,6 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { StorageKey } from '../models/storage-keys';
-import { StorageService } from '../storage/storage.service';
+import { SupabaseService } from '../supabase/supabase.service';
 
 export interface CodirMember {
   id: string;
@@ -58,13 +57,62 @@ export const CODIR_MEMBER_COLORS = [
 
 @Injectable({ providedIn: 'root' })
 export class CodirDataService {
-  private readonly storage = inject(StorageService);
+  private readonly supabase = inject(SupabaseService);
+  private readonly _data = signal<CodirData | null>(null);
   private readonly _version = signal(0);
 
   readonly data = computed(() => {
     this._version();
-    return this.storage.get<CodirData>(StorageKey.CodirData);
+    return this._data();
   });
+
+  async load(): Promise<void> {
+    const [membersRes, themesRes, actionsRes] = await Promise.all([
+      this.supabase.from('codir_members').select('*').order('name'),
+      this.supabase.from('codir_themes').select('label').order('label'),
+      this.supabase.from('codir_actions').select('*').order('created_at'),
+    ]);
+
+    if (membersRes.error || themesRes.error || actionsRes.error) {
+      console.error('[Codir] load failed', membersRes.error ?? themesRes.error ?? actionsRes.error);
+      return;
+    }
+
+    const members: CodirMember[] = (membersRes.data ?? []).map((m) => ({
+      id: m.id,
+      code: m.code ?? undefined,
+      name: m.name,
+      role: m.role,
+      email: m.email ?? undefined,
+      color: m.color,
+    }));
+
+    const themes = (themesRes.data ?? []).map((t) => t.label as string);
+
+    const actions: CodirAction[] = (actionsRes.data ?? []).map((a) => ({
+      id: a.id,
+      theme: a.theme,
+      title: a.title,
+      description: a.description ?? '',
+      ownerId: a.owner_id ?? undefined,
+      coOwnerIds: a.co_owner_ids ?? [],
+      ownerLabel: a.owner_label ?? '',
+      startDate: a.start_date ?? undefined,
+      deadline: a.deadline ?? undefined,
+      deadlineNote: a.deadline_note ?? '',
+      status: a.status,
+      priority: a.priority ?? 'medium',
+      archived: a.archived ?? false,
+      archivedAt: a.archived_at ?? undefined,
+      createdAt: a.created_at ?? undefined,
+      comments: a.comments ?? [],
+      history: a.history ?? [],
+      subtasks: a.subtasks ?? [],
+    }));
+
+    this._data.set({ members, actions, themes });
+    this._version.update((v) => v + 1);
+  }
 
   readonly actions = computed(() => this.data()?.actions ?? []);
   readonly members = computed(() => this.data()?.members ?? []);
@@ -416,7 +464,49 @@ export class CodirDataService {
   }
 
   private persist(data: CodirData): void {
-    this.storage.set(StorageKey.CodirData, data);
+    this._data.set(data);
     this._version.update((v) => v + 1);
+    void this.persistToDb(data);
+  }
+
+  private async persistToDb(data: CodirData): Promise<void> {
+    const memberRows = data.members.map((m) => ({
+      id: m.id,
+      code: m.code ?? '',
+      name: m.name,
+      role: m.role,
+      email: m.email ?? '',
+      color: m.color,
+    }));
+    const { error: mErr } = await this.supabase.from('codir_members').upsert(memberRows);
+    if (mErr) console.error('[Codir] members persist failed', mErr);
+
+    for (const label of data.themes) {
+      const { error } = await this.supabase.from('codir_themes').upsert({ label });
+      if (error) console.error('[Codir] theme persist failed', label, error);
+    }
+
+    const actionRows = data.actions.map((a) => ({
+      id: a.id,
+      theme: a.theme,
+      title: a.title,
+      description: a.description ?? '',
+      owner_id: a.ownerId ?? null,
+      co_owner_ids: a.coOwnerIds ?? [],
+      owner_label: a.ownerLabel ?? '',
+      start_date: a.startDate || null,
+      deadline: a.deadline || null,
+      deadline_note: a.deadlineNote ?? '',
+      priority: a.priority ?? 'medium',
+      status: a.status,
+      archived: a.archived ?? false,
+      archived_at: a.archivedAt ?? null,
+      created_at: a.createdAt || null,
+      comments: a.comments ?? [],
+      history: a.history ?? [],
+      subtasks: a.subtasks ?? [],
+    }));
+    const { error: aErr } = await this.supabase.from('codir_actions').upsert(actionRows);
+    if (aErr) console.error('[Codir] actions persist failed', aErr);
   }
 }

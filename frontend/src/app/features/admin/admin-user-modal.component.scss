@@ -1,0 +1,162 @@
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 46, 37, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+  padding: 20px;
+}
+
+.modal-box {
+  background: var(--white);
+  border-radius: 13px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--ink);
+  }
+}
+
+.modal-x {
+  border: none;
+  background: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.modal-b {
+  padding: 20px 22px 22px;
+}
+
+.modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-field {
+  margin-bottom: 14px;
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    color: var(--ink);
+    background: var(--white);
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: var(--wood);
+    }
+  }
+
+  &.modal-check label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+}
+
+.readonly {
+  background: var(--sand) !important;
+  color: var(--muted);
+}
+
+.modal-error {
+  background: var(--red-soft);
+  color: var(--red);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.modal-warn {
+  background: var(--amber-soft);
+  color: var(--ink);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+
+  code {
+    font-size: 11px;
+  }
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.modal-f {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.btn-save {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

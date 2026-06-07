@@ -30,11 +30,7 @@ export class RecrutementShellComponent implements OnInit {
   readonly session = this.mode.session;
   readonly isAdmin = this.mode.isAdmin;
 
-  readonly displayName = computed(() => {
-    const session = this.session();
-    if (!session) return '—';
-    return session.role === 'admin' ? '👑 Franchiseur' : session.name;
-  });
+  readonly displayName = computed(() => this.session()?.name ?? '—');
 
   readonly adminNav = [
     { label: "Vue d'ensemble", route: '/apps/recrutement', icon: '📊' },

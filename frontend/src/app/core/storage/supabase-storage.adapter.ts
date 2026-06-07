@@ -1,32 +1,76 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { StorageKey } from '../models/storage-keys';
-import { LocalStorageAdapter } from './local-storage.adapter';
+import { SupabaseService } from '../supabase/supabase.service';
 import { StorageAdapter } from './storage.interface';
 
-/**
- * Supabase-backed storage adapter (step 2).
- * Currently delegates to localStorage — swap implementations when Supabase client is wired.
- */
+/** In-memory cache backed by Supabase `app_kv_store`. */
 @Injectable({ providedIn: 'root' })
 export class SupabaseStorageAdapter implements StorageAdapter {
-  private readonly fallback = new LocalStorageAdapter();
+  private readonly cache = new Map<string, unknown>();
+  private readonly hydrated = signal(false);
+
+  readonly isHydrated = this.hydrated.asReadonly();
+
+  constructor(private readonly supabase: SupabaseService) {}
+
+  /** Load all KV rows after authentication. */
+  async hydrate(): Promise<void> {
+    const { data, error } = await this.supabase.from('app_kv_store').select('storage_key, data');
+    if (error) {
+      console.error('[SupabaseStorage] hydrate failed', error);
+      return;
+    }
+    this.cache.clear();
+    for (const row of data ?? []) {
+      this.cache.set(row.storage_key, row.data);
+    }
+    this.hydrated.set(true);
+  }
+
+  clearCache(): void {
+    this.cache.clear();
+    this.hydrated.set(false);
+  }
 
   get<T>(key: StorageKey): T | null {
-    // TODO: fetch from Supabase app_kv_store or typed tables
-    return this.fallback.get<T>(key);
+    const v = this.cache.get(key);
+    return v === undefined ? null : (v as T);
   }
 
   set<T>(key: StorageKey, value: T): void {
-    // TODO: upsert to Supabase
-    this.fallback.set(key, value);
+    this.cache.set(key, value);
+    void this.persist(key, value);
   }
 
   remove(key: StorageKey): void {
-    // TODO: delete from Supabase
-    this.fallback.remove(key);
+    this.cache.delete(key);
+    void this.supabase
+      .from('app_kv_store')
+      .delete()
+      .eq('storage_key', key)
+      .then(({ error }) => {
+        if (error) console.error('[SupabaseStorage] remove failed', key, error);
+      });
   }
 
   list(prefix?: string): StorageKey[] {
-    return this.fallback.list(prefix);
+    const keys: StorageKey[] = [];
+    for (const k of this.cache.keys()) {
+      if (!prefix || k.startsWith(prefix)) {
+        keys.push(k as StorageKey);
+      }
+    }
+    return keys;
+  }
+
+  private async persist<T>(key: StorageKey, value: T): Promise<void> {
+    const { data } = await this.supabase.auth.getSession();
+    if (!data.session) return;
+
+    const { error } = await this.supabase.from('app_kv_store').upsert(
+      { storage_key: key, data: value as object },
+      { onConflict: 'storage_key' },
+    );
+    if (error) console.error('[SupabaseStorage] persist failed', key, error);
   }
 }

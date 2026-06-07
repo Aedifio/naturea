@@ -1,0 +1,21 @@
+<div class="section-h">
+  <div class="section-t">Modules d'administration</div>
+  <div class="section-m">Réservé animateur</div>
+</div>
+
+<div class="admin-grid">
+  @for (tile of tiles; track tile.action) {
+    <button
+      type="button"
+      class="admin-tile"
+      [class.admin-tile-active]="active() === tile.action"
+      (click)="onTileClick(tile.action)"
+    >
+      <div class="admin-tile-icon">{{ tile.icon }}</div>
+      <div class="admin-tile-text">
+        <div class="admin-tile-name">{{ tile.name }}</div>
+        <div class="admin-tile-desc">{{ tile.desc }}</div>
+      </div>
+    </button>
+  }
+</div>

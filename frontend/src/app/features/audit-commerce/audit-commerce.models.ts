@@ -116,7 +116,9 @@ export interface NoteStats {
 
 export interface DocPayload {
   type: 'image';
-  dataURL: string;
+  dataURL?: string;
+  storagePath?: string;
+  storageBucket?: string;
 }
 
 export interface TableDocPayload {
