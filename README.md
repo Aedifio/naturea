@@ -31,7 +31,7 @@ This repo includes a [Render Blueprint](https://render.com/docs/infrastructure-a
 1. Push this repo to GitHub.
 2. In [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**.
 3. Connect `Aedifio/naturea` (or your fork) and apply the blueprint.
-4. Render builds from `frontend/`, publishes `frontend/dist/frontend/browser/`, and rewrites all routes to `index.html`.
+4. Render builds from `frontend/`, publishes `dist/frontend/browser/` (relative to the root directory), and rewrites all routes to `index.html`.
 
 ### Manual static site
 
@@ -39,10 +39,22 @@ This repo includes a [Render Blueprint](https://render.com/docs/infrastructure-a
 |--------|--------|
 | Root directory | `frontend` |
 | Build command | `npm ci && npm run build` |
-| Publish directory | `frontend/dist/frontend/browser` |
+| Publish directory | `dist/frontend/browser` |
 | Node version | `20` (env var `NODE_VERSION`) |
 
+When **Root directory** is `frontend`, the publish path is relative to that folder — not the repo root. Do not prefix it with `frontend/`.
+
 Add a **Rewrite** rule: `/*` → `/index.html` (Settings → Redirects/Rewrites).
+
+### Troubleshooting: publish directory not found
+
+If the build succeeds but deploy fails with:
+
+```text
+Publish directory frontend/dist/frontend/browser does not exist!
+```
+
+Update **Publish directory** in the Render Dashboard to `dist/frontend/browser` (not `frontend/dist/frontend/browser`), then trigger a manual deploy.
 
 PR preview environments are enabled in the blueprint.
 
