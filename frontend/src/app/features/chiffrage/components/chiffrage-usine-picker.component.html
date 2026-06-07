@@ -1,0 +1,8 @@
+<div class="usine-pick">
+  @for (u of usines; track u.key) {
+    <button type="button" class="usine-btn" [class.on]="selected() === u.key" (click)="select(u.key)">
+      <div class="usine-btn-name">{{ u.nom }}</div>
+      <div class="usine-btn-meta">{{ u.devis_count }} devis sources</div>
+    </button>
+  }
+</div>

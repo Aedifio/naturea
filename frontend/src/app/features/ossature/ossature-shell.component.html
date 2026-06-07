@@ -1,0 +1,37 @@
+<app-return-banner appCode="OSSATURE" />
+
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">
+      <img class="brand-img" [src]="logo.src" [alt]="logo.alt" />
+      <span class="brand-tag">OssatureTrack</span>
+    </div>
+    @for (item of nav; track item.route) {
+      <a
+        class="nav-btn"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="item.view === 'coord' ? { exact: true } : { exact: false }"
+      >
+        {{ item.icon }} {{ item.label }}
+      </a>
+    }
+    @if (mode.showFranchiseSelect()) {
+      <select id="franchise-select" style="display: block" [value]="mode.selectedFranchise()" (change)="onFranchiseChange($event)">
+        @for (f of franchises; track f) {
+          <option [value]="f">{{ f }}</option>
+        }
+      </select>
+    }
+  </div>
+</div>
+
+<div id="main">
+  <router-outlet />
+</div>
+
+<app-ossature-toast />
+<app-ossature-alert-banner />
+<app-ossature-detail-modal />
+<app-ossature-new-order-modal />
+<app-ossature-signature-modal />

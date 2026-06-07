@@ -1,0 +1,126 @@
+@if (ui.auditEdit() && currentAudit(); as cur) {
+  <div class="fade">
+    <div class="toolbar">
+      <button type="button" class="btn sm ghost" (click)="backToList()">← Liste</button>
+      <span style="display: flex; align-items: center; gap: 6px">
+        <span class="lab" style="margin: 0">Date</span>
+        <input class="in" type="date" [ngModel]="cur.date" (ngModelChange)="updateDate($event)" [disabled]="locked()" style="width: 150px" autocomplete="off" data-lpignore="true" data-form-type="other" />
+      </span>
+      @if (cur.status === 'draft') {
+        <span class="badge" style="background: #f8efd7; color: var(--amber)">✏️ Brouillon</span>
+        <button type="button" class="btn sm pri" (click)="validate()">✅ Valider</button>
+      } @else if (cur.status === 'archived') {
+        <span class="badge" style="background: #efeae0; color: var(--ink-soft)">📦 Archivé</span>
+        <button type="button" class="btn sm" (click)="unarchive()">📂 Désarchiver</button>
+      } @else {
+        <span class="badge" style="background: #e3f1e8; color: var(--green)">✅ Validé</span>
+        <button type="button" class="btn sm" (click)="reopen()">✏️ Modifier</button>
+        <button type="button" class="btn sm" (click)="archive()">📦 Archiver</button>
+      }
+      <button type="button" class="btn sm" (click)="exportPdf()">📄 PDF</button>
+      <div style="flex: 1"></div>
+      <button type="button" class="btn sm danger ghost" (click)="confirmDelete(cur.id)">🗑️</button>
+    </div>
+    <app-audit-com-audit-form [agency]="agency()" [audit]="cur" />
+  </div>
+} @else {
+  <div class="fade">
+    <div class="toolbar" style="justify-content: space-between">
+      <div class="disp" style="font-weight: 700; font-size: 16px">📋 Audits de {{ ymLabel(ym()) }}</div>
+      <button type="button" class="btn pri sm" (click)="newAudit()"><span style="font-weight: 800; font-size: 16px; line-height: 1;">+</span> Nouvel audit</button>
+    </div>
+
+    <div class="card pad" style="margin-bottom: 16px; background: var(--paper2)">
+      <div class="lab">Cumul du mois — {{ ymLabel(ym()) }}</div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 12px; margin-top: 6px">
+        <div>
+            <div class="tiny muted">Contacts entrants</div><div class="disp" style="font-weight: 800; font-size: 18px">{{ monthKpisVal().entrant }}</div>
+        </div>
+        <div>
+            <div class="tiny muted">Signatures</div><div class="disp" style="font-weight: 800; font-size: 18px; color: var(--clay)">{{ monthKpisVal().signatures }}</div>
+        </div>
+        <div>
+            <div class="tiny muted">Résiliations</div><div class="disp" style="font-weight: 800; font-size: 18px; color: var(--petrol)">{{ monthKpisVal().ccmi }}</div>
+        </div>
+        <div>
+            <div class="tiny muted">Transfo.</div><div class="disp" style="font-weight: 800; font-size: 18px">{{ monthKpisVal().transfo.toFixed(1) }}%</div>
+        </div>
+        <div>
+            <div class="tiny muted">Note agence</div><div class="disp" style="font-weight: 800; font-size: 18px">{{ monthNote() == null ? '—' : monthNote()!.toFixed(1) + '/10' }}</div>
+        </div>
+      </div>
+      <div class="tiny muted" style="margin-top: 8px">{{ allMonthCount() }} audit(s) ce mois · tous se cumulent ci-dessus.</div>
+    </div>
+
+    @if (!monthList().length) {
+      <div class="empty">📋<div style="margin-top: 8px">Aucun audit pour {{ ymLabel(ym()) }}.<br />Clique sur <b>« Nouvel audit »</b>.</div></div>
+    }
+    @for (au of monthList(); track au.id) {
+      <div class="card" style="margin-bottom: 10px; overflow: hidden">
+        <button
+          type="button"
+          (click)="ui.toggleAuditExpanded(au.id)"
+          style="display: flex; align-items: center; gap: 10px; width: 100%; border: none; padding: 13px 16px; text-align: left"
+          [style.background]="isExpanded(au.id) ? 'var(--paper2)' : 'var(--card)'"
+        >
+          {{ isExpanded(au.id) ? '▼' : '▶' }}
+          <span style="font-weight: 700">Audit du {{ fmtDate(au.date) }}</span>
+          @if (au.status === 'validated') {
+            <span class="badge" style="background: #e3f1e8; color: var(--green)">✅ Validé</span>
+          } @else {
+            <span class="badge" style="background: #f8efd7; color: var(--amber)">✏️ Brouillon</span>
+          }
+          <span style="margin-left: auto; display: flex; gap: 14px" class="tiny muted">
+            <span><b style="color: var(--clay)">{{ auditKpis(au).signatures }}</b> sign.</span>
+            <span>note <b>{{ auditNote(au) == null ? '—' : auditNote(au)!.toFixed(1) + '/10' }}</b></span>
+          </span>
+        </button>
+        @if (isExpanded(au.id)) {
+          <div class="fade" style="padding: 14px 16px; border-top: 1px solid var(--line2)">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button type="button" class="btn sm pri" (click)="openEdit(au.id)">✏️ Ouvrir pour éditer</button>
+              <button type="button" class="btn sm" (click)="exportPdf(au)">📄 PDF</button>
+              <button type="button" class="btn sm danger ghost" (click)="confirmDelete(au.id)">🗑️ Supprimer</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (archives().length) {
+      <div class="card" style="margin-top: 16px; overflow: hidden">
+        <button
+          type="button"
+          (click)="toggleArch()"
+          style="display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: var(--paper2); padding: 13px 16px; text-align: left"
+        >
+          📁 <span class="disp" style="font-weight: 700; font-size: 15px">Archives ({{ archives().length }})</span>
+          <span class="tiny muted" style="margin-left: auto">conservés et comptés dans les cumuls</span>
+        </button>
+        @if (ui.archOpen()) {
+          @for (au of archives(); track au.id) {
+            <div class="agrow clk" style="grid-template-columns: 1.4fr 0.8fr 0.8fr auto" (click)="openEdit(au.id)">
+              <div style="font-weight: 600">📄 Audit du {{ fmtDate(au.date) }}</div>
+              <div class="tiny muted">{{ auditKpis(au).signatures }} sign. · {{ auditKpis(au).ccmi }} résil.</div>
+              <div class="tiny muted">{{ auditNote(au) == null ? '—' : auditNote(au)!.toFixed(1) + '/10' }}</div>
+              <button type="button" class="btn sm" (click)="openEdit(au.id); $event.stopPropagation()">Ouvrir</button>
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+}
+
+@if (ui.confirmDeleteAuditId(); as delId) {
+  <div class="modal-bg" (click)="ui.confirmDeleteAuditId.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <b class="disp" style="font-size: 17px">Supprimer cet audit ?</b>
+      <p class="muted" style="margin: 10px 0 18px">Action irréversible.</p>
+      <div style="display: flex; gap: 10px; justify-content: flex-end">
+        <button type="button" class="btn" (click)="ui.confirmDeleteAuditId.set(null)">Annuler</button>
+        <button type="button" class="btn pri" style="background: var(--red); border-color: var(--red)" (click)="doDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

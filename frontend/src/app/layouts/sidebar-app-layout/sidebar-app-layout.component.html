@@ -1,0 +1,47 @@
+<div class="app-shell-wrap">
+  <app-return-banner [appCode]="layout.appCode" [title]="layout.title" />
+  <div class="app-shell" [class]="'variant-' + (layout.variant || 'default')">
+    <aside class="sidebar">
+      @if (layout.showLogo) {
+        <div class="sidebar-logo">
+          <a routerLink="/home">
+            <img [src]="logo.src" [alt]="logo.alt" class="sidebar-banner" />
+          </a>
+        </div>
+      }
+      <div class="sidebar-head">
+        @if (!layout.showLogo) {
+          <h1 class="sidebar-title">{{ layout.title }}</h1>
+          @if (layout.subtitle) {
+            <p class="sidebar-sub">{{ layout.subtitle }}</p>
+          }
+        }
+      </div>
+      <nav class="sidebar-nav">
+        @for (item of layout.navItems; track item.route) {
+          <a [routerLink]="item.route" routerLinkActive="active" class="sidebar-link">
+            @if (item.icon) {
+              <span class="icon">{{ item.icon }}</span>
+            }
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+    </aside>
+    <div class="main-column">
+      @if (layout.variant === 'recrut') {
+        <header class="topbar">
+          <div>
+            <h1 class="topbar-title">{{ layout.title }}</h1>
+            @if (layout.subtitle) {
+              <p class="topbar-sub">{{ layout.subtitle }}</p>
+            }
+          </div>
+        </header>
+      }
+      <main class="app-main">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+</div>

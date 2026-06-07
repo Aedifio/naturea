@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+.reseau-grid .app-card:not(a) {
+  cursor: default;
+}
+
+.reseau-grid .app-card:not(a):hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
+
+.reseau-grid .app-card:not(a)::before {
+  display: none;
+}

@@ -1,0 +1,51 @@
+<button type="button" class="menu-toggle" aria-label="Ouvrir le menu" (click)="toggleSidebar()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
+<div class="sidebar-backdrop" [class.show]="sidebarOpen()" (click)="closeSidebar()"></div>
+
+<app-return-banner appCode="AUDIT" />
+
+<div class="shell">
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+    <div class="sidebar-logo">
+      <img class="brand-banner" [src]="logo.src" [alt]="logo.alt" />
+    </div>
+    <div class="sidebar-subtitle">Audit réseau</div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Vue globale</div>
+      <a class="nav-item" routerLink="/apps/audit-technique" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+        <span class="dot"></span>Tableau de bord
+      </a>
+      <a class="nav-item" routerLink="/apps/audit-technique/urgents" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="dot"></span>Écarts urgents
+        @if (openUrgents()) {
+          <span class="score-badge badge-red">{{ openUrgents() }}</span>
+        }
+      </a>
+      <a class="nav-item" routerLink="/apps/audit-technique/classement" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="dot"></span>Classement
+      </a>
+
+      <div class="nav-section agences-section">Agences</div>
+      @for (a of agencesNav(); track a.id) {
+        <a
+          class="nav-item agence-item"
+          [routerLink]="['/apps/audit-technique/agence', a.id]"
+          routerLinkActive="active"
+          (click)="closeSidebar()"
+        >
+          <span class="agence-dot" [style.background]="scoreColor(a.score)"></span>
+          <span class="agence-nom">{{ a.nom }}</span>
+          @if (a.score !== null) {
+            <span class="agence-score" [style.color]="scoreColor(a.score)">{{ a.score.toFixed(1) }}</span>
+          }
+        </a>
+      }
+    </nav>
+  </aside>
+  <main class="main">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Archivo', system-ui, sans-serif;
+}
+
+a.nav-btn {
+  text-decoration: none;
+}
+
+#franchise-select {
+  display: none;
+}

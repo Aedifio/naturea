@@ -1,0 +1,175 @@
+<div class="page-head">
+  <div class="page-kicker">Historique des devis · mise à jour des tarifs réseau</div>
+  <h1 class="page-title">Devis <em>sources & imports</em></h1>
+  <p class="page-sub">Charge des PDF de devis usine pour comparer aux tarifs de référence et appliquer les variations ligne par ligne. La base des 60 devis sources reste accessible plus bas.</p>
+</div>
+
+@if (!importSvc.pdfJsReady()) {
+  <div class="import-pdfjs-warn">
+    ⚠️ Librairie pdf.js non chargée. Vérifie ta connexion internet et recharge la page.
+  </div>
+}
+
+<div class="card card-import">
+  <div class="card-h card-h-warm">
+    <div class="card-h-l">
+      <div class="ico ico-terra">📥</div>
+      <h3 class="title-terra">Importer un nouveau devis usine</h3>
+    </div>
+    <div class="flex-row">
+      <button type="button" class="btn btn-terra" (click)="fileInput.click()">📥 Choisir un PDF</button>
+      <span class="text-muted-sm">Réservé coordinateur</span>
+      <input #fileInput type="file" accept=".pdf" multiple class="hidden-input" (change)="onFileInput($event)" />
+    </div>
+  </div>
+  <div class="card-b">
+    <div
+      class="import-dropzone"
+      [class.dragover]="dragOver()"
+      [class.has-files]="importSvc.queue().length > 0"
+      (click)="fileInput.click()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      @if (importSvc.queue().length === 0) {
+        <div class="ico">📥</div>
+        <div class="lbl">Glisse-dépose ici un ou plusieurs PDF de devis usine</div>
+        <div class="hint">ou clique pour choisir · formats acceptés : .pdf</div>
+      }
+    </div>
+    @if (importSvc.queue().length > 0) {
+      <div class="import-files">
+        @for (f of importSvc.queue(); track f.name + $index; let i = $index) {
+          <div class="import-file">
+            <span class="import-file-ico">📄</span>
+            <span class="fname" [title]="f.name">{{ f.name }}</span>
+            @if (f.parsed?.usine) {
+              <span class="import-file-usine">{{ usineNom(f.parsed!.usine!) }}</span>
+            }
+            @if (f.status === 'parsing') {
+              <span class="status parsing">⏳ Lecture...</span>
+            } @else if (f.status === 'ok') {
+              <span class="status ok">✓ {{ f.parsed!.postes.length }} poste{{ f.parsed!.postes.length > 1 ? 's' : '' }}</span>
+            } @else if (f.status === 'scan') {
+              <span class="status scan">📷 Scan</span>
+            } @else if (f.status === 'err') {
+              <span class="status err">✗ {{ f.error || 'erreur' }}</span>
+            }
+            @if (f.status === 'ok') {
+              <button type="button" class="btn btn-ghost btn-sm" (click)="importSvc.showPreviewByIndex(i); $event.stopPropagation()">→ Voir</button>
+            }
+            <button type="button" class="btn btn-ghost btn-sm" (click)="importSvc.removeFromQueue(i); $event.stopPropagation()" title="Retirer">✕</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<app-chiffrage-import-preview />
+
+<div class="card card-mb">
+  <div class="card-h">
+    <div class="card-h-l"><div class="ico">📊</div><h3>Historique des imports</h3></div>
+    <div class="card-meta">{{ importHistory().length }} import{{ importHistory().length > 1 ? 's' : '' }}</div>
+  </div>
+  <div class="card-b">
+    @if (historyStats().length > 0) {
+      <div class="history-stats">
+        <div class="history-stats-kicker">Variation moyenne · 30 derniers jours</div>
+        @for (s of historyStats(); track s.usine) {
+          <div>
+            <div class="history-stat-l">{{ usineNom(s.usine) }}</div>
+            <div class="history-stat-v" [class.up]="s.avg > 5" [class.down]="s.avg < -1">
+              {{ s.avg >= 0 ? '+' : '' }}{{ s.avg.toFixed(1) }}%
+            </div>
+            <div class="history-stat-sub">{{ s.n }} tarif{{ s.n > 1 ? 's' : '' }} appliqué{{ s.n > 1 ? 's' : '' }}</div>
+          </div>
+        }
+      </div>
+    } @else if (importHistory().length > 0) {
+      <div class="history-stats-empty">Aucune variation appliquée sur les 30 derniers jours</div>
+    }
+
+    @if (importHistory().length === 0) {
+      <div class="empty-state-sm">
+        Aucun import pour le moment. Charge un premier PDF ci-dessus pour démarrer le suivi des tarifs.
+      </div>
+    } @else {
+      <div class="history-list">
+        @for (h of importHistory(); track h.id) {
+          @let applies = appliedCount(h);
+          @let avg = avgDelta(h);
+          <div class="history-item" (click)="viewHistoryDetail(h)">
+            <span class="h-pill hist-pill {{ h.usine }}">{{ usineNom(h.usine) }}</span>
+            <div class="h-info">
+              <div class="h-num">Devis {{ h.devis_num || '?' }} · {{ h.client || 'sans client' }}</div>
+              <div class="h-meta">
+                {{ historyDateLabel(h.date_import) }} · {{ h.postes.length }} poste{{ h.postes.length > 1 ? 's' : '' }} détecté{{ h.postes.length > 1 ? 's' : '' }}
+                @if (h.total_ht) { · {{ fmtEurR(h.total_ht) }} }
+              </div>
+            </div>
+            <div class="h-applied">
+              {{ applies }}/{{ h.postes.length }}<br />
+              <span class="h-applied-lbl">appliqué{{ applies > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="h-delta">
+              @if (avg !== null) {
+                <span class="delta-pill {{ deltaClass(avg) }}">{{ avg >= 0 ? '+' : '' }}{{ avg.toFixed(1) }}%</span>
+              } @else {
+                <span class="h-delta-empty">aucun appliqué</span>
+              }
+            </div>
+            <button type="button" class="h-del" (click)="deleteImport(h, $event)" title="Supprimer">🗑</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-h">
+    <div class="card-h-l"><div class="ico">📋</div><h3>Devis sources de la base de référence</h3></div>
+    <div class="card-meta">60 devis</div>
+  </div>
+  <div class="card-b">
+    <table class="hist-table">
+      <thead>
+        <tr>
+          <th>Usine</th>
+          <th>N° devis</th>
+          <th>Date</th>
+          <th class="num">Surface MOB</th>
+          <th class="num">Prix MOB €/m²</th>
+          <th class="num">Total HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of devisHist; track d.n + d.date) {
+          <tr [class.row-sicob-2026]="isSicob2026(d.date, d.usine)">
+            <td><span class="hist-pill {{ d.usine }}">{{ usineNom(d.usine) }}</span></td>
+            <td>
+              <strong>{{ d.n }}</strong>
+              <div class="hist-client">{{ d.client }}</div>
+            </td>
+            <td>{{ fmtDateFR(d.date) }}</td>
+            <td class="num">{{ fmtNum(d.mob_m2, 1) }} m²</td>
+            <td class="num" [class.cell-sicob-2026]="isSicob2026(d.date, d.usine)">
+              {{ fmtNum(d.mob_pu, 2) }} €
+              @if (isSicob2026(d.date, d.usine)) {
+                <span class="badge-year">2026</span>
+              }
+            </td>
+            <td class="num"><strong>{{ fmtEurR(d.total) }}</strong></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="note">
+  <strong>💡 Comment ça marche.</strong> 1) Tu télécharges les PDF de devis usine depuis Ossature/Track. 2) Tu les glisses ici. 3) Le parser extrait les postes et compare avec ton référentiel actuel. 4) Pour chaque ligne, tu décides d'appliquer ou pas le nouveau tarif. 5) L'historique conserve tous les imports pour suivre la dérive des tarifs sur le temps. Les PDF scannés (sans texte sélectionnable) ne peuvent pas être lus automatiquement — saisie manuelle à venir.
+</div>

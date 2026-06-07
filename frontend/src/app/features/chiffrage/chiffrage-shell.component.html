@@ -1,0 +1,53 @@
+<app-return-banner [label]="bannerLabel()" />
+
+<div class="chiffrage-app">
+<header>
+  <div class="head-in">
+    <div class="brand">
+      <div class="brand-icon">🧮</div>
+      <div class="brand-text">
+        <div class="brand-name">Chiffrage Naturéa</div>
+        <div class="brand-tag">Estimateur multi-usines</div>
+      </div>
+    </div>
+    <div class="head-stats">
+      <div class="head-stat">
+        <div class="head-stat-n">{{ headStats().usines }}</div>
+        <div class="head-stat-l">Usines</div>
+      </div>
+      <div class="head-stat">
+        <div class="head-stat-n">{{ headStats().devis }}</div>
+        <div class="head-stat-l">Devis sources</div>
+      </div>
+      <div class="head-stat">
+        <div class="head-stat-n">{{ headStats().postes }}</div>
+        <div class="head-stat-l">Postes référencés</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-in">
+    <a class="tab" routerLink="/apps/chiffrage" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }">
+      🧮 Chiffrer un projet
+    </a>
+    <a class="tab" routerLink="/apps/chiffrage/mes-projets" routerLinkActive="on">
+      📁 Mes projets
+      <span class="badge">{{ mesProjetsBadge() }}</span>
+    </a>
+    <a class="tab" routerLink="/apps/chiffrage/referentiel" routerLinkActive="on">📊 Référentiels usines</a>
+    <a class="tab" routerLink="/apps/chiffrage/historique" routerLinkActive="on">
+      📋 Historique des devis
+      <span class="badge">{{ historiqueBadge() }}</span>
+    </a>
+    <a class="tab" routerLink="/apps/chiffrage/parametres" routerLinkActive="on">⚙️ Paramètres</a>
+  </div>
+</nav>
+
+<main>
+  <router-outlet />
+</main>
+
+<app-chiffrage-toast />
+</div>

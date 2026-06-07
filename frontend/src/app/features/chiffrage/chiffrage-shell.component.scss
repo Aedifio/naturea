@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+.chiffrage-app {
+  display: block;
+  min-height: calc(100vh - var(--return-banner-h, 50px));
+}

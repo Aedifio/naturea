@@ -1,0 +1,58 @@
+<app-page-hero
+  kicker="Synthèse réseau"
+  titleHtml="Dashboard <em>Réseau</em>"
+  subtitle="Vue d'ensemble en temps réel des indicateurs clés des 6 applications. Clique sur une carte pour ouvrir l'app correspondante."
+  [stats]="heroStats()"
+/>
+
+<div class="section-h">
+  <div class="section-t">Indicateurs par application</div>
+  <button type="button" class="reseau-refresh" (click)="refresh()">↻ Rafraîchir</button>
+</div>
+
+<div class="reseau-grid">
+  @for (card of cards(); track card.key) {
+    @if (card.locked) {
+      <div class="app-card {{ card.cls }} locked-card">
+        <div class="app-card-h">
+          <div class="app-card-icon">{{ card.icon }}</div>
+          <div class="app-card-name">{{ card.name }}</div>
+          <div class="app-card-empty" style="background: var(--red-soft); color: var(--red)">Verrouillé</div>
+        </div>
+        <app-kpi-grid [items]="[{ label: 'Accès non autorisé', value: '🔒', tone: 'muted' }]" />
+        <div class="app-card-foot">
+          <div class="app-card-updated">Demande l'accès à l'animateur</div>
+        </div>
+      </div>
+    } @else if (card.canOpen) {
+      <a class="app-card {{ card.cls }}" [routerLink]="card.route">
+        <ng-container *ngTemplateOutlet="cardBody; context: { $implicit: card }" />
+      </a>
+    } @else {
+      <div class="app-card {{ card.cls }}">
+        <ng-container *ngTemplateOutlet="cardBody; context: { $implicit: card }" />
+      </div>
+    }
+  }
+</div>
+
+<ng-template #cardBody let-card>
+  <div class="app-card-h">
+    <div class="app-card-icon">{{ card.icon }}</div>
+    <div class="app-card-name">{{ card.name }}</div>
+    @if (!card.kpis) {
+      <div class="app-card-empty">Vide</div>
+    }
+  </div>
+  @if (card.kpis) {
+    <app-kpi-grid [items]="card.kpis" />
+  } @else {
+    <app-kpi-grid [items]="emptyKpis" />
+  }
+  <div class="app-card-foot">
+    <div class="app-card-updated">{{ card.footText }}</div>
+    @if (card.canOpen) {
+      <div class="app-card-go">Ouvrir →</div>
+    }
+  </div>
+</ng-template>

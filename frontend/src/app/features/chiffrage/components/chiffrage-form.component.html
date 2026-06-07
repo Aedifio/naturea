@@ -1,0 +1,44 @@
+@for (section of sections(); track section.label) {
+  @if (section.fields.length > 0 || section.showExtBanner) {
+    <div class="section-label">{{ section.label }}</div>
+    @for (field of section.fields; track field.id || field.label) {
+      @if (field.ensemble) {
+        <app-chiffrage-charpente-ext [title]="field.label || 'Estimateur charpente'" />
+      } @else if (field.id) {
+        @let hint = getHint(field);
+        @let prixBadge = hasPrixBadge(field);
+        <div class="fld">
+          <div class="fld-l">
+            <label [for]="'f-' + field.id">
+              {{ getDisplayLabel(field) }}
+              @if (getTooltip(field); as tooltip) {
+                <span class="info-i" [chiffrageTooltip]="tooltip">ⓘ</span>
+              }
+              @if (showAutoBadge(field)) {
+                <span class="auto-badge" [class.manuel]="!isAuto(field.id)">{{ isAuto(field.id) ? 'auto' : 'manuel' }}</span>
+              }
+              @if (prixBadge.show) {
+                <span class="prix-modifie-badge" title="Prix personnalisé">💶 {{ prixBadge.prix }} €</span>
+              }
+            </label>
+            @if (hint.visible) {
+              <span class="fld-hint">{{ hint.text }}@if (hint.modified) { <span class="hint-edited">✎</span> }</span>
+            }
+          </div>
+          <input
+            type="number"
+            [id]="'f-' + field.id"
+            min="0"
+            step="0.01"
+            placeholder="0"
+            [ngModel]="fieldValue(field.id)"
+            (ngModelChange)="onFieldInput(field.id, $event)"
+          />
+        </div>
+      }
+    }
+    @if (section.showExtBanner) {
+      <app-chiffrage-charpente-ext [banner]="true" title="Estimateur charpente externe" />
+    }
+  }
+}

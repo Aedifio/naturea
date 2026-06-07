@@ -1,0 +1,84 @@
+@if (agence(); as a) {
+  <div class="topbar">
+    <div style="display: flex; align-items: center; gap: 16px">
+      <app-audit-score-ring [score]="score()" [size]="52" />
+      <div>
+        <div class="agence-ville">{{ a.ville }}</div>
+        <h2 style="margin-bottom: 2px">{{ a.nom }}</h2>
+        @if (a.adresse) {
+          <div style="font-size: 12px; color: var(--text3)">{{ a.adresse }}</div>
+        }
+      </div>
+    </div>
+    <a class="btn btn-primary" [routerLink]="['/apps/audit-technique/agence', a.id, 'nouveau']">+ Nouvel audit</a>
+  </div>
+  <div class="content fade-up">
+    <div class="grid-3" style="margin-bottom: 24px">
+      <div class="metric">
+        <div class="metric-label">Score moyen</div>
+        <div class="metric-value" [style.color]="score() ? 'var(--green)' : 'var(--text3)'">
+          {{ score() ? score()!.toFixed(2) : '—' }}
+        </div>
+        <div class="metric-sub">{{ score() ? scoreLabel(score()) : '—' }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Nombre d'audits</div>
+        <div class="metric-value" style="color: var(--primary)">{{ a.audits.length }}</div>
+        <div class="metric-sub">
+          {{ a.audits.length ? 'Dernier : ' + fmtDate(sortedAudits()[0]?.date) : 'Aucun audit' }}
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Écarts urgents</div>
+        <div class="metric-value" [style.color]="urgentCount() ? 'var(--red)' : 'var(--green)'">{{ urgentCount() }}</div>
+        <div class="metric-sub">sur l'ensemble des audits</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Historique des audits</div>
+      @if (!sortedAudits().length) {
+        <div class="empty">
+          Aucun audit réalisé.
+          <a class="btn btn-primary" style="margin-left: 10px" [routerLink]="['/apps/audit-technique/agence', a.id, 'nouveau']">
+            Créer le premier audit
+          </a>
+        </div>
+      } @else {
+        <table class="table">
+          <thead>
+            <tr><th>Date</th><th>Auditeur</th><th>Corps notés</th><th>Score</th><th>Écarts</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (au of sortedAudits(); track au.id) {
+              <tr class="clickable" [routerLink]="['/apps/audit-technique/agence', a.id, 'audit', au.id]">
+                <td><span class="mono" style="color: var(--text2)">{{ fmtDate(au.date) }}</span></td>
+                <td style="color: var(--text2)">{{ au.auditeur || '—' }}</td>
+                <td><span class="mono">{{ notedCount(au) }}/{{ corpsCount }}</span></td>
+                <td><app-audit-score-pill [score]="auditScore(au)" /></td>
+                <td>
+                  @if (urgentInAudit(au) > 0) {
+                    <span class="badge badge-red" style="margin-right: 4px">⚠ {{ urgentInAudit(au) }} urgent{{ urgentInAudit(au) > 1 ? 's' : '' }}</span>
+                  }
+                  @if (minorInAudit(au) > 0) {
+                    <span class="badge badge-amber">{{ minorInAudit(au) }} mineur{{ minorInAudit(au) > 1 ? 's' : '' }}</span>
+                  }
+                  @if (isAuditOk(au)) {
+                    <span class="badge badge-green">OK</span>
+                  }
+                </td>
+                <td>
+                  <a
+                    class="btn btn-ghost"
+                    style="font-size: 12px"
+                    [routerLink]="['/apps/audit-technique/agence', a.id, 'audit', au.id]"
+                    (click)="$event.stopPropagation()"
+                  >Voir →</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+}

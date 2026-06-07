@@ -1,0 +1,69 @@
+<div class="card recap-card">
+  <div class="recap-total">
+    <div class="recap-total-k">Total HT estimé</div>
+    <div class="recap-total-n mono">{{ recap().hasAnyValue ? fmtEurR(recap().totalGeneral) : '—' }}</div>
+    <div class="recap-total-tva">
+      @if (recap().hasAnyValue) {
+        TVA 20 % : {{ fmtEurR(recap().totalGeneral * 0.2) }} · TTC : {{ fmtEurR(recap().totalGeneral * 1.2) }}
+      } @else {
+        —
+      }
+    </div>
+  </div>
+  <div class="card-b recap-b">
+    @if (recap().fiabiliteBanner) {
+      <div class="fiab-banner" [class.warn]="recap().fiabiliteBanner === 'warn'">
+        <span class="ico">{{ recap().fiabiliteBanner === 'warn' ? '⚠️' : recap().fiabiliteBanner === 'high' ? '✓' : '📊' }}</span>
+        <span>{{ recap().fiabiliteMessage }}</span>
+      </div>
+    }
+
+    @if (!recap().hasAnyValue) {
+      <div class="recap-empty">Saisis les métrés pour voir l'estimation</div>
+    } @else {
+      @for (line of recap().lines; track line.label + line.detail) {
+        <div class="recap-line">
+          <div class="recap-line-l">{{ line.label }}<span class="det">{{ line.detail }}</span></div>
+          <div class="recap-line-v">{{ fmtEurR(line.amount) }}</div>
+        </div>
+      }
+      <div class="recap-line subtotal">
+        <div class="recap-line-l">Sous-total MOB</div>
+        <div class="recap-line-v">{{ fmtEurR(recap().subtotal) }}</div>
+      </div>
+
+      @if (showCharpenteSection()) {
+        @if (recap().charpenteTotal > 0) {
+          <div class="recap-charpente">
+            <div class="recap-charpente-kicker">{{ charpenteLabel() }}</div>
+            @for (cl of recap().charpenteLines; track cl.label + cl.detail) {
+              <div class="recap-line">
+                <div class="recap-line-l">{{ cl.label }}<span class="det">{{ cl.detail }}</span></div>
+                <div class="recap-line-v">{{ fmtEurR(cl.amount) }}</div>
+              </div>
+            }
+            <div class="recap-line subtotal">
+              <div class="recap-line-l">Sous-total charpente</div>
+              <div class="recap-line-v">{{ fmtEurR(recap().charpenteTotal) }}</div>
+            </div>
+          </div>
+        } @else if (recap().showCharpenteWarning) {
+          <div class="recap-warn">
+            <strong>⚠️ Charpente non renseignée</strong> — le total ci-dessous est incomplet. Remplis l'estimateur charpente dans la section correspondante.
+          </div>
+        }
+      }
+
+      <div class="recap-line subtotal">
+        <div class="recap-line-l">Total HT général</div>
+        <div class="recap-line-v">{{ fmtEurR(recap().totalGeneral) }}</div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" (click)="save.emit()">💾 Sauvegarder</button>
+        <button type="button" class="btn btn-secondary" (click)="exportPdf.emit()">📄 Exporter PDF</button>
+        <button type="button" class="btn btn-ghost" (click)="reset.emit()">🔄 Réinitialiser</button>
+      </div>
+    }
+  </div>
+</div>

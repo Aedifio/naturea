@@ -1,0 +1,383 @@
+@if (open() && order(); as o) {
+  <div class="modal-overlay" (click)="close($event)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <div class="detail-id">{{ o.id }}</div>
+          <div class="detail-title">{{ o.reference }}</div>
+          <div class="detail-sub">{{ o.franchise }}</div>
+          @if (showSecStatut()) {
+            <div style="margin-top: 6px; background: #fff7ed; color: #92400e; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 600; display: inline-block">
+              ⏳ En attente de validation des plans
+            </div>
+          }
+        </div>
+        <button type="button" class="modal-close" (click)="closeBtn()">✕</button>
+      </div>
+
+      <div class="section-label">Avancement</div>
+      <div class="timeline">
+        @for (s of statuts; track s; let i = $index; let last = $last) {
+          <div class="tl-step">
+            <div class="tl-dot" [class.done]="i < statutIndex(o.statut)" [class.active]="i === statutIndex(o.statut)">
+              {{ i < statutIndex(o.statut) ? '✓' : i + 1 }}
+            </div>
+            <div class="tl-name" [class.done]="i < statutIndex(o.statut)" [class.active]="i === statutIndex(o.statut)">{{ s }}</div>
+          </div>
+          @if (!last) {
+            <div class="tl-line" [class.done]="i < statutIndex(o.statut)"></div>
+          }
+        }
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-cell-label">📐 Surface murs</div>
+          <div class="info-cell-val">{{ o.surface || '—' }}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">🏠 Surface plancher</div>
+          <div class="info-cell-val">{{ o.plancher || '—' }}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">🏭 Site</div>
+          <div class="info-cell-val">{{ o.site }}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">📍 Adresse usine</div>
+          <div class="info-cell-val">{{ siteAdresse(o.site) }}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">📅 Livraison souhaitée</div>
+          <div class="info-cell-val">{{ o.livraison || '—' }}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">🏛️ Dépôt permis</div>
+          <div class="info-cell-val">{{ o.permis || '—' }}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+        <div class="section-label" style="margin-bottom: 0">Demande de devis</div>
+        <button type="button" style="background: var(--blue-light); color: var(--blue); border: none; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer" (click)="toggleDocs()">
+          {{ showDocs() ? '▲ Masquer' : '▼ Afficher' }}
+        </button>
+      </div>
+      @if (showDocs()) {
+        <div style="margin-bottom: 22px">
+          @if (o.docs?.length) {
+            @for (d of o.docs; track d) {
+              <div class="doc-chip" style="justify-content: space-between">
+                <span>📄 {{ d }}</span>
+                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; margin-left: 8px" (click)="download(d); $event.preventDefault()">⬇ Télécharger</a>
+              </div>
+            }
+          } @else {
+            <div style="color: var(--faint); font-size: 13px">Aucun document joint</div>
+          }
+        </div>
+      }
+
+      @if (showDocsRecusSection()) {
+        <div style="margin-bottom: 22px">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+            <div class="section-label" style="margin-bottom: 0">Confirmation réception documents</div>
+            <button type="button" style="background: var(--blue-light); color: var(--blue); border: none; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer" (click)="toggleDocsRecus()">
+              {{ showDocsRecus() ? '▲ Masquer' : '▼ Afficher' }}
+            </button>
+          </div>
+          @if (showDocsRecus()) {
+            @if (o.docs_recus_date) {
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: #d1fae5; border-radius: 10px">
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span style="font-size: 18px">✅</span>
+                  <div>
+                    <div style="font-weight: 700; font-size: 13px; color: #065f46">Documents reçus et consultés</div>
+                    <div style="font-size: 12px; color: #059669; margin-top: 2px">Le {{ o.docs_recus_date }} à {{ o.docs_recus_heure || '—' }}</div>
+                  </div>
+                </div>
+                @if (isUsine()) {
+                  <button type="button" style="background: #fff; color: #6b7280; border: 1.5px solid #d1d5db; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer" (click)="data.unconfirmDocsRecus(o.id)">↩️ Annuler</button>
+                }
+              </div>
+            } @else {
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff7ed; border-radius: 10px; border: 1.5px dashed #fcd34d">
+                <span style="font-size: 13px; color: #92400e; font-weight: 600">⏳ En attente de confirmation usine</span>
+                @if (isUsine()) {
+                  <button type="button" style="background: #f97316; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer" (click)="data.confirmDocsRecus(o.id)">✅ Documents reçus</button>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <div style="margin-bottom: 22px">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+          <div class="section-label" style="margin-bottom: 0">Devis retour usine</div>
+          <button type="button" style="background: var(--blue-light); color: var(--blue); border: none; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer" (click)="toggleDevisRetour()">
+            {{ showDevisRetour() ? '▲ Masquer' : '▼ Afficher' }}
+          </button>
+        </div>
+        @if (showDevisRetour()) {
+          @if (devisDelai(o)) {
+            <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+              <div>
+                <span style="font-weight: 700; color: #dc2626">⚠️ Retard {{ daysSince(o.created) }} jours</span>
+                <div style="font-size: 12px; color: #ef4444; margin-top: 2px">Délai de 15j dépassé depuis le {{ o.created }}</div>
+              </div>
+              <button type="button" style="background: #dc2626; color: #fff; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer" (click)="alertDelai(o)">📧 Envoyer alerte</button>
+            </div>
+          }
+          @if (o.devis_retour) {
+            <div class="doc-chip" style="justify-content: space-between; background: #d1fae5">
+              <span>✅ {{ o.devis_retour }} <span style="color: var(--faint); font-size: 11px">(déposé le {{ o.devis_retour_date || '—' }})</span></span>
+              <div style="display: flex; gap: 4px">
+                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.devis_retour!); $event.preventDefault()">⬇ Télécharger</a>
+                @if (isUsine()) {
+                  <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deleteDevisRetour(o.id)">🗑</button>
+                }
+              </div>
+            </div>
+          } @else if (o.statut === 'Devis demandé' || o.statut === 'Devis envoyé') {
+            @if (isUsine() || isCoord()) {
+              <label style="display: inline-flex; align-items: center; gap: 8px; background: var(--blue-light); color: var(--blue); padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px">
+                <input type="file" accept=".pdf,.png,.jpg" hidden (change)="onDevisUpload($event)" />
+                📤 Déposer le devis retour usine
+              </label>
+            } @else {
+              <div style="padding: 10px 14px; background: #f9fafb; border-radius: 10px; border: 1.5px dashed var(--border); font-size: 13px; color: var(--faint)">⏳ En attente du devis retour usine</div>
+            }
+          }
+        }
+      </div>
+
+      @if (showSigSection()) {
+        <div style="margin-bottom: 22px">
+          <div class="section-label">Signature du devis</div>
+          @if (o.signature) {
+            <div style="background: #f0fdf4; border-radius: 10px; padding: 12px 14px">
+              <div style="font-size: 12px; font-weight: 700; color: #065f46; margin-bottom: 8px">✅ Signé le {{ o.signature_date }} à {{ o.signature_heure || '—' }}</div>
+              <img [src]="o.signature" style="max-width: 100%; border-radius: 8px; border: 1px solid #d1fae5" alt="Signature" />
+              @if (o.signature_docs?.length) {
+                <div style="margin-top: 12px">
+                  <div style="font-size: 11px; font-weight: 700; color: #065f46; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px">📎 Pièces jointes validation</div>
+                  @for (d of o.signature_docs; track $index; let i = $index) {
+                    <div class="doc-chip" style="justify-content: space-between; background: #fff; border: 1px solid #d1fae5; margin-bottom: 6px">
+                      <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                        <div style="width: 24px; height: 24px; border-radius: 6px; background: #d1fae5; display: flex; align-items: center; justify-content: center; font-size: 12px">📄</div>
+                        <div style="min-width: 0">
+                          <div style="font-weight: 700; font-size: 12px; color: #065f46">{{ docsSignature[i]?.label || d }}</div>
+                          <div style="font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px">{{ d }}</div>
+                        </div>
+                      </div>
+                      @if (isFranchise()) {
+                        <div style="display: flex; gap: 4px">
+                          <label style="background: #fff7ed; color: #f97316; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px dashed #fcd34d">
+                            <input type="file" accept=".pdf,.dwg,.png,.jpg" hidden (change)="onSigDocReplace(i, $event)" />
+                            🔄 Remplacer
+                          </label>
+                          <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.removeSigDocFromOrder(o.id, i)">🗑</button>
+                        </div>
+                      } @else if (isCoord() || isUsine()) {
+                        <a href="#" style="background: var(--blue); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(d); $event.preventDefault()">⬇ Télécharger</a>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff7ed; border-radius: 10px; border: 1.5px dashed #fcd34d">
+              <span style="font-size: 13px; color: #92400e; font-weight: 600">⏳ En attente de signature franchisé</span>
+              @if (isFranchise()) {
+                <button type="button" style="background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer" (click)="openSignDevis()">✍️ Signer le devis</button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (showProd()) {
+        <div style="margin-bottom: 22px" id="d-ar-section">
+          <div class="section-label">Accusé de réception usine</div>
+          @if (o.ar_fichier) {
+            <div class="doc-chip" style="justify-content: space-between; background: #d1fae5; margin-bottom: 8px">
+              <div>
+                <div style="font-weight: 700; font-size: 13px">✅ {{ o.ar_fichier }}</div>
+                <div style="font-size: 11px; color: #059669; margin-top: 2px">Déposé le {{ o.ar_date || '—' }} à {{ o.ar_heure || '—' }}</div>
+              </div>
+              <div style="display: flex; gap: 6px">
+                <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.ar_fichier!); $event.preventDefault()">⬇ Télécharger</a>
+                @if (isUsine()) {
+                  <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deleteAR(o.id)">🗑</button>
+                }
+              </div>
+            </div>
+          } @else if (isUsine()) {
+            <label style="display: inline-flex; align-items: center; gap: 8px; background: var(--blue-light); color: var(--blue); padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px">
+              <input type="file" accept=".pdf,.png,.jpg" hidden (change)="onARUpload($event)" />
+              📤 Déposer l'accusé de réception
+            </label>
+          } @else {
+            <div style="padding: 9px 12px; background: #fff7ed; border-radius: 10px; border: 1.5px dashed #fcd34d; font-size: 13px; color: #92400e; font-weight: 600">⏳ En attente de l'accusé de réception</div>
+          }
+
+          <div style="margin-bottom: 16px; margin-top: 16px">
+            <div class="section-label" style="margin-bottom: 8px">Plan de fabrication</div>
+            @if (planFabDelai(o)) {
+              <div style="background: #fef3c7; border: 1.5px solid #fcd34d; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #92400e">⚠️ Plan attendu depuis plus de 15 jours</div>
+            }
+            @if (o.plan_fab) {
+              <div class="doc-chip" style="justify-content: space-between; background: #d1fae5; margin-bottom: 8px">
+                <div>
+                  <div style="font-weight: 700; font-size: 13px">✅ {{ o.plan_fab }}</div>
+                  <div style="font-size: 11px; color: #059669; margin-top: 2px">Déposé le {{ o.plan_fab_date || '—' }}</div>
+                </div>
+                <div style="display: flex; gap: 6px">
+                  <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.plan_fab!); $event.preventDefault()">⬇ Télécharger</a>
+                  @if (isUsine()) {
+                    <label style="background: #fff7ed; color: #f97316; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer">🔄<input type="file" accept=".pdf,.dwg,.png" hidden (change)="onPlanFabUpload($event)" /></label>
+                    <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deletePlanFab(o.id)">🗑</button>
+                  }
+                </div>
+              </div>
+            } @else if (isUsine()) {
+              <div class="doc-chip" style="justify-content: space-between; cursor: pointer; border: 1.5px dashed var(--border); background: #f9fafb" (dragover)="$event.preventDefault()" (drop)="onPlanFabDrop($event)">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <div style="width: 26px; height: 26px; border-radius: 6px; background: var(--border); display: flex; align-items: center; justify-content: center">📎</div>
+                  <div>
+                    <div style="font-weight: 600; font-size: 13px">Plan de fabrication</div>
+                    <div style="font-size: 11px; color: var(--faint)">Glisser-déposer ou cliquer</div>
+                  </div>
+                </div>
+                <label style="background: var(--blue-light); color: var(--blue); padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer">
+                  <input type="file" accept=".pdf,.dwg,.png" hidden (change)="onPlanFabUpload($event)" />📤 Joindre
+                </label>
+              </div>
+            } @else {
+              <div style="padding: 9px 12px; background: #fff7ed; border-radius: 10px; border: 1.5px dashed #fcd34d; font-size: 13px; color: #92400e; font-weight: 600">⏳ En attente du plan de fabrication</div>
+            }
+          </div>
+
+          <div style="margin-bottom: 16px">
+            <div class="section-label" style="margin-bottom: 8px">Validation des plans</div>
+            @if (o.signature) {
+              @if (o.plan_val_docs?.length) {
+                @for (d of o.plan_val_docs; track $index; let i = $index) {
+                  <div class="doc-chip" style="justify-content: space-between; background: #eef2ff; margin-bottom: 6px">
+                    <div>
+                      <div style="font-weight: 600; font-size: 13px">📎 {{ d.name }}</div>
+                      <div style="font-size: 11px; color: var(--faint)">{{ d.date }}</div>
+                    </div>
+                    <div style="display: flex; gap: 4px">
+                      <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(d.name); $event.preventDefault()">⬇</a>
+                      @if (isFranchise()) {
+                        <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deletePlanValDoc(o.id, i)">🗑</button>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+              @if (isFranchise()) {
+                <label style="display: inline-flex; align-items: center; gap: 8px; background: var(--blue-light); color: var(--blue); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; margin-bottom: 10px">
+                  <input type="file" accept=".pdf,.dwg,.png,.jpg" hidden (change)="onPlanValDoc($event)" />📎 Ajouter une pièce
+                </label>
+              }
+              @if (o.plan_val_signature) {
+                <div style="background: #f0fdf4; border-radius: 10px; padding: 12px 14px">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+                    <div style="font-size: 12px; font-weight: 700; color: #065f46">✅ Validé et signé le {{ o.plan_val_date }} à {{ o.plan_val_heure || '—' }}</div>
+                    @if (isFranchise()) {
+                      <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.invalidatePlanValidation(o.id)">🗑 Dévalider</button>
+                    }
+                  </div>
+                  <img [src]="o.plan_val_signature" style="max-width: 100%; border-radius: 8px; border: 1px solid #d1fae5" alt="Signature plans" />
+                </div>
+              } @else if (isFranchise()) {
+                <div style="background: #fff7ed; border: 1.5px dashed #fcd34d; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                  <span style="font-size: 13px; color: #92400e; font-weight: 600">✍️ Signature requise</span>
+                  <button type="button" style="background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer" (click)="openSignPlan()">✍️ Signer</button>
+                </div>
+              } @else {
+                <div style="padding: 9px 12px; background: #fff7ed; border-radius: 10px; font-size: 13px; color: #92400e; font-weight: 600">⏳ En attente de signature franchisé</div>
+              }
+            } @else {
+              <div style="padding: 9px 12px; background: #f9fafb; border-radius: 10px; font-size: 13px; color: var(--faint)">Disponible après signature du devis</div>
+            }
+          </div>
+
+          <div style="margin-bottom: 16px">
+            <div class="section-label" style="margin-bottom: 8px">Date de livraison prévue</div>
+            @if (maxLivraison(o); as maxL) {
+              <div style="padding: 10px 14px; background: #eef2ff; border-radius: 10px">
+                <div style="font-size: 12px; font-weight: 600; color: var(--blue)">📅 À livrer avant le</div>
+                <div style="font-size: 20px; font-weight: 800; color: #1a2236; margin-top: 2px">{{ maxL }}</div>
+                <div style="font-size: 11px; color: var(--faint); margin-top: 3px">7 semaines après la signature du devis</div>
+              </div>
+            } @else {
+              <div style="padding: 9px 12px; background: #f9fafb; border-radius: 10px; font-size: 13px; color: var(--faint)">Disponible après signature du devis</div>
+            }
+          </div>
+
+          <div>
+            <div class="section-label" style="margin-bottom: 8px">Date de livraison définitive</div>
+            @if (o.livraison_definitive) {
+              <div [style.background]="livDefLate(o) ? '#fef2f2' : '#f0fdf4'" style="padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px">
+                <div>
+                  <div [style.color]="livDefLate(o) ? '#dc2626' : '#065f46'" style="font-size: 12px; font-weight: 600">{{ livDefLate(o) ? '⚠️ Dépassement délai' : '✅ Dans les délais' }}</div>
+                  <div [style.color]="livDefLate(o) ? '#dc2626' : '#1a2236'" style="font-size: 18px; font-weight: 800; margin-top: 2px">{{ o.livraison_definitive | date: 'dd/MM/yyyy' }}</div>
+                  @if (livDefLate(o) && maxLivraison(o)) {
+                    <div style="font-size: 11px; color: #ef4444; margin-top: 2px">Max autorisée : {{ maxLivraison(o) }}</div>
+                  }
+                </div>
+                @if (isUsine()) {
+                  <div style="display: flex; gap: 6px">
+                    <button type="button" style="background: var(--blue-light); color: var(--blue); border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer" (click)="startEditLivDef()">✏️ Modifier</button>
+                    <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer" (click)="data.deleteLivraisonDefinitive(o.id)">🗑</button>
+                  </div>
+                }
+              </div>
+              @if (editLivDef() && isUsine()) {
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <input type="date" class="form-input" [(ngModel)]="livDefValue" style="flex: 1" autocomplete="off" data-lpignore="true" data-form-type="other" />
+                  <button type="button" style="background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer" (click)="saveLivDef()">OK</button>
+                </div>
+              }
+            } @else if (isUsine()) {
+              <div style="display: flex; gap: 8px; align-items: center">
+                <input type="date" class="form-input" [(ngModel)]="livDefValue" style="flex: 1" autocomplete="off" data-lpignore="true" data-form-type="other" />
+                <button type="button" style="background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer" (click)="saveLivDef()">📅 Enregistrer</button>
+              </div>
+            } @else {
+              <div style="padding: 9px 12px; background: #f9fafb; border-radius: 10px; font-size: 13px; color: var(--faint)">Date non encore saisie par l'usine</div>
+            }
+          </div>
+
+          <div style="margin-top: 16px; padding: 10px 14px; background: #fef2f2; border-radius: 10px; border: 1px solid #fca5a5; font-size: 13px; font-weight: 700; color: #dc2626; text-align: center">
+            ⚠️ Pour toute modification du délai de livraison, contacter directement l'agence
+          </div>
+        </div>
+      }
+
+      @if (canArchive()) {
+        <div style="margin-bottom: 16px">
+          <button type="button" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #374151, #1f2937); color: #fff; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer" (click)="archive()">
+            📦 Archiver cette commande
+          </button>
+        </div>
+      }
+
+      @if (isCoord()) {
+        <div id="d-statut-section">
+          <div class="section-label">Modifier le statut</div>
+          <div class="statut-btns">
+            @for (s of statuts; track s) {
+              <button type="button" class="statut-btn" [class.active]="s === o.statut" (click)="updateStatut(s)">{{ s }}</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,124 @@
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 46, 37, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  padding: 20px;
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(31, 46, 37, 0.2);
+}
+
+.modal-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+}
+
+.modal-x {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 4px;
+
+  &:hover {
+    color: var(--ink);
+  }
+}
+
+.modal-b {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-f {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: var(--sans);
+
+  &:focus {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: -1px;
+  }
+}
+
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+
+  &.selected {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+}
+
+.app-btn-danger {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red);
+
+  &:hover {
+    background: var(--red-soft);
+  }
+}

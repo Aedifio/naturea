@@ -1,0 +1,210 @@
+@if (action(); as a) {
+  <div class="modal-bg" (click)="onBackdrop($event)">
+    <div class="modal-box modal-wide" role="dialog" aria-modal="true">
+      <div class="modal-h">
+        <h3>{{ modalTitle() }}</h3>
+        <button type="button" class="modal-x" (click)="close.emit()" aria-label="Fermer">×</button>
+      </div>
+      <div class="modal-b modal-scroll">
+        <div class="detail-section">
+          <div class="grid-2">
+            <div class="field">
+              <label for="ad-theme">Thème</label>
+              <select
+                id="ad-theme"
+                class="input"
+                [ngModel]="a.theme"
+                (ngModelChange)="onFieldChange(a.id, 'theme', $event, 'Thème')"
+              >
+                @for (t of themes(); track t) {
+                  <option [value]="t">{{ t }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="ad-status">Statut</label>
+              <select id="ad-status" class="input" [ngModel]="a.status" (ngModelChange)="onStatusChange(a.id, $event)">
+                <option value="todo">À faire</option>
+                <option value="in_progress">En cours</option>
+                <option value="blocked">Bloqué</option>
+                <option value="done">Terminé</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="ad-title">Titre / Tâche</label>
+            <textarea
+              id="ad-title"
+              class="input"
+              rows="2"
+              [value]="a.title"
+              (blur)="onFieldChange(a.id, 'title', $any($event.target).value, 'Titre')"
+              autocomplete="off" data-lpignore="true" data-form-type="other"
+            ></textarea>
+          </div>
+          <div class="field">
+            <label for="ad-description">Description / Détails</label>
+            <textarea
+              id="ad-description"
+              class="input"
+              rows="3"
+              placeholder="Précisions, contexte, livrables attendus…"
+              [value]="a.description ?? ''"
+              (blur)="onFieldChange(a.id, 'description', $any($event.target).value, 'Description')"
+            ></textarea>
+          </div>
+          <div class="grid-3">
+            <div class="field">
+              <label for="ad-startdate">Date démarrage</label>
+              <input
+                id="ad-startdate"
+                type="date"
+                class="input"
+                [ngModel]="a.startDate ?? ''"
+                (ngModelChange)="onFieldChange(a.id, 'startDate', $event, 'Date démarrage')"
+                autocomplete="off" data-lpignore="true" data-form-type="other"
+              />
+            </div>
+            <div class="field">
+              <label for="ad-deadline">Échéance</label>
+              <input
+                id="ad-deadline"
+                type="date"
+                class="input"
+                [ngModel]="a.deadline ?? ''"
+                (ngModelChange)="onFieldChange(a.id, 'deadline', $event, 'Échéance', codir.formatDateShort($event))"
+                autocomplete="off" data-lpignore="true" data-form-type="other"
+              />
+            </div>
+            <div class="field">
+              <label for="ad-priority">Priorité</label>
+              <select id="ad-priority" class="input" [ngModel]="a.priority ?? 'medium'" (ngModelChange)="onPriorityChange(a.id, $event)">
+                <option value="low">Faible</option>
+                <option value="medium">Moyenne</option>
+                <option value="high">Haute</option>
+              </select>
+            </div>
+          </div>
+          @if (a.deadlineNote && !a.deadline) {
+            <div class="field-hint">Note d'échéance importée : « {{ a.deadlineNote }} »</div>
+          }
+          @if (a.ownerLabel) {
+            <div class="field-hint">Code responsable importé : « {{ a.ownerLabel }} »</div>
+          }
+        </div>
+
+        <div class="detail-section">
+          <h4>Attribution</h4>
+          <div class="field">
+            <label for="ad-owner">Responsable principal</label>
+            <select id="ad-owner" class="input" [ngModel]="a.ownerId ?? ''" (ngModelChange)="onOwnerChange(a.id, $event)">
+              <option value="">— Non attribué —</option>
+              @for (m of members(); track m.id) {
+                <option [value]="m.id">{{ m.name }} ({{ m.role }})</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Co-responsables (optionnel)</label>
+            <div class="coowner-chips">
+              @for (m of members(); track m.id) {
+                <button type="button" class="app-chip" [class.active]="isCoOwner(m.id)" (click)="toggleCoOwner(m.id)">
+                  {{ m.name }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Commentaires ({{ sortedComments().length }})</h4>
+          <div class="field">
+            <textarea
+              class="input"
+              rows="3"
+              placeholder="Ajouter un commentaire..."
+              [ngModel]="newComment()"
+              (ngModelChange)="newComment.set($event)"
+            ></textarea>
+            <div class="comment-compose-actions">
+              <select class="input input-inline" [ngModel]="commentAuthorId()" (ngModelChange)="commentAuthorId.set($event)">
+                <option value="">— Anonyme —</option>
+                @for (m of members(); track m.id) {
+                  <option [value]="m.id">{{ m.name }}</option>
+                }
+              </select>
+              <button type="button" class="app-btn app-btn-primary app-btn-sm" (click)="publishComment()">Publier le commentaire</button>
+            </div>
+          </div>
+          @if (!sortedComments().length) {
+            <div class="empty-comments">Aucun commentaire.</div>
+          } @else {
+            @for (c of sortedComments(); track c.id ?? c.text) {
+              <div class="comment" [class.comment-imported]="isImportedComment(c.id)">
+                <div class="comment-header">
+                  <div class="comment-author">
+                    @if (c.authorId; as aid) {
+                      @if (codir.memberById(aid); as author) {
+                        <span class="app-avatar" [style.background]="author.color" style="width: 22px; height: 22px; font-size: 9px">
+                          {{ codir.initials(author.name) }}
+                        </span>
+                        <span>{{ author.name }}</span>
+                      }
+                    } @else {
+                      <span>{{ isImportedComment(c.id) ? 'Import Excel' : 'Anonyme' }}</span>
+                    }
+                  </div>
+                  <div class="comment-actions">
+                    <span class="comment-date">{{ codir.formatDateTime(c.createdAt) }}</span>
+                    @if (c.id) {
+                      <button type="button" class="icon-btn" (click)="removeComment(c.id!)" title="Supprimer">
+                        <app-codir-icon name="trash" [size]="14" />
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div class="comment-text">{{ c.text }}</div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="detail-section">
+          <h4>Historique des modifications ({{ sortedHistory().length }})</h4>
+          @if (!sortedHistory().length) {
+            <div class="empty-comments">Aucun historique.</div>
+          } @else {
+            @for (h of sortedHistory(); track h.date + h.action) {
+              <div class="history-item">
+                <span class="history-dot"></span>
+                <div class="history-text">
+                  <div>{{ h.action }}</div>
+                  <div class="history-date">{{ codir.formatDateTime(h.date) }}</div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="modal-f">
+        <button type="button" class="app-btn app-btn-danger app-btn-sm app-btn-icon" (click)="deleteAction()">
+          <app-codir-icon name="trash" [size]="14" />
+          Supprimer
+        </button>
+        @if (action()?.archived) {
+          <button type="button" class="app-btn app-btn-secondary app-btn-sm app-btn-icon" (click)="unarchiveAction()">
+            <app-codir-icon name="archiveRestore" [size]="14" />
+            Désarchiver
+          </button>
+        } @else {
+          <button type="button" class="app-btn app-btn-secondary app-btn-sm app-btn-icon" (click)="archiveAction()">
+            <app-codir-icon name="archive" [size]="14" />
+            Archiver
+          </button>
+        }
+        <span class="spacer"></span>
+        <button type="button" class="app-btn app-btn-ghost app-btn-sm" (click)="close.emit()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,77 @@
+<div class="fade">
+  <div style="display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap">
+    <input id="audit-com-file-img" type="file" accept="image/*" hidden (change)="onImportImage($event)" />
+    <input id="audit-com-file-xls" type="file" accept=".xlsx,.xls,.csv" hidden (change)="onImportExcel($event)" />
+    <button type="button" class="btn" (click)="triggerImage()">🖼️ Importer une image</button>
+    <button type="button" class="btn" (click)="triggerExcel()">📊 Importer un Excel / CSV</button>
+    @if (ui.importStatus()) {
+      <span class="muted tiny" style="align-self: center">{{ ui.importStatus() }}</span>
+    }
+  </div>
+
+  @if (agency().documents.length) {
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
+      @for (d of agency().documents; track d.id) {
+        <div class="card pad" style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span>{{ d.kind === 'image' ? '🖼️' : '📊' }}</span>
+            <span style="font-weight: 600; font-size: 13px; word-break: break-word">{{ d.name }}</span>
+          </div>
+          <div class="tiny muted">
+            @if (d.kind === 'excel') { {{ d.rows ?? '?' }} lignes · }
+            importé le {{ fmtDate(d.importedAt) }}
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 4px">
+            <button type="button" class="btn sm" style="flex: 1" (click)="openDoc(d.id)">Ouvrir</button>
+            <button type="button" class="btn sm danger ghost" (click)="confirmDelete(d.id)">🗑️</button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty">⬆️<div style="margin-top: 8px">Aucun document. Importe les exports de ton outil (captures, tableaux Excel).</div></div>
+  }
+</div>
+
+@if (ui.docViewerId()) {
+  <div class="modal-bg" (click)="closeViewer()">
+    <div class="modal" style="max-width: 760px" (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px">
+        <b class="disp" style="font-size: 16px">{{ viewerMeta()?.name }}</b>
+        <button type="button" class="btn ghost sm" (click)="closeViewer()">✕</button>
+      </div>
+      @if (!viewerDoc()) {
+        <div class="muted">Contenu indisponible.</div>
+      } @else if (viewerImage()) {
+        <img [src]="viewerImage()!.dataURL" alt="" style="width: 100%; border-radius: 10px" />
+      } @else if (viewerTable()) {
+        <div style="overflow: auto; max-height: 60vh">
+          <table style="border-collapse: collapse; font-size: 12px; width: 100%">
+            <tbody>
+              @for (row of viewerTable()!.rows.slice(0, 200); track $index; let i = $index) {
+                <tr>
+                  @for (cell of row; track $index) {
+                    <td style="border: 1px solid var(--line); padding: 5px 8px" [style.font-weight]="i === 0 ? '700' : 'normal'" [style.background]="i === 0 ? 'var(--paper2)' : '#fff'">{{ cell }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (ui.confirmDeleteDocId()) {
+  <div class="modal-bg" (click)="ui.confirmDeleteDocId.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <b class="disp" style="font-size: 17px">Supprimer ce document ?</b>
+      <p class="muted" style="margin: 10px 0 18px">Action irréversible.</p>
+      <div style="display: flex; gap: 10px; justify-content: flex-end">
+        <button type="button" class="btn" (click)="ui.confirmDeleteDocId.set(null)">Annuler</button>
+        <button type="button" class="btn pri" style="background: var(--red); border-color: var(--red)" (click)="doDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

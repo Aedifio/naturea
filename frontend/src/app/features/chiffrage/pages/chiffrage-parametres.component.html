@@ -1,0 +1,122 @@
+<div class="page-head">
+  <div class="page-kicker">Paramètres · réservé coordinateur</div>
+  <h1 class="page-title">Personnaliser <em>les libellés & prix</em></h1>
+  <p class="page-sub">Renomme chaque poste, ajoute un tooltip d'aide, masque un poste dans le formulaire. Surcharge le prix unitaire de référence (prix fixe ou ratio d'un autre poste).</p>
+</div>
+
+<div class="param-actions">
+  <button type="button" class="btn btn-secondary" (click)="exportJson()">📤 Exporter mes personnalisations (JSON)</button>
+  <button type="button" class="btn btn-secondary" (click)="fileInput.click()">📥 Importer un fichier de personnalisations</button>
+  <input #fileInput type="file" accept=".json" class="hidden-input" (change)="onImportFile($event)" />
+  <button type="button" class="btn btn-ghost" (click)="resetAll()">🔄 Tout réinitialiser</button>
+</div>
+
+@for (u of usines; track u.key) {
+  <div class="param-card" [style.border-top]="'4px solid ' + u.ref.couleur">
+    <div class="param-card-h">
+      <div class="flex-row-between">
+        <h3 class="title-reset">
+          <span class="ico" [style.background]="u.ref.couleur + '22'" [style.color]="u.ref.couleur">🏭</span>
+          {{ u.ref.nom }}
+        </h3>
+        <span class="text-muted-sm">{{ u.ref.devis_count }} devis · MAJ {{ fmtDateFR(u.ref.derniere_maj) }}</span>
+        <span class="fiabilite {{ globalFiab(u.key) }} fiab-inline">Fiabilité {{ globalFiab(u.key) }}</span>
+      </div>
+      <button type="button" class="param-collapse-btn" (click)="toggleCard(u.key)">
+        {{ isExpanded(u.key) ? '▲' : '▼' }}
+      </button>
+    </div>
+    @if (isExpanded(u.key)) {
+      @for (code of posteCodes(u.key); track code) {
+        @if (getPoste(u.key, code); as p) {
+          @let base = getBasePoste(u.key, code);
+          @let ov = getOverride(u.key, code);
+          @let prixType = getPrixType(u.key, code);
+          @let hasPx = data.hasPrixOverride(u.key, code);
+          @let prixCurrent = data.getPrixCalcule(u.key, code);
+          <div class="param-poste">
+            <div class="param-poste-head">
+              <strong class="param-poste-title">{{ p.label_user }}</strong>
+              @if (data.isCustomPoste(u.key, code)) { <span class="custom-badge">perso</span> }
+              <span class="param-poste-code">code · {{ code }}</span>
+              @if (data.hasOverride(u.key, code)) { <span class="param-modified">● modifié</span> }
+              @if (hasPx) { <span class="prix-modifie-badge">💶 prix personnalisé</span> }
+            </div>
+            <div class="param-poste-grid">
+              <div>
+                <div class="param-fld">
+                  <label>
+                    Libellé affiché aux franchisés
+                    @if (data.hasOverride(u.key, code)) {
+                      <button type="button" class="reset-btn" (click)="resetPoste(u.key, code)">↺ réinitialiser</button>
+                    }
+                  </label>
+                  <input type="text" [ngModel]="p.label_user" (ngModelChange)="onLabelChange(u.key, code, $event)" [placeholder]="base?.label_user" />
+                </div>
+                <div class="param-fld">
+                  <label>Tooltip d'aide (au survol du ⓘ)</label>
+                  <textarea [ngModel]="p.tooltip || ''" (ngModelChange)="onTooltipChange(u.key, code, $event)" placeholder="Description technique optionnelle"></textarea>
+                </div>
+                <div class="param-toggle">
+                  <input type="checkbox" [id]="'vis-' + u.key + '-' + code" [ngModel]="p.visible !== false" (ngModelChange)="onVisibleChange(u.key, code, $event)" />
+                  <label [for]="'vis-' + u.key + '-' + code">Visible dans le formulaire de chiffrage</label>
+                </div>
+                <div class="prix-section">
+                  <div class="prix-section-title">
+                    <span>💶 Prix unitaire ({{ base?.unite }})</span>
+                    @if (hasPx) {
+                      <button type="button" class="reset-btn" (click)="resetPrix(u.key, code)">↺ reset prix</button>
+                    }
+                  </div>
+                  <div class="prix-mode-btns">
+                    <button type="button" class="prix-mode-btn" [class.on]="prixType === 'auto'" (click)="setPrixMode(u.key, code, 'auto')">📊 Stats ({{ fmtNum(base?.moyen, 2) }} €)</button>
+                    <button type="button" class="prix-mode-btn" [class.on]="prixType === 'fixe'" (click)="setPrixMode(u.key, code, 'fixe')">✏️ Prix fixe</button>
+                    <button type="button" class="prix-mode-btn" [class.on]="prixType === 'ratio'" (click)="setPrixMode(u.key, code, 'ratio')">🔗 Ratio</button>
+                  </div>
+                  @if (prixType === 'auto') {
+                    <div class="prix-auto-display">
+                      Valeur statistique : <strong>{{ fmtNum(base?.moyen, 2) }} €</strong>
+                      <span class="range-hint">(min {{ fmtNum(base?.min, 2) }} → max {{ fmtNum(base?.max, 2) }})</span>
+                    </div>
+                  }
+                  @if (prixType === 'fixe') {
+                    <div class="prix-fixe-row">
+                      <input type="number" min="0" step="0.01" [ngModel]="ov.prix_unitaire ?? base?.moyen" (ngModelChange)="onPrixFieldChange(u.key, code, 'prix_unitaire', $event)" />
+                      <span class="prix-unite">{{ base?.unite }}</span>
+                    </div>
+                  }
+                  @if (prixType === 'ratio') {
+                    <div class="prix-ratio-row">
+                      <select [ngModel]="ov.ratio_source || ''" (ngModelChange)="onPrixFieldChange(u.key, code, 'ratio_source', $event)">
+                        <option value="">-- choisir poste source --</option>
+                        @for (opt of ratioOptions(u.key, code); track opt.code) {
+                          <option [value]="opt.code">{{ opt.label }}</option>
+                        }
+                      </select>
+                      <span class="ratio-sep">×</span>
+                      <input type="number" min="0" step="0.001" [ngModel]="ov.ratio_value ?? 1" (ngModelChange)="onPrixFieldChange(u.key, code, 'ratio_value', $event)" />
+                      <span class="prix-preview">= {{ fmtNum(prixCurrent, 2) }} €</span>
+                    </div>
+                  }
+                  @if (hasPx) {
+                    <div class="prix-active">▶ Prix actif : {{ fmtNum(prixCurrent, 2) }} {{ base?.unite }}</div>
+                  }
+                </div>
+              </div>
+              <div>
+                <div class="param-fld">
+                  <label><span class="label-locked">🔒 Texte reconnu dans les PDF (verrouillé)</span></label>
+                  <div class="pdf-source"><span class="lock">🔒</span><span>"{{ base?.label_pdf }}"</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+}
+
+<div class="note">
+  <strong>💡 Architecture 3 couches + prix.</strong> Identifiant technique (verrouillé) · texte PDF reconnu par le parser (verrouillé) · libellé affiché aux franchisés (modifiable). Le prix unitaire de référence peut être remplacé par un prix fixe ou calculé comme ratio d'un autre poste.
+</div>

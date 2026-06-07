@@ -1,0 +1,32 @@
+@if (!agency()) {
+  <div class="empty">Agence introuvable.</div>
+} @else {
+  <div class="fade">
+    <a routerLink="/apps/audit-commerce" class="btn ghost sm" style="margin-bottom: 12px">← Réseau</a>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px">
+      <div>
+        <h1 style="font-size: 30px; margin: 0">{{ agency()!.name }}</h1>
+        <div class="muted" style="margin-top: 4px">
+          {{ agency()!.address || 'Adresse non renseignée' }} · {{ agency()!.employees.length }} salarié(s)
+        </div>
+      </div>
+      <div style="text-align: right">
+        <app-audit-com-status-pill [note]="note()" [threshold]="data.settings().noteThreshold" />
+        <div class="tiny muted" style="margin-top: 6px">Période : <b>{{ ymLabel(ui.ym()) }}</b></div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      @for (t of tabs; track t.id) {
+        <button type="button" class="tab" [class.on]="ui.tab() === t.id" (click)="setTab(t.id)">{{ t.label }}</button>
+      }
+    </div>
+
+    @switch (ui.tab()) {
+      @case ('synthese') { <app-audit-com-synthese-tab [agency]="agency()!" /> }
+      @case ('audit') { <app-audit-com-audit-tab [agency]="agency()!" /> }
+      @case ('equipe') { <app-audit-com-equipe-tab [agency]="agency()!" /> }
+      @case ('docs') { <app-audit-com-docs-tab [agency]="agency()!" /> }
+    }
+  </div>
+}

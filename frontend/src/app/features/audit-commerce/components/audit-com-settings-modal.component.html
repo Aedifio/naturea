@@ -1,0 +1,49 @@
+<div class="modal-bg" (click)="closeBg($event)">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px">
+      <b class="disp" style="font-size: 18px">Réglages</b>
+      <button type="button" class="btn ghost sm" (click)="close()">✕</button>
+    </div>
+
+    <!--<div class="card pad" style="background: var(--paper2); margin-bottom: 18px">
+      <div style="display: flex; gap: 8px; align-items: flex-start">
+        <span>💾</span>
+        <div class="tiny" style="line-height: 1.45">
+          <span style="color: var(--green)"><b>Enregistrement actif</b> dans ce navigateur. Exporte une sauvegarde pour conserver tes données ailleurs.</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
+        <button type="button" class="btn sm" (click)="exportBackup()">⬇️ Exporter une sauvegarde</button>
+        <button type="button" class="btn sm" (click)="backupInput.click()">⬆️ Importer une sauvegarde</button>
+        <input #backupInput type="file" accept=".json,application/json" hidden (change)="importBackup($event)" />
+      </div>
+    </div>-->
+
+    <span class="lab">Seuil d'alerte « en difficulté » (note moyenne)</span>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px">
+      <input
+        type="range"
+        min="0"
+        max="10"
+        step="0.5"
+        [value]="noteThreshold()"
+        (input)="onThresholdInput($event)"
+        style="flex: 1"
+      />
+      <b class="disp" style="width: 48px">{{ noteThreshold() }}/10</b>
+    </div>
+    <div class="tiny muted" style="margin-bottom: 18px">Sous cette note moyenne, l'agence est signalée en rouge (« en difficulté »).</div>
+    <div class="sep"></div>
+    <span class="lab">Créer plusieurs agences (une par ligne)</span>
+    <textarea
+      class="in"
+      rows="5"
+      placeholder="Agence Lyon&#10;Agence Bordeaux&#10;Agence Lille&#10;…"
+      [value]="ui.bulkText()"
+      (input)="onBulkInput($event)"
+    ></textarea>
+    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+      <button type="button" class="btn pri" (click)="bulkAdd()">➕ Ajouter les agences</button>
+    </div>
+  </div>
+</div>

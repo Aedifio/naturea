@@ -1,0 +1,69 @@
+@if (banner()) {
+  <div class="charpente-ext-banner">
+    <span class="ceb-ico">📦</span>
+    <div style="flex: 1; min-width: 0">
+      <strong>Cette usine ne fabrique pas de charpente</strong>
+      <p>Faire une demande de devis en externe — utilise l'estimateur ci-dessous.</p>
+    </div>
+  </div>
+}
+
+<div class="cext-form">
+  <div class="cext-form-title">🏗️ {{ title() }}</div>
+  <div class="cext-row-main" [style.opacity]="estimDisabled() ? '0.4' : '1'" [style.pointer-events]="estimDisabled() ? 'none' : 'auto'">
+    <div class="cext-fld">
+      <label>Type de fermette</label>
+      <select [ngModel]="vals().fermette_type" (ngModelChange)="onFieldChange('fermette_type', $event)">
+        <option value="">-- choisir un type --</option>
+        @for (f of fermettes; track f.id) {
+          <option [value]="f.id">{{ f.label }} — {{ fmtNum(f.prix, 2) }} €/m²</option>
+        }
+      </select>
+    </div>
+    <div class="cext-fld">
+      <label>Surface de toiture (m²)</label>
+      <input type="number" min="0" step="0.5" placeholder="ex: 120" [ngModel]="vals().surface || ''" (ngModelChange)="onFieldChange('surface', $event)" />
+    </div>
+  </div>
+  <div class="cext-acc-grid" [style.opacity]="estimDisabled() ? '0.4' : '1'" [style.pointer-events]="estimDisabled() ? 'none' : 'auto'">
+    @for (a of accessoires; track a.id) {
+      <div class="cext-acc-line">
+        <input type="number" min="0" step="1" placeholder="0" [ngModel]="$any(vals())[a.id] || ''" (ngModelChange)="onFieldChange($any(a.id), $event)" />
+        <span class="acc-label">{{ a.label }}</span>
+        <span class="acc-pu">{{ fmtNum(a.prix, 2) }} €/{{ a.unite }}</span>
+      </div>
+    }
+  </div>
+  <div class="cext-subtotal" [style.opacity]="estimDisabled() ? '0.4' : '1'" [style.text-decoration]="estimDisabled() ? 'line-through' : 'none'">
+    <span>Sous-total estimé</span>
+    <span class="cext-st-amount">{{ estimSubtotal() > 0 ? fmtEurR(estimSubtotal()) : '—' }}</span>
+  </div>
+  <div style="margin-top: 12px; border-top: 1px dashed #c8a96e; padding-top: 12px">
+    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #5a2d00; margin-bottom: 8px">📋 Devis charpentier reçu</div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+      <input
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Montant HT du devis reçu"
+        [ngModel]="vals().devis_ext || ''"
+        (ngModelChange)="onFieldChange('devis_ext', $event)"
+        style="flex: 1; min-width: 160px; padding: 7px 10px; border-radius: 7px; font-size: 13px"
+        [style.border]="estimDisabled() ? '1.5px solid #2e7d32' : '1.5px solid #c8a96e'"
+        [style.background]="estimDisabled() ? '#f1f8f1' : '#fff'"
+      />
+      <span style="font-size: 12px; color: var(--muted)">€ HT</span>
+      @if (estimDisabled()) {
+        <span style="font-size: 11px; color: #2e7d32; font-weight: 600">✓ Utilisé dans le total</span>
+      } @else {
+        <span style="font-size: 11px; color: var(--faint)">Remplace l'estimateur si renseigné</span>
+      }
+    </div>
+  </div>
+  @if (estimDisabled()) {
+    <div class="cext-subtotal" style="margin-top: 8px; color: #2e7d32">
+      <span>Total charpente (devis)</span>
+      <span class="cext-st-amount">{{ fmtEurR(vals().devis_ext) }}</span>
+    </div>
+  }
+</div>

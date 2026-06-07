@@ -1,0 +1,90 @@
+<div class="fade">
+  <div class="card pad" style="margin-bottom: 18px">
+    <div class="lab">Informations de l'agence</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap">
+      <input class="in" style="flex: 1 1 220px" [ngModel]="agency().name" (ngModelChange)="updateAgency('name', $event)" placeholder="Nom de l'agence" />
+      <input class="in" style="flex: 2 1 280px" [ngModel]="agency().address" (ngModelChange)="updateAgency('address', $event)" placeholder="Adresse" />
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 20px">
+    <div class="card pad">
+      <div class="lab">Audits réalisés (mois)</div>
+      <div class="kpibig">{{ nbMonth() }}</div>
+      <div class="tiny muted" style="margin-top: 4px">{{ agency().audits.length }} au total</div>
+    </div>
+    <div class="card pad">
+      <div class="lab">Note moyenne (mois)</div>
+      <div class="kpibig" [style.color]="noteVar(mnote(), threshold())">{{ mnote() == null ? '—' : mnote()!.toFixed(1) + '/10' }}</div>
+      @if (mnote() != null && mnote()! < threshold()) {
+        <div class="tiny muted" style="margin-top: 4px">sous le seuil d'alerte</div>
+      }
+    </div>
+    <div class="card pad">
+      <div class="lab">Signatures (mois sélect.)</div>
+      <div class="kpibig" style="color: var(--clay)">{{ kpis().signatures }}</div>
+      @if (agency().objectives.signatures) {
+        <div class="tiny muted" style="margin-top: 4px">objectif {{ agency().objectives.signatures }} · {{ Math.round((kpis().signatures / agency().objectives.signatures!) * 100) || 0 }}%</div>
+      }
+    </div>
+    <div class="card pad">
+      <div class="lab">Résiliations (mois sélect.)</div>
+      <div class="kpibig" style="color: var(--petrol)">{{ kpis().ccmi }}</div>
+      @if (agency().objectives.ccmi) {
+        <div class="tiny muted" style="margin-top: 4px">objectif {{ agency().objectives.ccmi }} · {{ Math.round((kpis().ccmi / agency().objectives.ccmi!) * 100) || 0 }}%</div>
+      }
+    </div>
+    <div class="card pad">
+      <div class="lab">Transfo. (mois sélect.)</div>
+      <div class="kpibig">{{ kpis().transfo.toFixed(1) }}%</div>
+      @if (agency().objectives.transfo) {
+        <div class="tiny muted" style="margin-top: 4px">objectif {{ agency().objectives.transfo }}%</div>
+      }
+    </div>
+  </div>
+
+  <div class="card pad" style="margin-bottom: 18px">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px">
+      <div class="disp" style="font-weight: 700; font-size: 16px">Évolution des ventes</div>
+      <div style="display: flex; gap: 4px; background: var(--paper2); padding: 4px; border-radius: 10px">
+        @for (v of synthViews; track v.id) {
+          <button
+            type="button"
+            class="btn sm"
+            [style.background]="ui.synthView() === v.id ? 'var(--clay)' : 'transparent'"
+            [style.color]="ui.synthView() === v.id ? '#fff' : 'var(--ink-soft)'"
+            style="border: none"
+            (click)="setSynthView(v.id)"
+          >
+            {{ v.label }}
+          </button>
+        }
+      </div>
+    </div>
+    <app-audit-com-evolution-chart [agency]="agency()" [ym]="ym()" [synthView]="ui.synthView()" />
+  </div>
+
+  <div class="card pad" style="margin-bottom: 18px">
+    <div class="disp" style="font-weight: 700; font-size: 16px; margin-bottom: 4px">📊 Ratios de conversion — cumul {{ ymLabel(ym()) }}</div>
+    <div class="tiny muted" style="margin-bottom: 12px">Cumul de tous les audits du mois, par salarié et pour l'agence.</div>
+    <app-audit-com-ratios-table [agency]="agency()" [ym]="ym()" />
+  </div>
+
+  <div class="card pad">
+    <div class="disp" style="font-weight: 700; font-size: 16px; margin-bottom: 4px">🎯 Objectifs mensuels</div>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-top: 14px">
+      <div>
+        <span class="lab">Signatures / mois</span>
+        <input class="in numin" type="number" [ngModel]="agency().objectives.signatures ?? ''" (ngModelChange)="updateObjective('signatures', $event)" />
+      </div>
+      <div>
+        <span class="lab">Résiliations / mois</span>
+        <input class="in numin" type="number" [ngModel]="agency().objectives.ccmi ?? ''" (ngModelChange)="updateObjective('ccmi', $event)" />
+      </div>
+      <div>
+        <span class="lab">Taux transfo. cible (%)</span>
+        <input class="in numin" type="number" [ngModel]="agency().objectives.transfo ?? ''" (ngModelChange)="updateObjective('transfo', $event)" />
+      </div>
+    </div>
+  </div>
+</div>

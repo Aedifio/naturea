@@ -1,0 +1,49 @@
+@if (open()) {
+  <div class="modal-bg" (click)="onBackdrop($event)">
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <div class="modal-h">
+        <h3>{{ isEdit() ? 'Modifier le membre' : 'Nouveau membre' }}</h3>
+        <button type="button" class="modal-x" (click)="close.emit()" aria-label="Fermer">×</button>
+      </div>
+      <div class="modal-b">
+        <div class="field">
+          <label for="mb-name">Nom complet</label>
+          <input id="mb-name" type="text" class="input" [ngModel]="name()" (ngModelChange)="name.set($event)" autofocus />
+        </div>
+        <div class="field">
+          <label for="mb-role">Rôle / Fonction</label>
+          <input id="mb-role" type="text" class="input" [ngModel]="role()" (ngModelChange)="role.set($event)" />
+        </div>
+        <div class="field">
+          <label for="mb-email">Email</label>
+          <input id="mb-email" type="email" class="input" [ngModel]="email()" (ngModelChange)="email.set($event)" />
+        </div>
+        <div class="field">
+          <label>Couleur</label>
+          <div class="color-picker">
+            @for (c of colors; track c) {
+              <button
+                type="button"
+                class="color-swatch"
+                [class.selected]="color() === c"
+                [style.background]="c"
+                (click)="selectColor(c)"
+                [attr.aria-label]="'Couleur ' + c"
+              ></button>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="modal-f">
+        @if (isEdit()) {
+          <button type="button" class="app-btn app-btn-danger app-btn-sm" (click)="deleteMember()">Retirer</button>
+        }
+        <span class="spacer"></span>
+        <button type="button" class="app-btn app-btn-ghost app-btn-sm" (click)="close.emit()">Annuler</button>
+        <button type="button" class="app-btn app-btn-primary app-btn-sm" [disabled]="!name().trim()" (click)="save()">
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

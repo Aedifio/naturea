@@ -1,0 +1,56 @@
+<app-page-hero
+  kicker="Administration"
+  titleHtml="Gestion des <em>accès</em>"
+  [subtitleHtml]="subtitleHtml"
+/>
+
+<div class="section-h">
+  <div class="section-t">Modules d'administration</div>
+  <div class="section-m">Réservé animateur</div>
+</div>
+
+<div class="admin-grid">
+  @for (tile of tiles; track tile.action) {
+    <button type="button" class="admin-tile" (click)="onTileClick(tile.action)">
+      <div class="admin-tile-icon">{{ tile.icon }}</div>
+      <div class="admin-tile-text">
+        <div class="admin-tile-name">{{ tile.name }}</div>
+        <div class="admin-tile-desc">{{ tile.desc }}</div>
+      </div>
+    </button>
+  }
+</div>
+
+<div class="card">
+  <div class="chd">
+    <div class="chl">
+      <div class="ci ci-users">👥</div>
+      <h3>Utilisateurs actifs du réseau</h3>
+    </div>
+    <div class="card-source">Source : gestion_acces_naturea.xlsx</div>
+  </div>
+  <table #usersTable class="users-table">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Nom</th>
+        <th>Rôle</th>
+        <th>Franchise</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (u of users; track u.id) {
+        <tr>
+          <td><code class="user-email">{{ u.email }}</code></td>
+          <td>{{ u.name }}</td>
+          <td><span class="role-badge {{ roleClass(u.role) }}">{{ u.role }}</span></td>
+          <td>{{ u.franchise }}</td>
+          <td [class]="u.actif ? 'status-actif' : 'status-inactif'">
+            {{ u.actif ? '● Actif' : '● Inactif' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
