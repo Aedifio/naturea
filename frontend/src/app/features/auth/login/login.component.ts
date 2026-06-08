@@ -1,38 +1,56 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NATUREA_LOGO } from '../../../shared/constants/branding';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [FormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
   private readonly auth = inject(AuthService);
-  private readonly fb = inject(FormBuilder);
 
   readonly error = signal<string | null>(null);
   readonly logo = NATUREA_LOGO;
+  readonly loading = signal(false);
 
-  form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-  });
+  email = '';
+  password = '';
 
-  async submit(): Promise<void> {
-    this.error.set(null);
-    if (this.form.invalid) return;
-    const { email, password } = this.form.getRawValue();
+  /** After Supabase auth succeeds, allow one native POST so password managers can record the login. */
+  private allowNativePost = false;
 
-    const result = await this.auth.login(email, password);
-    if (result.ok) {
-      // Full page navigation helps password managers detect a successful login (SPA router.navigate does not).
-      window.setTimeout(() => window.location.assign('/home'), 150);
+  async onSubmit(event: SubmitEvent): Promise<void> {
+    if (this.allowNativePost) {
+      this.allowNativePost = false;
       return;
     }
-    this.error.set(result.error ?? 'Email ou mot de passe incorrect.');
+
+    event.preventDefault();
+    this.error.set(null);
+
+    const email = this.email.trim();
+    const password = this.password;
+    if (!email || !password) {
+      this.error.set('Email et mot de passe requis.');
+      return;
+    }
+
+    this.loading.set(true);
+    try {
+      const result = await this.auth.login(email, password);
+      if (!result.ok) {
+        this.error.set(result.error ?? 'Email ou mot de passe incorrect.');
+        return;
+      }
+
+      this.allowNativePost = true;
+      (event.currentTarget as HTMLFormElement).requestSubmit();
+    } finally {
+      this.loading.set(false);
+    }
   }
 }

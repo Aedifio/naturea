@@ -46,7 +46,31 @@ async function sendFile(res, filePath) {
   res.end(data);
 }
 
+function redirect(res, location, status = 303) {
+  res.writeHead(status, {
+    Location: location,
+    'Cache-Control': 'no-store',
+  });
+  res.end();
+}
+
+function drainRequestBody(req) {
+  return new Promise((resolve) => {
+    req.on('data', () => {});
+    req.on('end', resolve);
+    req.on('error', resolve);
+  });
+}
+
 createServer(async (req, res) => {
+  const urlPath = (req.url ?? '/').split('?')[0];
+
+  if (req.method === 'POST' && urlPath === '/login') {
+    await drainRequestBody(req);
+    redirect(res, '/home');
+    return;
+  }
+
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.writeHead(405);
     res.end('Method Not Allowed');

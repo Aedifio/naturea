@@ -11,10 +11,10 @@
 
     <form
       class="login-form"
-      [formGroup]="form"
       method="post"
       action="/login"
-      (ngSubmit)="submit()"
+      autocomplete="on"
+      (submit)="onSubmit($event)"
     >
       <div class="login-field">
         <label for="email">Email</label>
@@ -22,11 +22,13 @@
           id="email"
           name="username"
           type="email"
-          formControlName="email"
+          [(ngModel)]="email"
+          [ngModelOptions]="{ standalone: true }"
           autocomplete="username"
           inputmode="email"
           spellcheck="false"
           autocapitalize="none"
+          required
           placeholder="prenom.nom@naturea.fr"
         />
       </div>
@@ -36,12 +38,14 @@
           id="password"
           name="password"
           type="password"
-          formControlName="password"
+          [(ngModel)]="password"
+          [ngModelOptions]="{ standalone: true }"
           autocomplete="current-password"
+          required
           placeholder="••••••••"
         />
       </div>
-      <button type="submit" class="login-btn" [disabled]="form.invalid">Se connecter</button>
+      <button type="submit" class="login-btn" [disabled]="loading()">Se connecter</button>
     </form>
   </div>
 </div>
