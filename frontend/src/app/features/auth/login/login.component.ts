@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
+import { environment } from '../../../../environments/environment';
 import { NATUREA_LOGO } from '../../../shared/constants/branding';
 
 @Component({
@@ -30,6 +31,9 @@ export class LoginComponent {
     }
 
     event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement | null;
+    if (!form) return;
+
     this.error.set(null);
 
     const email = this.email.trim();
@@ -47,10 +51,22 @@ export class LoginComponent {
         return;
       }
 
-      this.allowNativePost = true;
-      (event.currentTarget as HTMLFormElement).requestSubmit();
+      this.finishLogin(form);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * Production: native POST → server 303 /home (password managers).
+   * Dev (ng serve): SPA redirect — dev server has no POST /login handler.
+   */
+  private finishLogin(form: HTMLFormElement): void {
+    if (environment.production) {
+      this.allowNativePost = true;
+      form.requestSubmit();
+      return;
+    }
+    window.location.assign('/home');
   }
 }

@@ -11,7 +11,7 @@ npm ci
 npm start
 ```
 
-`npm start` runs `scripts/write-environment.mjs`, which reads `frontend/.env` and generates gitignored `src/environments/environment.ts` and `environment.prod.ts`. If variables are missing, the script exits with an error. Open [http://localhost:4200](http://localhost:4200).
+`npm start` runs `scripts/write-environment.mjs`, which reads `frontend/.env` and generates gitignored `src/environments/environment.ts` and `environment.prod.ts`. **Never commit credentials** — only `.env.example` and empty `environment.example.ts` live in the repo. Missing variables cause the script to exit with an error. Open [http://localhost:4200](http://localhost:4200).
 
 ## Database & seeds
 

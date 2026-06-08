@@ -1,16 +1,14 @@
 import { browserTracingIntegration, feedbackIntegration, init } from '@sentry/angular';
+import { assertAppEnvironment } from '../config/assert-app-environment';
 import { environment } from '../../../environments/environment';
 
 export function initSentry(): void {
-  const dsn = environment.sentryDsn?.trim();
-  if (!dsn) {
-    console.warn('[Sentry] skipped — missing sentryDsn (run npm run env / set SENTRY_DSN)');
-    return;
-  }
+  assertAppEnvironment();
 
   init({
-    dsn,
+    dsn: environment.sentryDsn,
     enabled: true,
+    release: environment.sentryRelease,
     debug: !environment.production,
     integrations: [
       browserTracingIntegration(),
@@ -23,8 +21,8 @@ export function initSentry(): void {
         submitButtonLabel: 'Envoyer',
         cancelButtonLabel: 'Annuler',
         confirmButtonLabel: 'Confirmer',
-        addScreenshotButtonLabel: 'Ajouter une capture d\'écran',
-        removeScreenshotButtonLabel: 'Retirer la capture d\'écran',
+        addScreenshotButtonLabel: "Ajouter une capture d'écran",
+        removeScreenshotButtonLabel: "Retirer la capture d'écran",
         emailLabel: 'E-mail',
         emailPlaceholder: 'votre.email@exemple.org',
         isRequiredLabel: '(obligatoire)',
@@ -34,6 +32,7 @@ export function initSentry(): void {
         highlightToolText: 'Surligner',
         hideToolText: 'Masquer',
         removeHighlightText: 'Retirer',
+        useSentryUser: { email: 'email', name: 'username' },
       }),
     ],
     tracesSampleRate: environment.production ? 0.2 : 1,
