@@ -1,6 +1,7 @@
 /**
  * Node web service for Render — static files + SPA fallback.
  * All client-side routes (e.g. /apps/chiffrage) fall back to index.html.
+ * Renders app bootstrap on refresh, guards restore session, router navigates to original route.
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -8,17 +9,20 @@ import { existsSync } from 'node:fs';
 import { join, extname, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = join(fileURLToPath(new URL('.', import.meta.url)), 'dist/frontend/browser');
-const rootPrefix = root.endsWith(sep) ? root : `${root}${sep}`;
+const cwd = fileURLToPath(new URL('.', import.meta.url));
+const root = join(cwd, 'dist/frontend/browser');
 const indexHtml = join(root, 'index.html');
-const host = '0.0.0.0';
+const host = process.env.HOST || '0.0.0.0';
 const port = Number(process.env.PORT) || 3000;
 
+// Validate build output
 if (!existsSync(indexHtml)) {
-  console.error(`server.mjs: build output not found at ${indexHtml}`);
+  console.error(`❌ Build output missing: ${indexHtml}`);
   console.error('Run: npm run build');
   process.exit(1);
 }
+
+console.log(`✓ Build found at ${root}`);
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -36,40 +40,74 @@ const mimeTypes = {
   '.woff': 'font/woff',
 };
 
+/**
+ * Resolve a URL path to a file path, with basic security checks.
+ * Returns null if the path escapes the root directory.
+ */
 function resolvePath(urlPath) {
-  const decoded = decodeURIComponent(urlPath.split('?')[0] || '/');
+  if (!urlPath || typeof urlPath !== 'string') return null;
+
+  // Remove query string
+  const path = urlPath.split('?')[0];
+
+  // Decode and normalize
+  let decoded;
+  try {
+    decoded = decodeURIComponent(path || '/');
+  } catch {
+    return null;
+  }
+
+  // Path normalization
   const relative = decoded === '/' ? 'index.html' : decoded.replace(/^\/+/, '');
   const absolute = normalize(join(root, relative));
-  if (!absolute.startsWith(rootPrefix)) return null;
+
+  // Security: ensure the file is within root
+  const normalized = absolute.endsWith(sep) ? absolute.slice(0, -1) : absolute;
+  const rootNorm = root.endsWith(sep) ? root.slice(0, -1) : root;
+  if (!normalized.startsWith(rootNorm + sep) && normalized !== rootNorm) {
+    return null;
+  }
+
   return absolute;
 }
 
-function isSpaRoute(filePath) {
-  const ext = extname(filePath);
-  return ext === '' || ext === '.html';
+function isAsset(filePath) {
+  return extname(filePath) !== '';
 }
 
-async function sendFile(res, filePath) {
-  const data = await readFile(filePath);
-  res.writeHead(200, {
-    'Content-Type': mimeTypes[extname(filePath)] ?? 'application/octet-stream',
-    'Cache-Control': filePath === indexHtml ? 'no-cache' : 'public, max-age=31536000, immutable',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'SAMEORIGIN',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-  });
-  res.end(data);
+async function sendFile(res, filePath, contentType = null) {
+  try {
+    const data = await readFile(filePath);
+    const type = contentType || mimeTypes[extname(filePath)] || 'application/octet-stream';
+    const isIndex = filePath === indexHtml;
+
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Content-Length': data.length,
+      'Cache-Control': isIndex ? 'no-cache, no-store, must-revalidate' : 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+    });
+    res.end(data);
+  } catch (err) {
+    console.error(`sendFile error for ${filePath}:`, err.message);
+    res.writeHead(500);
+    res.end('Internal Server Error');
+  }
 }
 
-function redirect(res, location, status = 303) {
-  res.writeHead(status, {
-    Location: location,
-    'Cache-Control': 'no-store',
-  });
-  res.end();
+async function sendIndex(res) {
+  await sendFile(res, indexHtml, 'text/html; charset=utf-8');
 }
 
-function drainRequestBody(req) {
+function sendError(res, code, message) {
+  res.writeHead(code, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end(message);
+}
+
+function drainBody(req) {
   return new Promise((resolve) => {
     req.on('data', () => {});
     req.on('end', resolve);
@@ -77,73 +115,87 @@ function drainRequestBody(req) {
   });
 }
 
-async function serveSpa(res, method) {
-  if (method === 'HEAD') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end();
-    return;
-  }
-  await sendFile(res, indexHtml);
-}
-
-createServer(async (req, res) => {
-  const method = req.method ?? 'GET';
-  const urlPath = (req.url ?? '/').split('?')[0];
-
-  if (urlPath === '/health') {
-    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('ok');
-    return;
-  }
-
-  if (method === 'POST' && urlPath === '/login') {
-    await drainRequestBody(req);
-    redirect(res, '/home');
-    return;
-  }
-
-  if (method !== 'GET' && method !== 'HEAD') {
-    res.writeHead(405);
-    res.end('Method Not Allowed');
-    return;
-  }
-
-  const filePath = resolvePath(req.url ?? '/');
-  if (!filePath) {
-    res.writeHead(400);
-    res.end('Bad Request');
-    return;
-  }
-
-  if (isSpaRoute(filePath) && !existsSync(filePath)) {
-    await serveSpa(res, method);
-    return;
-  }
-
+const server = createServer(async (req, res) => {
   try {
-    if (method === 'HEAD') {
-      res.writeHead(200);
+    const method = req.method || 'GET';
+    const fullUrl = req.url || '/';
+    const urlPath = fullUrl.split('?')[0];
+
+    // Health check for Render
+    if (urlPath === '/health' || urlPath === '/health.html') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+
+    // POST /login → 303 /home (password manager flow)
+    if (method === 'POST' && urlPath === '/login') {
+      await drainBody(req);
+      res.writeHead(303, { Location: '/home', 'Cache-Control': 'no-store' });
       res.end();
       return;
     }
-    await sendFile(res, filePath);
+
+    // Only GET and HEAD allowed for file serving
+    if (method !== 'GET' && method !== 'HEAD') {
+      sendError(res, 405, 'Method Not Allowed');
+      return;
+    }
+
+    const filePath = resolvePath(fullUrl);
+    if (!filePath) {
+      sendError(res, 400, 'Bad Request');
+      return;
+    }
+
+    // File exists → serve it
+    if (existsSync(filePath)) {
+      if (method === 'HEAD') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+      await sendFile(res, filePath);
+      return;
+    }
+
+    // File doesn't exist
+    if (isAsset(filePath)) {
+      // Asset (js, css, png, etc.) → 404
+      sendError(res, 404, 'Not Found');
+      return;
+    }
+
+    // SPA route (no extension) → serve index.html
+    if (method === 'HEAD') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end();
+      return;
+    }
+    await sendIndex(res);
   } catch (err) {
-    const code = err && typeof err === 'object' && 'code' in err ? err.code : null;
-    if (code !== 'ENOENT') {
-      res.writeHead(500);
-      res.end('Internal Server Error');
-      return;
+    console.error(`Request error [${req.method} ${req.url}]:`, err.message);
+    if (!res.headersSent) {
+      sendError(res, 500, 'Internal Server Error');
     }
-
-    if (!isSpaRoute(filePath)) {
-      res.writeHead(404);
-      res.end('Not Found');
-      return;
-    }
-
-    await serveSpa(res, method);
   }
-}).listen(port, host, () => {
-  console.log(`SPA server listening on http://${host}:${port}`);
-  console.log(`Serving ${root}`);
+});
+
+server.on('error', (err) => {
+  console.error('Server error:', err);
+  process.exit(1);
+});
+
+server.listen(port, host, () => {
+  console.log(`\n  🚀 SPA server listening on http://${host}:${port}`);
+  console.log(`     Serving: ${root}\n`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, closing server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });

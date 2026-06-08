@@ -1,7 +1,7 @@
 import { ApplicationConfig, APP_INITIALIZER, ErrorHandler, LOCALE_ID, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
-import { provideRouter, Router, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { createErrorHandler, TraceService } from '@sentry/angular';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
@@ -9,8 +9,12 @@ import { SupabaseStorageAdapter } from './core/storage/supabase-storage.adapter'
 import { STORAGE_ADAPTER } from './core/storage/storage.interface';
 import { environment } from '../environments/environment';
 
+/** Block bootstrap until auth session is restored (max 8s). */
 function initAuth(auth: AuthService): () => Promise<void> {
-  return () => auth.init();
+  return async () => {
+    await auth.init();
+    await auth.whenReady();
+  };
 }
 
 const sentryProviders = environment.sentryDsn?.trim()
@@ -31,7 +35,7 @@ registerLocaleData(localeFr);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withEnabledBlockingInitialNavigation()),
+    provideRouter(routes),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
     { provide: STORAGE_ADAPTER, useClass: SupabaseStorageAdapter },
     ...sentryProviders,
