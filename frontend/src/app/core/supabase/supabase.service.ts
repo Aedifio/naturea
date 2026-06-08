@@ -1,20 +1,22 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
+import { assertSupabaseEnvironment } from './assert-supabase-environment';
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
-  readonly client: SupabaseClient = createClient(
-    environment.supabaseUrl,
-    environment.supabaseAnonKey,
-    {
+  readonly client: SupabaseClient;
+
+  constructor() {
+    assertSupabaseEnvironment();
+    this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
-    },
-  );
+    });
+  }
 
   get auth() {
     return this.client.auth;

@@ -11,7 +11,7 @@ npm ci
 npm start
 ```
 
-`npm start` runs `scripts/write-environment.mjs`, which reads `frontend/.env` and generates `src/environments/environment.ts`. Open [http://localhost:4200](http://localhost:4200).
+`npm start` runs `scripts/write-environment.mjs`, which reads `frontend/.env` and generates gitignored `src/environments/environment.ts` and `environment.prod.ts`. If variables are missing, the script exits with an error. Open [http://localhost:4200](http://localhost:4200).
 
 ## Database & seeds
 
@@ -60,8 +60,10 @@ node server.mjs
 |--------|--------|
 | Runtime | **Node** (not Static Site) |
 | Root directory | `frontend` |
-| Build command | see above |
+| Build command | `npm ci && npm run build` |
 | Start command | `node server.mjs` |
+
+**Important:** In the Render Dashboard → **Settings → Build & Deploy**, set the build command exactly as above. Do **not** use `cd .. && node scripts/write-environment.mjs` — `npm run build` already runs `write-environment` from `frontend/scripts/`.
 
 If the service was previously a **Static Site**, update it in the Render Dashboard (Settings → change to Web Service) or re-sync the Blueprint from `render.yaml`.
 

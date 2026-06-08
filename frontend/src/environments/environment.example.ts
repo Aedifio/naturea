@@ -1,6 +1,6 @@
-// Copy to environment.ts / run `npm run env` after creating frontend/.env
+/** Generated locally by `npm run env` — do not commit. See environment.example.ts */
 export const environment = {
   production: false,
-  supabaseUrl: 'https://YOUR_PROJECT.supabase.co',
-  supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
 };

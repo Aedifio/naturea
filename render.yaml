@@ -13,6 +13,7 @@ services:
     buildFilter:
       paths:
         - frontend/**
+        - scripts/**
     envVars:
       - key: NODE_VERSION
         value: "20"

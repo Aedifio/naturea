@@ -43,3 +43,9 @@ Thumbs.db
 
 # Local secrets (see .env.example)
 .env
+.env.*
+!.env.example
+
+# Generated from env vars — never commit
+/src/environments/environment.ts
+/src/environments/environment.prod.ts
