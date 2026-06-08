@@ -9,13 +9,7 @@
       <div class="login-error show">{{ error() }}</div>
     }
 
-    <form
-      class="login-form"
-      method="post"
-      action="/login"
-      autocomplete="on"
-      (submit)="onSubmit($event)"
-    >
+    <form class="login-form" autocomplete="on" (submit)="onSubmit($event)">
       <div class="login-field">
         <label for="email">Email</label>
         <input

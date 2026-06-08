@@ -107,13 +107,6 @@ function sendError(res, code, message) {
   res.end(message);
 }
 
-function drainBody(req) {
-  return new Promise((resolve) => {
-    req.on('data', () => {});
-    req.on('end', resolve);
-    req.on('error', resolve);
-  });
-}
 
 const server = createServer(async (req, res) => {
   try {
@@ -128,13 +121,6 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    // POST /login → 303 /home (password manager flow)
-    if (method === 'POST' && urlPath === '/login') {
-      await drainBody(req);
-      res.writeHead(303, { Location: '/home', 'Cache-Control': 'no-store' });
-      res.end();
-      return;
-    }
 
     // Only GET and HEAD allowed for file serving
     if (method !== 'GET' && method !== 'HEAD') {
