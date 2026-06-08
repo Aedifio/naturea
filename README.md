@@ -6,7 +6,7 @@ Angular 19 SPA for the Naturéa franchise network portal. **Data and files are s
 
 ```bash
 cd frontend
-cp .env.example .env   # then fill SUPABASE_URL and SUPABASE_ANON_KEY
+cp .env.example .env   # fill SUPABASE_URL, SUPABASE_ANON_KEY and SENTRY_DSN
 npm ci
 npm start
 ```
@@ -80,6 +80,7 @@ cd frontend && npm run build && npm run start:prod
 |----------|-------------|
 | `SUPABASE_URL` | Project URL from Supabase Dashboard → Settings → API |
 | `SUPABASE_ANON_KEY` | Anon/public key from Supabase Dashboard → Settings → API |
+| `SENTRY_DSN` | Sentry project DSN (Settings → Client Keys) |
 | `NODE_VERSION` | `20` |
 
 ## Supabase manual configuration

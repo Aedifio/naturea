@@ -498,3 +498,8 @@ code {
 }
 
 a, a:hover {text-decoration:none}
+
+/* Sentry feedback widget — above app modals (z-index up to ~4000) */
+#sentry-feedback {
+  z-index: 10000 !important;
+}

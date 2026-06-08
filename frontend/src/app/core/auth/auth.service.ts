@@ -12,6 +12,7 @@ import {
 import { SupabaseStorageAdapter } from '../storage/supabase-storage.adapter';
 import { StorageService } from '../storage/storage.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { syncSentryUser } from '../sentry/sentry-user';
 
 interface PortalUserRow {
   legacy_id: number | null;
@@ -70,6 +71,7 @@ export class AuthService {
       }
       if (event === 'SIGNED_OUT') {
         this.userSignal.set(null);
+        syncSentryUser(null);
         this.storageAdapter.clearCache();
       }
     });
@@ -103,6 +105,7 @@ export class AuthService {
 
   async logout(): Promise<void> {
     this.userSignal.set(null);
+    syncSentryUser(null);
     this.storageAdapter.clearCache();
     await this.supabase.auth.signOut();
     void this.router.navigate(['/login']);
@@ -167,6 +170,7 @@ export class AuthService {
 
     const user = this.mapPortalUser(row as PortalUserRow, authUser.email);
     this.userSignal.set(user);
+    syncSentryUser(user);
     this.syncActiveUser(user);
     return true;
   }

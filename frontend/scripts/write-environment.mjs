@@ -46,6 +46,7 @@ loadDotEnv();
 const required = [
   ['SUPABASE_URL', process.env.SUPABASE_URL],
   ['SUPABASE_ANON_KEY', process.env.SUPABASE_ANON_KEY],
+  ['SENTRY_DSN', process.env.SENTRY_DSN],
 ];
 
 const missing = required
@@ -61,10 +62,15 @@ if (missing.length) {
 
 const supabaseUrl = process.env.SUPABASE_URL.trim();
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY.trim();
+const sentryDsn = process.env.SENTRY_DSN.trim();
 
 const placeholderPattern = /YOUR_|CHANGE_ME|example\.com/i;
-if (placeholderPattern.test(supabaseUrl) || placeholderPattern.test(supabaseAnonKey)) {
-  fail('environment variables contain placeholder values — set real Supabase credentials.');
+if (
+  placeholderPattern.test(supabaseUrl) ||
+  placeholderPattern.test(supabaseAnonKey) ||
+  placeholderPattern.test(sentryDsn)
+) {
+  fail('environment variables contain placeholder values — set real credentials.');
 }
 
 function escapeTsString(value) {
@@ -78,6 +84,7 @@ export const environment = {
   production: ${production},
   supabaseUrl: '${escapeTsString(supabaseUrl)}',
   supabaseAnonKey: '${escapeTsString(supabaseAnonKey)}',
+  sentryDsn: '${escapeTsString(sentryDsn)}',
 };
 `;
   writeFileSync(outPath, contents, 'utf8');

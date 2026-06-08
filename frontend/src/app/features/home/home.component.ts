@@ -122,4 +122,8 @@ export class HomeComponent {
   newsletterPdfSrc(content: string) {
     return this.sanitizer.bypassSecurityTrustResourceUrl(content);
   }
+
+  public throwTestError(): void {
+    throw new Error("Sentry Test Error");
+  }
 }
