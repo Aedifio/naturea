@@ -1,7 +1,7 @@
 import { ApplicationConfig, APP_INITIALIZER, ErrorHandler, LOCALE_ID, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { createErrorHandler, TraceService } from '@sentry/angular';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
@@ -31,7 +31,7 @@ registerLocaleData(localeFr);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideRouter(routes, withEnabledBlockingInitialNavigation()),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
     { provide: STORAGE_ADAPTER, useClass: SupabaseStorageAdapter },
     ...sentryProviders,

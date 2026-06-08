@@ -42,30 +42,20 @@ Output: `frontend/dist/frontend/browser/`
 
 ## Deploy on Render.com
 
-See [`render.yaml`](render.yaml). The app runs as a **Node web service** that serves the Angular build with SPA fallback (`frontend/server.mjs`). This fixes blank pages on browser refresh — Render **does not** read Netlify-style `public/_redirects`.
-
-Build command:
-
-```bash
-npm ci && npm run build
-```
-
-Start command:
-
-```bash
-node server.mjs
-```
+See [`render.yaml`](render.yaml). The app runs as a **Node Web Service** — `frontend/server.mjs` serves the Angular build and falls back to `index.html` for all client-side routes (fixes blank pages on refresh). Render **does not** read Netlify-style `public/_redirects`.
 
 | Setting | Value |
 |--------|--------|
-| Runtime | **Node** (not Static Site) |
+| Runtime | **Node** |
 | Root directory | `frontend` |
 | Build command | `npm ci && npm run build` |
 | Start command | `node server.mjs` |
 
-**Important:** In the Render Dashboard → **Settings → Build & Deploy**, set the build command exactly as above. Do **not** use `cd .. && node scripts/write-environment.mjs` — `npm run build` already runs `write-environment` from `frontend/scripts/`.
-
-If the service was previously a **Static Site**, update it in the Render Dashboard (Settings → change to Web Service) or re-sync the Blueprint from `render.yaml`.
+**Important:** In Render Dashboard → **Settings → Build & Deploy**, confirm:
+- Runtime is **Node** (not Static Site)
+- Start command is `node server.mjs` (not `npm start` / `ng serve`)
+- Build command is `npm ci && npm run build` — it already runs `write-environment.mjs`; do **not** use `cd .. && node scripts/write-environment.mjs`
+- Remove any **Redirects/Rewrites** rules from the Static Site era — the Node server handles routing
 
 Local production smoke test:
 

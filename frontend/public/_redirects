@@ -1,3 +1,3 @@
 # Netlify / Cloudflare Pages only — Render does NOT read this file.
-# SPA routing on Render is handled by frontend/server.mjs (Node web service).
+# SPA routing on Render Node: frontend/server.mjs falls back to index.html.
 /*    /index.html   200

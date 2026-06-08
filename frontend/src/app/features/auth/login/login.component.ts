@@ -58,8 +58,8 @@ export class LoginComponent {
   }
 
   /**
-   * Production: native POST → server 303 /home (password managers).
-   * Dev (ng serve): SPA redirect — dev server has no POST /login handler.
+   * Production (Node server): native POST → server 303 /home (password managers).
+   * Dev (ng serve): client redirect — dev server has no POST /login handler.
    */
   private finishLogin(form: HTMLFormElement): void {
     if (environment.production) {

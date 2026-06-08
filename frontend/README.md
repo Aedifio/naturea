@@ -38,7 +38,7 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Deploy on Render
 
-See the [repository README](../README.md#deploy-on-rendercom) for Render.com deployment (Blueprint or manual static site).
+See the [repository README](../README.md#deploy-on-rendercom) for Render.com deployment (Node Web Service).
 
 ## Running unit tests
 
