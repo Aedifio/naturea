@@ -41,14 +41,25 @@ export class PortalPermissionsService {
 
   whenReady(): Promise<void> {
     if (this.readySignal()) return Promise.resolve();
-    return new Promise<void>((resolve) => {
-      const id = setInterval(() => {
-        if (this.readySignal()) {
-          clearInterval(id);
+    return Promise.race([
+      new Promise<void>((resolve) => {
+        const id = setInterval(() => {
+          if (this.readySignal()) {
+            clearInterval(id);
+            resolve();
+          }
+        }, 10);
+      }),
+      new Promise<void>((resolve) => {
+        setTimeout(() => {
+          if (!this.readySignal()) {
+            console.warn('[PortalPermissions] whenReady timeout — continuing without matrix');
+            this.readySignal.set(true);
+          }
           resolve();
-        }
-      }, 10);
-    });
+        }, 8000);
+      }),
+    ]);
   }
 
   async loadForAdmin(): Promise<RolePermissionRow[]> {

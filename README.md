@@ -6,11 +6,12 @@ Angular 19 SPA for the Naturéa franchise network portal. **Data and files are s
 
 ```bash
 cd frontend
+cp .env.example .env   # then fill SUPABASE_URL and SUPABASE_ANON_KEY
 npm ci
 npm start
 ```
 
-Open [http://localhost:4200](http://localhost:4200). Supabase credentials are in `frontend/src/environments/environment.ts`.
+`npm start` runs `scripts/write-environment.mjs`, which reads `frontend/.env` and generates `src/environments/environment.ts`. Open [http://localhost:4200](http://localhost:4200).
 
 ## Database & seeds
 
@@ -37,27 +38,45 @@ npm run build
 
 Output: `frontend/dist/frontend/browser/`
 
-For Render, env vars are injected before build via `scripts/write-environment.mjs`.
+`npm run build` also runs `write-environment.mjs` (requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the environment or `frontend/.env`).
 
 ## Deploy on Render.com
 
-See [`render.yaml`](render.yaml). Build command:
+See [`render.yaml`](render.yaml). The app runs as a **Node web service** that serves the Angular build with SPA fallback (`frontend/server.mjs`). This fixes blank pages on browser refresh — Render **does not** read Netlify-style `public/_redirects`.
+
+Build command:
 
 ```bash
-cd .. && node scripts/write-environment.mjs && cd frontend && npm ci && npm run build
+npm ci && npm run build
+```
+
+Start command:
+
+```bash
+node server.mjs
 ```
 
 | Setting | Value |
 |--------|--------|
+| Runtime | **Node** (not Static Site) |
 | Root directory | `frontend` |
-| Publish directory | `dist/frontend/browser` |
-| Rewrite rule | `/*` → `/index.html` |
+| Build command | see above |
+| Start command | `node server.mjs` |
+
+If the service was previously a **Static Site**, update it in the Render Dashboard (Settings → change to Web Service) or re-sync the Blueprint from `render.yaml`.
+
+Local production smoke test:
+
+```bash
+cd frontend && npm run build && npm run start:prod
+# open http://localhost:3000/apps/chiffrage and refresh — should stay on the app
+```
 
 ### Render environment variables
 
 | Variable | Description |
 |----------|-------------|
-| `SUPABASE_URL` | `https://rrhaubqmcetgmjhqweyr.supabase.co` |
+| `SUPABASE_URL` | Project URL from Supabase Dashboard → Settings → API |
 | `SUPABASE_ANON_KEY` | Anon/public key from Supabase Dashboard → Settings → API |
 | `NODE_VERSION` | `20` |
 

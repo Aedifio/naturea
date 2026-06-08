@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "build:prod": "ng build --configuration production",
+    "env": "node scripts/write-environment.mjs",
+    "start": "node scripts/write-environment.mjs && ng serve",
+    "build": "node scripts/write-environment.mjs && ng build && node scripts/postbuild-static.mjs",
+    "build:prod": "node scripts/write-environment.mjs && ng build --configuration production && node scripts/postbuild-static.mjs",
+    "start:prod": "node server.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
