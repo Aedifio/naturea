@@ -14,7 +14,6 @@
       [formGroup]="form"
       method="post"
       action="/login"
-      autocomplete="on"
       (ngSubmit)="submit()"
     >
       <div class="login-field">
@@ -24,7 +23,10 @@
           name="username"
           type="email"
           formControlName="email"
-          autocomplete="username email"
+          autocomplete="username"
+          inputmode="email"
+          spellcheck="false"
+          autocapitalize="none"
           placeholder="prenom.nom@naturea.fr"
         />
       </div>
