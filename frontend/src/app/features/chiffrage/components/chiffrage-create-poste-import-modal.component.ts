@@ -74,7 +74,7 @@ export class ChiffrageCreatePosteImportModalComponent {
 
   usineNom(): string {
     const key = this.usineKey();
-    return key ? REFS[key].nom : '';
+    return key ? this.data.getUsineLabel(key) : '';
   }
 
   sections(): string[] {
@@ -160,7 +160,7 @@ export class ChiffrageCreatePosteImportModalComponent {
       },
     });
 
-    this.toast.show(`✓ Poste « ${label} » créé pour ${REFS[key].nom}`);
+    this.toast.show(`✓ Poste « ${label} » créé pour ${this.data.getUsineLabel(key)}`);
     this.finish(code);
   }
 

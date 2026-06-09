@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AgencyService } from '../../core/services/agency.service';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { NATUREA_LOGO } from '../../shared/constants/branding';
-import { FRANCHISES } from './constants/ossature.constants';
 import { OssatureAlertBannerComponent } from './components/ossature-alert-banner.component';
 import { OssatureDetailModalComponent } from './components/ossature-detail-modal.component';
 import { OssatureNewOrderModalComponent } from './components/ossature-new-order-modal.component';
@@ -29,9 +29,14 @@ import { OssatureModeService } from './services/ossature-mode.service';
   host: { class: 'ossature-app' },
 })
 export class OssatureShellComponent {
+  private readonly agencies = inject(AgencyService);
   readonly mode = inject(OssatureModeService);
   readonly logo = NATUREA_LOGO;
-  readonly franchises = FRANCHISES;
+
+  readonly franchises = computed(() => {
+    this.agencies.agencies();
+    return this.agencies.getNames();
+  });
 
   readonly nav = [
     { label: 'Coordinateur', route: '/apps/ossature', icon: '📊', view: 'coord' as const },

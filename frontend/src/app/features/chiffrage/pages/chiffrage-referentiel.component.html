@@ -5,7 +5,7 @@
 </div>
 
 <div class="ref-grid">
-  @for (u of usines; track u.key) {
+  @for (u of usines(); track u.key) {
     <div class="card ref-card" [style.border-top]="'4px solid ' + u.ref.couleur">
       <div class="card-h">
         <div class="card-h-l">
@@ -51,7 +51,7 @@
         </div>
         <div class="ref-meta-right">
           <span class="fiabilite {{ fiabiliteUsine(u.ref.devis_count) }}">Fiabilité {{ fiabiliteUsine(u.ref.devis_count) }}</span>
-          <div class="text-faint-sm" style="margin-top: 6px">Dernière MAJ : {{ fmtDateFR(u.ref.derniere_maj) }}</div>
+          <div class="text-faint-sm" style="margin-top: 6px">Dernière MAJ : {{ fmtDateFR(data.getFactoryUpdatedAt(u.key)) }}</div>
         </div>
       </div>
     </div>

@@ -1,10 +1,15 @@
 import {
   APP_URL,
   EXPEDITEUR,
-  FRANCHISES_EMAILS,
-  SITES_EMAILS,
 } from '../constants/ossature.constants';
 import { OssatureOrder } from '../ossature.models';
+
+export type SiteEmailResolver = (site: string) => string;
+export type FranchiseEmailResolver = (franchise: string) => string;
+
+function siteEmail(site: string, resolve?: SiteEmailResolver): string {
+  return resolve?.(site) ?? '';
+}
 
 function daysSince(dateStr?: string): number {
   if (!dateStr) return 0;
@@ -17,8 +22,8 @@ function daysSince(dateStr?: string): number {
   }
 }
 
-export function sendEmailUsine(order: OssatureOrder): void {
-  const to = SITES_EMAILS[order.site] || '';
+export function sendEmailUsine(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
+  const to = siteEmail(order.site, resolveSiteEmail);
   if (!to) return;
   const sujet = encodeURIComponent(`[NATUREA] Nouvelle demande de devis — ${order.reference}`);
   const corps = encodeURIComponent(
@@ -47,7 +52,7 @@ ${EXPEDITEUR}`,
   window.location.href = `mailto:${to}?cc=${EXPEDITEUR}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendAlertDelai(order: OssatureOrder): void {
+export function sendAlertDelai(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
   const sujet = encodeURIComponent(`[ALERTE NATUREA] Devis en retard — ${order.reference}`);
   const corps = encodeURIComponent(
     `Bonjour,
@@ -67,12 +72,12 @@ Merci de traiter cette demande en urgence.
 Cordialement,
 OssatureTrack — Réseau Naturéa`,
   );
-  const cc = SITES_EMAILS[order.site] || '';
+  const cc = siteEmail(order.site, resolveSiteEmail);
   window.location.href = `mailto:${EXPEDITEUR}${cc ? `?cc=${cc}` : '?'}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendEmailCommandeConfirmee(order: OssatureOrder): void {
-  const usineEmail = SITES_EMAILS[order.site] || '';
+export function sendEmailCommandeConfirmee(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
+  const usineEmail = siteEmail(order.site, resolveSiteEmail);
   const sujet = encodeURIComponent(`[NATUREA] Commande confirmée — ${order.reference}`);
   const corps = encodeURIComponent(
     `Bonjour,
@@ -100,8 +105,8 @@ ${EXPEDITEUR}`,
   window.location.href = `mailto:${EXPEDITEUR}${usineEmail ? `?cc=${usineEmail}` : '?'}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendDevisRetourEmail(order: OssatureOrder): void {
-  const franchiseEmail = FRANCHISES_EMAILS[order.franchise] || '';
+export function sendDevisRetourEmail(order: OssatureOrder, resolveFranchiseEmail?: FranchiseEmailResolver): void {
+  const franchiseEmail = resolveFranchiseEmail?.(order.franchise) ?? '';
   if (!franchiseEmail) return;
   const subject = encodeURIComponent(`Devis disponible — ${order.reference} (${order.franchise})`);
   const body = encodeURIComponent(
@@ -146,8 +151,8 @@ OssatureTrack — Réseau Naturéa`,
   window.location.href = `mailto:${EXPEDITEUR}?subject=${sujet}&body=${corps}`;
 }
 
-export function sendSignatureConfirmEmail(order: OssatureOrder): void {
-  const usineEmail = SITES_EMAILS[order.site] || '';
+export function sendSignatureConfirmEmail(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
+  const usineEmail = siteEmail(order.site, resolveSiteEmail);
   if (!usineEmail) return;
   const subject = encodeURIComponent(
     `Devis signé — Commande confirmée — ${order.reference} (${order.franchise})`,
@@ -173,8 +178,8 @@ ${order.franchise} — Réseau Naturéa`,
   window.location.href = `mailto:${usineEmail}?cc=${EXPEDITEUR}&subject=${subject}&body=${body}`;
 }
 
-export function sendPlanValidationEmail(order: OssatureOrder): void {
-  const usineEmail = SITES_EMAILS[order.site] || '';
+export function sendPlanValidationEmail(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
+  const usineEmail = siteEmail(order.site, resolveSiteEmail);
   if (!usineEmail) return;
   const subject = encodeURIComponent(
     `Plans de fabrication validés — ${order.reference} (${order.franchise})`,
@@ -197,14 +202,18 @@ ${order.franchise} — Réseau Naturéa`,
   window.location.href = `mailto:${usineEmail}?cc=${EXPEDITEUR}&subject=${subject}&body=${body}`;
 }
 
-export function sendAlertsRetard(orders: OssatureOrder[], onDone: (count: number) => void): void {
+export function sendAlertsRetard(
+  orders: OssatureOrder[],
+  onDone: (count: number) => void,
+  resolveSiteEmail?: SiteEmailResolver,
+): void {
   let idx = 0;
   const sendNext = (): void => {
     if (idx >= orders.length) {
       onDone(orders.length);
       return;
     }
-    sendAlertDelai(orders[idx++]);
+    sendAlertDelai(orders[idx++], resolveSiteEmail);
     setTimeout(sendNext, 1500);
   };
   sendNext();

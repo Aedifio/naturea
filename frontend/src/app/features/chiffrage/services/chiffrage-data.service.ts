@@ -1,5 +1,8 @@
 import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
+import { StorageKey } from '../../../core/models/storage-keys';
+import { LocalStorageAdapter } from '../../../core/storage/local-storage.adapter';
+import { FactoryService } from '../../../core/services/factory.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
 import { DEVIS_HIST } from '../constants/chiffrage-devis-hist.constants';
 import { FIELD_TO_POSTE, FORM_SCHEMAS } from '../constants/chiffrage-form.constants';
@@ -27,6 +30,8 @@ import { EMPTY_CHARPENTE_EXT } from '../chiffrage.models';
 @Injectable({ providedIn: 'root' })
 export class ChiffrageDataService {
   private readonly supabase = inject(SupabaseService);
+  private readonly factory = inject(FactoryService);
+  private readonly storage = inject(LocalStorageAdapter);
   private readonly injector = inject(Injector);
 
   readonly overrides = signal<OverridesStore>({});
@@ -34,6 +39,12 @@ export class ChiffrageDataService {
   readonly formOverrides = signal<FormOverridesStore>({});
   readonly projets = signal<ChiffrageProjet[]>([]);
   private readonly _tarifsHistory = signal<ImportHistoryEntry[]>([]);
+
+  /** REFS postes + factory metadata; updates when factories load from Supabase. */
+  readonly usineKeys = computed(() => {
+    this.factory.factories();
+    return this.getAllUsineKeys();
+  });
 
   async load(): Promise<void> {
     const [ovRes, cpRes, foRes, projRes, histRes] = await Promise.all([
@@ -48,22 +59,24 @@ export class ChiffrageDataService {
     this.customPostes.set((cpRes.data?.data as CustomPostesStore) ?? {});
     this.formOverrides.set((foRes.data?.data as FormOverridesStore) ?? {});
 
-    this.projets.set(
-      (projRes.data ?? []).map((p) => ({
-        id: Number(p.id),
-        nom: p.nom,
-        ref: p.ref ?? '',
-        usine: p.usine as UsineKey,
-        usineLabel: p.usine_label ?? '',
-        total: Number(p.total),
-        agence: p.agence ?? '',
-        date: p.projet_date,
-        user_name: p.user_name ?? '',
-        values: p.values ?? {},
-        charpente_ext: (p.charpente_ext as ChiffrageProjet['charpente_ext']) ?? { ...EMPTY_CHARPENTE_EXT },
-        lines: p.lines ?? [],
-      })),
-    );
+    const dbProjets = this.mapProjetsFromRows(projRes.data ?? []);
+    const localProjets = this.readLocalProjets();
+    let merged = this.mergeProjets(dbProjets, localProjets);
+
+    if (projRes.error) {
+      console.warn('[Chiffrage] projets load failed, using localStorage', projRes.error);
+      merged = localProjets.length ? localProjets : dbProjets;
+    } else {
+      const dbIds = new Set(dbProjets.map((p) => p.id));
+      const toMigrate = localProjets.filter((p) => !dbIds.has(p.id));
+      if (toMigrate.length) {
+        await Promise.all(toMigrate.map((p) => this.persistProjetToDb(p)));
+        this.storage.remove(StorageKey.ChiffrageProjets);
+      }
+    }
+
+    this.projets.set(merged);
+    this.syncProjetsToLocalStorage();
 
     const imports = histRes.data ?? [];
     if (imports.length) {
@@ -116,8 +129,9 @@ export class ChiffrageDataService {
     Object.values(REFS).forEach((u) => {
       totalPostes += Object.keys(u.postes).length;
     });
+    const usineCount = this.factory.getAll().length || Object.keys(REFS).length;
     return {
-      usines: Object.keys(REFS).length,
+      usines: usineCount,
       devis: DEVIS_HIST.length,
       postes: totalPostes,
     };
@@ -136,12 +150,56 @@ export class ChiffrageDataService {
     );
   });
 
-  getUsineRef(key: UsineKey): UsineRef {
-    return REFS[key] as UsineRef;
+  getUsineRef(key: UsineKey | string): UsineRef {
+    const hardcoded = REFS[key as UsineKey];
+    const meta = this.factory.getByKey(key);
+    if (hardcoded && meta) {
+      return {
+        ...hardcoded,
+        nom: meta.nom,
+        couleur: meta.couleur,
+        description: meta.description ?? hardcoded.description,
+        derniere_maj: meta.updated_at?.slice(0, 10) ?? hardcoded.derniere_maj,
+      } as UsineRef;
+    }
+    if (hardcoded) return hardcoded as UsineRef;
+    if (meta) {
+      return {
+        nom: meta.nom,
+        couleur: meta.couleur,
+        description: meta.description ?? '',
+        devis_count: 0,
+        derniere_maj: meta.updated_at?.slice(0, 10) ?? '',
+        postes: {},
+      };
+    }
+    return {
+      nom: String(key),
+      couleur: '#6b7280',
+      description: '',
+      devis_count: 0,
+      derniere_maj: '',
+      postes: {},
+    };
   }
 
+  getUsineLabel(key: string): string {
+    return this.factory.getNom(key) || REFS[key as UsineKey]?.nom || key;
+  }
+
+  getFactoryUpdatedAt(key: UsineKey): string | null {
+    return this.factory.getByKey(key)?.updated_at ?? REFS[key]?.derniere_maj ?? null;
+  }
+
+  /** Union of REFS (postes/tarifs) and active factories from Supabase. */
   getAllUsineKeys(): UsineKey[] {
-    return Object.keys(REFS) as UsineKey[];
+    const keys = new Set<string>([
+      ...Object.keys(REFS),
+      ...this.factory.getAll().map((f) => f.key),
+    ]);
+    return [...keys].sort((a, b) =>
+      this.getUsineLabel(a).localeCompare(this.getUsineLabel(b), 'fr'),
+    ) as UsineKey[];
   }
 
   isCustomPoste(usineKey: UsineKey, posteCode: string): boolean {
@@ -486,26 +544,16 @@ export class ChiffrageDataService {
   }
 
   saveProjet(projet: ChiffrageProjet): void {
-    const list = [projet, ...this.projets()];
+    const list = [projet, ...this.projets().filter((p) => p.id !== projet.id)];
     this.projets.set(list);
-    void this.supabase.from('chiffrage_projets').upsert({
-      id: projet.id,
-      projet_date: projet.date,
-      nom: projet.nom,
-      ref: projet.ref,
-      usine: projet.usine,
-      usine_label: projet.usineLabel,
-      total: projet.total,
-      agence: projet.agence,
-      user_name: projet.user_name,
-      values: projet.values ?? {},
-      lines: projet.lines ?? [],
-    });
+    this.syncProjetsToLocalStorage();
+    void this.persistProjetToDb(projet);
   }
 
   deleteProjet(id: number): void {
     const list = this.projets().filter((p) => p.id !== id);
     this.projets.set(list);
+    this.syncProjetsToLocalStorage();
     void this.supabase.from('chiffrage_projets').delete().eq('id', id);
   }
 
@@ -616,6 +664,80 @@ export class ChiffrageDataService {
 
   private persistOverrides(): void {
     void this.supabase.from('chiffrage_overrides').upsert({ id: 1, data: this.overrides() });
+  }
+
+  private readLocalProjets(): ChiffrageProjet[] {
+    const raw = this.storage.get<ChiffrageProjet[]>(StorageKey.ChiffrageProjets);
+    if (!Array.isArray(raw)) return [];
+    return raw.map((p) => this.normalizeProjet(p));
+  }
+
+  private mapProjetsFromRows(rows: Record<string, unknown>[]): ChiffrageProjet[] {
+    return rows.map((p) =>
+      this.normalizeProjet({
+        id: Number(p['id']),
+        nom: String(p['nom'] ?? ''),
+        ref: String(p['ref'] ?? ''),
+        usine: p['usine'] as UsineKey,
+        usineLabel: String(p['usine_label'] ?? ''),
+        total: Number(p['total']),
+        agence: (p['agence'] as string | null) ?? null,
+        date: String(p['projet_date'] ?? p['date'] ?? new Date().toISOString()),
+        user_name: (p['user_name'] as string | null) ?? null,
+        values: (p['values'] as Record<string, number>) ?? {},
+        charpente_ext: (p['charpente_ext'] as ChiffrageProjet['charpente_ext']) ?? { ...EMPTY_CHARPENTE_EXT },
+        lines: (p['lines'] as ChiffrageProjet['lines']) ?? [],
+      }),
+    );
+  }
+
+  private normalizeProjet(p: Partial<ChiffrageProjet> & { id: number }): ChiffrageProjet {
+    const usine = (p.usine ?? 'boisboreal') as UsineKey;
+    return {
+      id: Number(p.id),
+      nom: p.nom ?? '',
+      ref: p.ref ?? '',
+      usine,
+      usineLabel: p.usineLabel || this.getUsineLabel(usine),
+      total: Number(p.total) || 0,
+      agence: p.agence ?? null,
+      date: p.date ?? new Date().toISOString(),
+      user_name: p.user_name ?? null,
+      values: p.values ?? {},
+      charpente_ext: p.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
+      lines: p.lines ?? [],
+    };
+  }
+
+  private mergeProjets(db: ChiffrageProjet[], local: ChiffrageProjet[]): ChiffrageProjet[] {
+    const byId = new Map<number, ChiffrageProjet>();
+    for (const p of db) byId.set(p.id, p);
+    for (const p of local) {
+      if (!byId.has(p.id)) byId.set(p.id, p);
+    }
+    return [...byId.values()].sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  private syncProjetsToLocalStorage(): void {
+    this.storage.set(StorageKey.ChiffrageProjets, this.projets());
+  }
+
+  private async persistProjetToDb(projet: ChiffrageProjet): Promise<void> {
+    const { error } = await this.supabase.from('chiffrage_projets').upsert({
+      id: projet.id,
+      projet_date: projet.date,
+      nom: projet.nom,
+      ref: projet.ref,
+      usine: projet.usine,
+      usine_label: projet.usineLabel,
+      total: projet.total,
+      agence: projet.agence,
+      user_name: projet.user_name,
+      values: projet.values ?? {},
+      charpente_ext: projet.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
+      lines: projet.lines ?? [],
+    });
+    if (error) console.warn('[Chiffrage] persist projet failed', error);
   }
 
   private persistCustomPostes(): void {

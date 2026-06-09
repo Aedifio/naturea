@@ -10,7 +10,10 @@
           </tr>
         </thead>
         <tbody>
-          @for (a of sorted(); track a.id; let i = $index) {
+          @if (!sorted().length) {
+            <tr><td colspan="5" class="empty">Aucune agence</td></tr>
+          } @else {
+            @for (a of sorted(); track a.id; let i = $index) {
             <tr class="clickable" [routerLink]="['/apps/audit-technique/agence', a.id]">
               <td><span class="mono rank" [style.color]="rankColor(i)">{{ i + 1 }}</span></td>
               <td>
@@ -34,6 +37,7 @@
                 </div>
               </td>
             </tr>
+            }
           }
         </tbody>
       </table>

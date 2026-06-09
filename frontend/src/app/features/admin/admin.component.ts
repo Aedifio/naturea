@@ -25,7 +25,6 @@ export class AdminComponent implements OnInit {
   readonly users = signal<PortalUserRow[]>([]);
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
-  readonly franchiseOptions = signal<string[]>(['(siège)']);
 
   readonly modalOpen = signal(false);
   readonly modalMode = signal<AdminUserModalMode>('edit');
@@ -38,7 +37,6 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     void this.loadUsers();
-    void this.usersService.listFranchiseOptions().then((opts) => this.franchiseOptions.set(opts));
   }
 
   async loadUsers(): Promise<void> {

@@ -1,0 +1,39 @@
+@use './admin-user-modal.component.scss';
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  input[type='color'] {
+    width: 44px;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  input[type='text'] {
+    flex: 1;
+  }
+}
+
+textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 72px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--wood);
+  }
+}

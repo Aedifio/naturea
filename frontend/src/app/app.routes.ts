@@ -8,6 +8,8 @@ import { HomeComponent } from './features/home/home.component';
 import { ReseauComponent } from './features/reseau/reseau.component';
 import { AdminComponent } from './features/admin/admin.component';
 import { AdminRolesComponent } from './features/admin/admin-roles.component';
+import { AdminFactoriesComponent } from './features/admin/admin-factories.component';
+import { AdminAgenciesComponent } from './features/admin/admin-agencies.component';
 
 export const routes: Routes = [
   {
@@ -29,6 +31,8 @@ export const routes: Routes = [
           { path: 'reseau', component: ReseauComponent, canActivate: [permissionGuard('RESEAU')] },
           { path: 'admin', component: AdminComponent, canActivate: [permissionGuard('ADMIN')] },
           { path: 'admin/roles', component: AdminRolesComponent, canActivate: [permissionGuard('ADMIN')] },
+          { path: 'admin/factories', component: AdminFactoriesComponent, canActivate: [permissionGuard('ADMIN')] },
+          { path: 'admin/agencies', component: AdminAgenciesComponent, canActivate: [permissionGuard('ADMIN')] },
         ],
       },
       {

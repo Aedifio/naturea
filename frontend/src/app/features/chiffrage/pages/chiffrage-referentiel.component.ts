@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CHARPENTE_EXT } from '../constants/chiffrage-charpente.constants';
 import { REFS } from '../constants/chiffrage-refs.constants';
 import type { UsineKey } from '../chiffrage.models';
@@ -13,7 +13,9 @@ import { ChiffrageDataService } from '../services/chiffrage-data.service';
 export class ChiffrageReferentielComponent {
   readonly data = inject(ChiffrageDataService);
 
-  readonly usines = this.data.getAllUsineKeys().map((key) => ({ key, ref: this.data.getUsineRef(key) }));
+  readonly usines = computed(() =>
+    this.data.usineKeys().map((key) => ({ key, ref: this.data.getUsineRef(key) })),
+  );
   readonly charpenteExt = CHARPENTE_EXT;
 
   fmtNum = fmtNum;

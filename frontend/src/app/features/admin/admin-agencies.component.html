@@ -1,0 +1,64 @@
+<app-page-hero
+  kicker="Administration"
+  titleHtml="Gestion des <em>agences</em>"
+  [subtitleHtml]="subtitleHtml"
+/>
+
+<app-admin-modules active="franchises" />
+
+<div class="card">
+  <div class="chd">
+    <div class="chl">
+      <div class="ci ci-agencies">🏛️</div>
+      <h3>Franchises</h3>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreate()">+ Nouvelle agence</button>
+  </div>
+
+  @if (loading()) {
+    <p class="users-status">Chargement…</p>
+  } @else if (loadError()) {
+    <p class="users-status users-status-err">{{ loadError() }}</p>
+    <button type="button" class="btn-retry" (click)="loadAgencies()">Réessayer</button>
+  } @else {
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Ville</th>
+          <th>Email</th>
+          <th>Adresse</th>
+          <th>Slug</th>
+          <th>Mise à jour</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of agencies(); track trackAgency(a)) {
+          <tr>
+            <td><strong>{{ a.name }}</strong></td>
+            <td>{{ a.ville ?? '—' }}</td>
+            <td>{{ a.contact_email ?? '—' }}</td>
+            <td class="adresse">{{ a.adresse ?? '—' }}</td>
+            <td><code class="agency-slug">{{ a.slug ?? '—' }}</code></td>
+            <td class="updated-at">{{ a.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <button type="button" class="btn-edit" (click)="openEdit(a)">Modifier</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<app-admin-agency-modal
+  [open]="modalOpen()"
+  [mode]="modalMode()"
+  [agency]="editingAgency()"
+  [saving]="saving()"
+  [error]="saveError()"
+  (close)="closeModal()"
+  (saveCreate)="onCreate($event)"
+  (saveEdit)="onUpdate($event)"
+/>

@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SITES } from '../constants/ossature.constants';
+import { FactoryService } from '../../../core/services/factory.service';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
 import { OssatureDataService, parseSurface } from '../services/ossature-data.service';
@@ -21,7 +21,7 @@ import { OssatureModeService } from '../services/ossature-mode.service';
 
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px">
       <div class="site-pills" style="margin-bottom: 0">
-        @for (s of sites; track s) {
+        @for (s of sites(); track s) {
           <button type="button" class="site-pill" [class.active]="mode.currentSiteUsine() === s" (click)="mode.setSiteUsine(s)">{{ s }}</button>
         }
       </div>
@@ -83,8 +83,11 @@ export class OssatureUsineComponent {
   readonly data = inject(OssatureDataService);
   readonly modals = inject(OssatureModalService);
   readonly mode = inject(OssatureModeService);
+  private readonly factory = inject(FactoryService);
 
-  readonly sites = SITES;
+  readonly sites = computed(() =>
+    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
+  );
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
 

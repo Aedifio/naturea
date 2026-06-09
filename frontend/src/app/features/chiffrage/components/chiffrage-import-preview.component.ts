@@ -20,14 +20,14 @@ export class ChiffrageImportPreviewComponent {
 
   readonly current = this.importSvc.currentImport;
 
-  readonly usineKeys = computed(() => Object.keys(REFS) as UsineKey[]);
+  readonly usineKeys = computed(() => this.data.usineKeys());
 
   fmtNum = fmtNum;
   fmtEurR = fmtEurR;
   fmtDateFR = fmtDateFR;
 
   usineOptions = computed(() =>
-    this.usineKeys().map((k) => ({ key: k, nom: REFS[k].nom })),
+    this.usineKeys().map((k) => ({ key: k, nom: this.data.getUsineLabel(k) })),
   );
 
   mappedCount = computed(() => {

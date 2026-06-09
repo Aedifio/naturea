@@ -1,7 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FRANCHISES, SITES } from '../constants/ossature.constants';
+import { FactoryService } from '../../../core/services/factory.service';
+import { AgencyService } from '../../../core/services/agency.service';
 import { OssatureDataService } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 
@@ -21,13 +22,13 @@ import { OssatureModalService } from '../services/ossature-modal.service';
       <input type="text" placeholder="🔍 Rechercher…" [ngModel]="search()" (ngModelChange)="search.set($event)" />
       <select [ngModel]="filterFranchise()" (ngModelChange)="filterFranchise.set($event)">
         <option value="">Tous les franchisés</option>
-        @for (f of franchises; track f) {
+        @for (f of franchises(); track f) {
           <option [value]="f">{{ f }}</option>
         }
       </select>
       <select [ngModel]="filterSite()" (ngModelChange)="filterSite.set($event)">
-        <option value="">Tous les sites</option>
-        @for (s of sites; track s) {
+        <option value="">Toutes les usines</option>
+        @for (s of sites(); track s) {
           <option [value]="s">{{ s }}</option>
         }
       </select>
@@ -79,9 +80,16 @@ import { OssatureModalService } from '../services/ossature-modal.service';
 export class OssatureArchivesComponent {
   readonly data = inject(OssatureDataService);
   readonly modals = inject(OssatureModalService);
+  private readonly factory = inject(FactoryService);
+  private readonly agencies = inject(AgencyService);
 
-  readonly franchises = FRANCHISES;
-  readonly sites = SITES;
+  readonly franchises = computed(() => {
+    this.agencies.agencies();
+    return this.agencies.getNames();
+  });
+  readonly sites = computed(() =>
+    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
+  );
 
   readonly search = signal('');
   readonly filterFranchise = signal('');
@@ -93,7 +101,7 @@ export class OssatureArchivesComponent {
     const q = this.search().toLowerCase();
     return this.archived().filter(
       (o) =>
-        (!this.filterFranchise() || o.franchise === this.filterFranchise()) &&
+        (!this.filterFranchise() || this.agencies.orderMatchesFranchise(o.franchise, this.filterFranchise())) &&
         (!this.filterSite() || o.site === this.filterSite()) &&
         (!q || o.reference.toLowerCase().includes(q) || o.franchise.toLowerCase().includes(q)),
     );

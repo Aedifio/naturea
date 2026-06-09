@@ -1,7 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FRANCHISES, SITES, STATUTS, STATUT_STYLE } from '../constants/ossature.constants';
+import { FactoryService } from '../../../core/services/factory.service';
+import { AgencyService } from '../../../core/services/agency.service';
+import { STATUTS, STATUT_STYLE } from '../constants/ossature.constants';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
 import {
@@ -19,7 +21,7 @@ import { OssatureModalService } from '../services/ossature-modal.service';
     <div class="page-header">
       <div>
         <div class="page-title">Vision globale</div>
-        <div class="page-sub" style="color: var(--green)">Réseau Naturéa — 17 franchisés · 6 sites de production</div>
+        <div class="page-sub" style="color: var(--green)">Réseau Naturéa — {{ franchiseCount() }} franchisés · {{ factoryCount() }} sites de production</div>
       </div>
       <select class="year-select" [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set($event)">
         <option [ngValue]="currentYear">Année en cours</option>
@@ -69,13 +71,13 @@ import { OssatureModalService } from '../services/ossature-modal.service';
     <div class="filters">
       <select [ngModel]="filterFranchise()" (ngModelChange)="filterFranchise.set($event)">
         <option value="">Tous les franchisés</option>
-        @for (f of franchises; track f) {
+        @for (f of franchises(); track f) {
           <option [value]="f">{{ f }}</option>
         }
       </select>
       <select [ngModel]="filterSite()" (ngModelChange)="filterSite.set($event)">
-        <option value="">Tous les sites</option>
-        @for (s of sites; track s) {
+        <option value="">Toutes les usines</option>
+        @for (s of sites(); track s) {
           <option [value]="s">{{ s }}</option>
         }
       </select>
@@ -130,10 +132,19 @@ import { OssatureModalService } from '../services/ossature-modal.service';
 export class OssatureCoordComponent {
   private readonly data = inject(OssatureDataService);
   private readonly modals = inject(OssatureModalService);
+  private readonly factory = inject(FactoryService);
+  private readonly agencies = inject(AgencyService);
 
   readonly statuts = STATUTS;
-  readonly franchises = FRANCHISES;
-  readonly sites = SITES;
+  readonly factoryCount = computed(() => this.factory.factories().length);
+  readonly franchiseCount = computed(() => this.agencies.agencies().length);
+  readonly franchises = computed(() => {
+    this.agencies.agencies();
+    return this.agencies.getNames();
+  });
+  readonly sites = computed(() =>
+    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
+  );
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
   readonly filterFranchise = signal('');
@@ -147,7 +158,7 @@ export class OssatureCoordComponent {
   readonly filtered = computed(() =>
     this.active().filter(
       (o) =>
-        (!this.filterFranchise() || o.franchise === this.filterFranchise()) &&
+        (!this.filterFranchise() || this.agencies.orderMatchesFranchise(o.franchise, this.filterFranchise())) &&
         (!this.filterSite() || o.site === this.filterSite()) &&
         (!this.filterStatut() || o.statut === this.filterStatut()),
     ),
@@ -162,7 +173,7 @@ export class OssatureCoordComponent {
   });
 
   readonly siteChips = computed(() =>
-    SITES.map((site) => {
+    this.sites().map((site) => {
       const siteOrders = this.active().filter((o) => o.site === site);
       const hasDelay = siteOrders.some((o) => isLivraisonDefDelayed(o));
       return { site, count: siteOrders.length, hasDelay };

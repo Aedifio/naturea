@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { REFS } from '../constants/chiffrage-refs.constants';
 import type { UsineKey } from '../chiffrage.models';
 import { ChiffrageDataService } from '../services/chiffrage-data.service';
@@ -14,12 +14,14 @@ export class ChiffrageUsinePickerComponent {
   readonly selected = input.required<UsineKey>();
   readonly usineChange = output<UsineKey>();
 
-  readonly usines = this.data.getAllUsineKeys().map((key) => ({
-    key,
-    nom: REFS[key].nom,
-    description: REFS[key].description,
-    devis_count: REFS[key].devis_count,
-  }));
+  readonly usines = computed(() =>
+    this.data.usineKeys().map((key) => ({
+      key,
+      nom: this.data.getUsineLabel(key),
+      description: this.data.getUsineRef(key).description,
+      devis_count: REFS[key]?.devis_count ?? 0,
+    })),
+  );
 
   select(key: UsineKey): void {
     this.usineChange.emit(key);

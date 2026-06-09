@@ -48,13 +48,14 @@
             </select>
           </div>
           <div class="modal-field">
-            <label for="u-franchise">Franchise</label>
-            <input id="u-franchise" type="text" formControlName="franchise" list="franchise-list" autocomplete="off" />
-            <datalist id="franchise-list">
-              @for (f of franchiseOptions(); track f) {
-                <option [value]="f"></option>
+            <label for="u-franchise">Agence</label>
+            <select id="u-franchise" formControlName="franchise">
+              <option value="(siège)">(siège)</option>
+              @for (a of agencies(); track a.id) {
+                <option [value]="a.name">{{ a.name }}</option>
               }
-            </datalist>
+            </select>
+            <p class="field-hint">Sans agence = accès siège.</p>
           </div>
         </div>
         <div class="modal-field modal-check">

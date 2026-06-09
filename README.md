@@ -109,6 +109,7 @@ Six private buckets are created by migration `20250608120000_storage_auth_seed.s
 | `ossature` | Devis, plans, signatures |
 | `chiffrage` | PDF tarif imports |
 | `portal` | Newsletter PDF |
+| `factory` | Usine metadata (nom, couleur, contact, description) — shared by chiffrage + ossature |
 
 ### 4. API keys
 

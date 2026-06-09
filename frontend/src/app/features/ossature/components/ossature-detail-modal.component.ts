@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DOCS_SIGNATURE, SITES_ADRESSES, STATUTS } from '../constants/ossature.constants';
+import { DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
 import { OssatureOrder } from '../ossature.models';
 import {
   daysSince,
@@ -13,6 +13,7 @@ import {
 } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 import { OssatureModeService } from '../services/ossature-mode.service';
+import { FactoryService } from '../../../core/services/factory.service';
 import { sendAlertDelai } from '../utils/ossature-email.util';
 
 @Component({
@@ -23,6 +24,7 @@ import { sendAlertDelai } from '../utils/ossature-email.util';
 })
 export class OssatureDetailModalComponent {
   readonly data = inject(OssatureDataService);
+  readonly factory = inject(FactoryService);
   readonly modals = inject(OssatureModalService);
   readonly mode = inject(OssatureModeService);
 
@@ -108,7 +110,7 @@ export class OssatureDetailModalComponent {
   }
 
   siteAdresse(site: string): string {
-    return SITES_ADRESSES[site] || '—';
+    return this.factory.getOssatureSiteAddress(site);
   }
 
   maxLivraison(o: OssatureOrder): string {
@@ -194,7 +196,7 @@ export class OssatureDetailModalComponent {
   }
 
   alertDelai(o: OssatureOrder): void {
-    sendAlertDelai(o);
+    sendAlertDelai(o, (site) => this.factory.getEmailForOssatureSite(site));
   }
 
   saveLivDef(): void {

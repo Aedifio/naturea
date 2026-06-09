@@ -1,7 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { REFS } from '../constants/chiffrage-refs.constants';
 import type { PrixType, UsineKey } from '../chiffrage.models';
+import { REFS } from '../constants/chiffrage-refs.constants';
 import { fmtDateFR, fmtNum } from '../utils/chiffrage.utils';
 import { ChiffrageDataService } from '../services/chiffrage-data.service';
 import { ChiffrageToastService } from '../services/chiffrage-toast.service';
@@ -18,7 +18,9 @@ export class ChiffrageParametresComponent {
 
   readonly expandedCards = signal<Record<string, boolean>>({});
 
-  readonly usines = this.data.getAllUsineKeys().map((key) => ({ key, ref: REFS[key] }));
+  readonly usines = computed(() =>
+    this.data.usineKeys().map((key) => ({ key, ref: this.data.getUsineRef(key) })),
+  );
 
   fmtNum = fmtNum;
   fmtDateFR = fmtDateFR;

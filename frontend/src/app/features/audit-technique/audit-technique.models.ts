@@ -24,6 +24,7 @@ export interface Audit {
 }
 
 export interface Agence {
+  /** Canonical `agencies.id` — used in routes and audit FK. */
   id: number;
   nom: string;
   ville: string;

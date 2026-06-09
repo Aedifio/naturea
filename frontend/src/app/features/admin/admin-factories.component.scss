@@ -1,0 +1,27 @@
+@use './admin.component.scss';
+
+.ci-factories {
+  background: #e8eef5;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  vertical-align: middle;
+}
+
+.factory-key {
+  font-size: 12px;
+  color: var(--ink);
+  background: none;
+  padding: 0;
+}
+
+.updated-at {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}

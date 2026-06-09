@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AgencyService } from '../../../core/services/agency.service';
 import { STATUTS, STATUT_STYLE } from '../constants/ossature.constants';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
@@ -75,13 +76,14 @@ export class OssatureFranchiseComponent {
   readonly data = inject(OssatureDataService);
   readonly modals = inject(OssatureModalService);
   readonly mode = inject(OssatureModeService);
+  private readonly agencies = inject(AgencyService);
 
   readonly statuts = STATUTS;
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
 
   readonly years = computed(() =>
-    [...new Set(this.data.orders().filter((o) => o.franchise === this.mode.selectedFranchise()).map((o) => o.annee || this.currentYear))].sort(
+    [...new Set(this.data.orders().filter((o) => this.matchesFranchise(o.franchise)).map((o) => o.annee || this.currentYear))].sort(
       (a, b) => b - a,
     ),
   );
@@ -91,7 +93,7 @@ export class OssatureFranchiseComponent {
       .orders()
       .filter(
         (o) =>
-          o.franchise === this.mode.selectedFranchise() &&
+          this.matchesFranchise(o.franchise) &&
           !o.archived &&
           (o.annee || this.currentYear) === this.selectedYear(),
       ),
@@ -115,5 +117,9 @@ export class OssatureFranchiseComponent {
 
   statCount(s: string): number {
     return this.mine().filter((o) => o.statut === s).length;
+  }
+
+  private matchesFranchise(orderFranchise: string): boolean {
+    return this.agencies.orderMatchesFranchise(orderFranchise, this.mode.selectedFranchise());
   }
 }

@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AgencyService } from '../../core/services/agency.service';
 import { PortalPermissionsService } from '../../core/services/portal-permissions.service';
 import type {
   PortalUserCreate,
@@ -19,13 +20,18 @@ export type AdminUserModalMode = 'create' | 'edit';
 export class AdminUserModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly permissions = inject(PortalPermissionsService);
+  private readonly agencyService = inject(AgencyService);
 
   readonly open = input(false);
   readonly mode = input<AdminUserModalMode>('edit');
   readonly user = input<PortalUserRow | null>(null);
-  readonly franchiseOptions = input<string[]>(['(siège)']);
   readonly saving = input(false);
   readonly error = input<string | null>(null);
+
+  readonly agencies = computed(() => {
+    this.agencyService.agencies();
+    return this.agencyService.getAll();
+  });
 
   readonly close = output<void>();
   readonly saveCreate = output<PortalUserCreate>();
@@ -66,7 +72,7 @@ export class AdminUserModalComponent {
           password: '',
           name: u.name,
           role: u.role,
-          franchise: u.franchise,
+          franchise: this.franchiseForForm(u.franchise),
           actif: u.actif,
         });
         this.form.controls.password.clearValidators();
@@ -107,5 +113,10 @@ export class AdminUserModalComponent {
         actif: raw.actif,
       });
     }
+  }
+
+  private franchiseForForm(franchise: string): string {
+    if (!franchise || franchise === '(siège)') return '(siège)';
+    return this.agencyService.resolveFranchiseName(franchise) ?? '(siège)';
   }
 }

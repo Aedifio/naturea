@@ -67,14 +67,4 @@ export class PortalUsersService {
     if (!updated) throw new Error('User not found after update');
     return updated;
   }
-
-  async listFranchiseOptions(): Promise<string[]> {
-    const { data, error } = await this.supabase.from('agencies').select('name').order('name');
-    if (error) {
-      console.warn('[PortalUsers] agencies load failed', error);
-      return ['(siège)'];
-    }
-    const names = (data ?? []).map((a: { name: string }) => a.name);
-    return ['(siège)', ...names];
-  }
 }

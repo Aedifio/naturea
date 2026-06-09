@@ -18,7 +18,7 @@
     }
     @if (mode.showFranchiseSelect()) {
       <select id="franchise-select" style="display: block" [value]="mode.selectedFranchise()" (change)="onFranchiseChange($event)">
-        @for (f of franchises; track f) {
+        @for (f of franchises(); track f) {
           <option [value]="f">{{ f }}</option>
         }
       </select>

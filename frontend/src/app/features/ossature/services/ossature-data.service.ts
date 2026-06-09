@@ -1,7 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { AgencyService } from '../../../core/services/agency.service';
+import { FactoryService } from '../../../core/services/factory.service';
+import { SupabaseService } from '../../../core/supabase/supabase.service';
 import { DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
 import { NewOrderInput, OssatureOrder } from '../ossature.models';
-import { SupabaseService } from '../../../core/supabase/supabase.service';
 import {
   sendDevisRetourEmail,
   sendEmailCommandeConfirmee,
@@ -236,6 +238,8 @@ export const OSSATURE_SEED: OssatureOrder[] = [
 @Injectable({ providedIn: 'root' })
 export class OssatureDataService {
   private readonly supabase = inject(SupabaseService);
+  private readonly factory = inject(FactoryService);
+  private readonly agencies = inject(AgencyService);
   private readonly toast = inject(OssatureToastService);
   private readonly _orders = signal<OssatureOrder[]>([]);
   private readonly _version = signal(0);
@@ -349,7 +353,7 @@ export class OssatureDataService {
       annee: new Date().getFullYear(),
     };
     void this.save([order, ...this.orders()]);
-    sendEmailUsine(order);
+    sendEmailUsine(order, (site) => this.factory.getEmailForOssatureSite(site));
     return order;
   }
 
@@ -379,7 +383,7 @@ export class OssatureDataService {
     if (promptEmail) {
       const updated = this.getById(orderId);
       if (updated && confirm("Envoyer un email au franchisé pour l'informer que le devis est disponible ?")) {
-        sendDevisRetourEmail(updated);
+        sendDevisRetourEmail(updated, (f) => this.agencies.getEmailForFranchise(f));
         this.toast.show(`📧 Email ouvert vers ${updated.franchise}`);
       }
     }
@@ -434,7 +438,7 @@ export class OssatureDataService {
         signed &&
         confirm("Envoyer un email à l'usine et au coordinateur pour confirmer la signature du devis ?")
       ) {
-        sendSignatureConfirmEmail(signed);
+        sendSignatureConfirmEmail(signed, (site) => this.factory.getEmailForOssatureSite(site));
         this.toast.show('📧 Email ouvert vers usine');
       }
     }
@@ -523,7 +527,7 @@ export class OssatureDataService {
     if (promptEmail && updated) {
       setTimeout(() => {
         if (confirm("Envoyer un email à l'usine pour confirmer la validation des plans ?")) {
-          sendPlanValidationEmail(updated);
+          sendPlanValidationEmail(updated, (site) => this.factory.getEmailForOssatureSite(site));
           this.toast.show('📧 Email ouvert vers usine');
         }
       }, 400);

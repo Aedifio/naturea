@@ -11,7 +11,7 @@
   <button type="button" class="btn btn-ghost" (click)="resetAll()">🔄 Tout réinitialiser</button>
 </div>
 
-@for (u of usines; track u.key) {
+@for (u of usines(); track u.key) {
   <div class="param-card" [style.border-top]="'4px solid ' + u.ref.couleur">
     <div class="param-card-h">
       <div class="flex-row-between">
@@ -19,7 +19,7 @@
           <span class="ico" [style.background]="u.ref.couleur + '22'" [style.color]="u.ref.couleur">🏭</span>
           {{ u.ref.nom }}
         </h3>
-        <span class="text-muted-sm">{{ u.ref.devis_count }} devis · MAJ {{ fmtDateFR(u.ref.derniere_maj) }}</span>
+        <span class="text-muted-sm">{{ u.ref.devis_count }} devis · MAJ {{ fmtDateFR(data.getFactoryUpdatedAt(u.key)) }}</span>
         <span class="fiabilite {{ globalFiab(u.key) }} fiab-inline">Fiabilité {{ globalFiab(u.key) }}</span>
       </div>
       <button type="button" class="param-collapse-btn" (click)="toggleCard(u.key)">

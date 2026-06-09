@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DOCS_REQUIS, FRANCHISES, SITES } from '../constants/ossature.constants';
+import { DOCS_REQUIS } from '../constants/ossature.constants';
+import { AgencyService } from '../../../core/services/agency.service';
+import { FactoryService } from '../../../core/services/factory.service';
 import { OssatureDataService } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 import { OssatureModeService } from '../services/ossature-mode.service';
@@ -49,7 +51,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
             <div class="form-group">
               <label class="form-label">Franchisé</label>
               <select class="form-select" [(ngModel)]="franchise">
-                @for (f of franchises; track f) {
+                @for (f of franchises(); track f) {
                   <option [value]="f">{{ f }}</option>
                 }
               </select>
@@ -58,7 +60,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
           <div class="form-group">
             <label class="form-label">Site de production</label>
             <select class="form-select" [(ngModel)]="site">
-              @for (s of sites; track s) {
+              @for (s of sites(); track s) {
                 <option [value]="s">{{ s }}</option>
               }
             </select>
@@ -168,9 +170,14 @@ export class OssatureNewOrderModalComponent {
   private readonly mode = inject(OssatureModeService);
   private readonly data = inject(OssatureDataService);
   private readonly toast = inject(OssatureToastService);
+  private readonly factory = inject(FactoryService);
+  private readonly agencies = inject(AgencyService);
 
-  readonly franchises = FRANCHISES;
-  readonly sites = SITES;
+  readonly franchises = computed(() => {
+    this.agencies.agencies();
+    return this.agencies.getNames();
+  });
+  readonly sites = computed(() => this.factory.getOssatureSites());
   readonly docsRequis = DOCS_REQUIS;
 
   readonly open = computed(() => this.modals.newOrderOpen());
@@ -181,8 +188,8 @@ export class OssatureNewOrderModalComponent {
   plancher = '';
   livraison = '';
   permis = '';
-  franchise: string = FRANCHISES[0];
-  site = SITES[0];
+  franchise = '';
+  site = '';
   readonly minLivraison = this.computeMinLivraison();
 
   readonly docsJoints = signal<Record<string, string>>({});
@@ -199,9 +206,9 @@ export class OssatureNewOrderModalComponent {
     this.surface = '';
     this.plancher = '';
     this.permis = '';
-    this.site = SITES[0];
+    this.site = this.factory.getOssatureSites()[0] ?? '';
     this.livraison = this.minLivraison;
-    this.franchise = this.mode.selectedFranchise();
+    this.franchise = this.mode.selectedFranchise() || this.agencies.getNames()[0] || '';
     this.docsJoints.set({});
     this.showWarn.set(false);
   }

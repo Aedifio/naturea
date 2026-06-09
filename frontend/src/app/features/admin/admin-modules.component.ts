@@ -1,7 +1,7 @@
 import { Component, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
 
-export type AdminModuleAction = 'users' | 'permissions' | 'franchises' | 'journal';
+export type AdminModuleAction = 'users' | 'permissions' | 'factories' | 'franchises';
 
 export interface AdminModuleTile {
   icon: string;
@@ -26,14 +26,14 @@ export const ADMIN_MODULE_TILES: AdminModuleTile[] = [
   {
     icon: '🏛️',
     name: 'Franchises',
-    desc: 'Annuaire des 17 agences du réseau',
+    desc: 'Annuaire des agences du réseau',
     action: 'franchises',
   },
   {
-    icon: '📝',
-    name: 'Journal',
-    desc: 'Connexions et actions sensibles',
-    action: 'journal',
+    icon: '🏭',
+    name: 'Usines',
+    desc: 'Créer et modifier les usines du réseau',
+    action: 'factories',
   },
 ];
 
@@ -68,11 +68,11 @@ export class AdminModulesComponent {
       case 'permissions':
         void this.router.navigate(['/admin/roles']);
         break;
-      case 'franchises':
-        alert('Onglet Codir à venir — voir vue Codir');
+      case 'factories':
+        void this.router.navigate(['/admin/factories']);
         break;
-      case 'journal':
-        alert("Journal d'activité à venir");
+      case 'franchises':
+        void this.router.navigate(['/admin/agencies']);
         break;
     }
   }

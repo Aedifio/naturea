@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { FactoryService } from '../../../core/services/factory.service';
 import { OssatureDataService } from '../services/ossature-data.service';
 import { sendAlertsRetard, sendAlertsSig } from '../utils/ossature-email.util';
 import { OssatureToastService } from '../services/ossature-toast.service';
@@ -97,6 +98,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
 })
 export class OssatureAlertBannerComponent {
   private readonly data = inject(OssatureDataService);
+  private readonly factory = inject(FactoryService);
   private readonly toast = inject(OssatureToastService);
 
   readonly dismissed = signal(false);
@@ -121,7 +123,7 @@ export class OssatureAlertBannerComponent {
     sendAlertsRetard(list, (count) => {
       this.toast.show(`✅ ${count} alerte(s) envoyée(s)`);
       this.dismiss();
-    });
+    }, (site) => this.factory.getEmailForOssatureSite(site));
   }
 
   alertSig(): void {
