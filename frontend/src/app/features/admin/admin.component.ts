@@ -98,6 +98,10 @@ export class AdminComponent implements OnInit {
       const updated = await this.usersService.update(user.id, patch);
       this.users.update((list) => list.map((u) => (u.id === updated.id ? updated : u)));
 
+      if (patch.password?.trim()) {
+        await this.usersService.setPassword(user.id, patch.password);
+      }
+
       if (wasSelf) {
         await this.auth.reloadProfile();
       }
@@ -130,6 +134,7 @@ export class AdminComponent implements OnInit {
     const msg = this.extractErrorMessage(err);
     if (msg.includes('Email already')) return 'Cet email est déjà utilisé.';
     if (msg.includes('Password must')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+    if (msg.includes('no linked auth account')) return 'Cet utilisateur n\'a pas de compte de connexion lié — mot de passe impossible à définir.';
     if (msg.includes('Invalid email')) return 'Email invalide.';
     if (msg.includes('Forbidden')) return 'Action réservée à l\'Animateur.';
     if (msg.includes('User not found after create')) return 'Utilisateur créé mais rechargement impossible — rafraîchis la page.';
