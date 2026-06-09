@@ -206,6 +206,12 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
 
 .btn-add{background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;transition:background .2s;letter-spacing:.2px}
 .btn-add:hover{background:var(--accent-ink)}
+.btn-edit-user{background:var(--surface);color:var(--accent);border:1px solid var(--accent);padding:4px 11px;border-radius:6px;font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;transition:.18s}
+.btn-edit-user:hover{background:var(--accent);color:#fff}
+.field-hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+.pwd-wrap{position:relative;display:flex;align-items:center}
+.pwd-wrap input{padding-right:64px!important;font-family:var(--mono,monospace);letter-spacing:.5px}
+.pwd-toggle{position:absolute;right:8px;background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.3px;padding:4px 6px}
 
 /* Items actu */
 .actu-item{padding:12px 0;border-bottom:1px dashed var(--border);position:relative}
@@ -485,7 +491,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
         <div>
           <div class="ph-k">Administration</div>
           <div class="ph-t">Gestion des <em>accès</em></div>
-          <div class="ph-s">Visualise les comptes utilisateurs et leurs permissions. Pour modifier en profondeur, édite le fichier <code style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:4px">gestion_acces_naturea.xlsx</code>.</div>
+          <div class="ph-s">Ajoute ou modifie les comptes utilisateurs et définis leur mot de passe d'accès à l'app. La matrice détaillée des permissions reste gérée dans <code style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:4px">gestion_acces_naturea.xlsx</code>.</div>
         </div>
       </div>
     </div>
@@ -531,7 +537,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
           <div class="ci" style="background:#E5EFD9">👥</div>
           <h3>Utilisateurs actifs du réseau</h3>
         </div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Source : gestion_acces_naturea.xlsx</div>
+        <button class="btn-add" onclick="openModal('user')">+ Ajouter un utilisateur</button>
       </div>
       <table class="users-table">
         <thead>
@@ -541,6 +547,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
             <th>Rôle</th>
             <th>Franchise</th>
             <th>Statut</th>
+            <th style="text-align:right">Actions</th>
           </tr>
         </thead>
         <tbody id="users-tbody"></tbody>
@@ -651,6 +658,17 @@ const USERS = [
   {id:7, email:"be.a@naturea.fr", password:"be2026!", name:"Lucas Bernard", role:"Dessinateur / BE", franchise:"Franchise A", actif:true},
   {id:8, email:"ancien@naturea.fr", password:"old2026!", name:"Ancien collaborateur", role:"Commercial", franchise:"Franchise A", actif:false},
 ];
+
+// Surcharge animateur : ajouts / modifications de comptes (dont mot de passe d'accès)
+// persistés en localStorage. Si présents, ils remplacent la liste par défaut ci-dessus.
+(function loadUsersOverride() {
+  const stored = loadFromStorage("naturea_users", null);
+  if (Array.isArray(stored) && stored.length) {
+    USERS.length = 0;
+    stored.forEach(u => USERS.push(u));
+  }
+})();
+function saveUsers() { saveToStorage("naturea_users", USERS); }
 
 // === PERMISSIONS PAR RÔLE ===
 // null = pas d'accès / "R" = lecture / "RW" = écriture / "ADMIN" = admin
@@ -1467,6 +1485,7 @@ function renderUsersTable() {
       <td><span class="role-badge ${roleClass}">${u.role}</span></td>
       <td>${u.franchise}</td>
       <td><span class="${u.actif ? 'status-actif' : 'status-inactif'}">${u.actif ? '● Actif' : '● Inactif'}</span></td>
+      <td style="text-align:right"><button class="btn-edit-user" onclick="openModal('user', ${u.id})">✏️ Éditer</button></td>
     </tr>`;
   }).join("");
 }
@@ -1620,13 +1639,57 @@ function onNewsletterUpload(event) {
 // ============================================================
 // MODALE GÉNÉRIQUE (publication)
 // ============================================================
-function openModal(type) {
+function openModal(type, editId) {
   if (currentUser.role !== "Animateur") return;
-  modalContext = {type};
+  modalContext = {type, editingId: (editId != null ? editId : null)};
   const titleEl = document.getElementById("modal-title");
   const bodyEl = document.getElementById("modal-body");
 
-  if (type === "actu") {
+  if (type === "user") {
+    const editing = editId != null ? USERS.find(u => u.id === editId) : null;
+    titleEl.textContent = editing ? "Modifier l'utilisateur" : "Nouvel utilisateur";
+    const roleOpts = Object.keys(PERMS).map(r =>
+      `<option value="${escapeHtml(r)}" ${editing && editing.role === r ? "selected" : ""}>${escapeHtml(r)}</option>`
+    ).join("");
+    bodyEl.innerHTML = `
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Email</label>
+          <input type="email" id="m-u-email" placeholder="prenom.nom@naturea.fr" value="${editing ? escapeHtml(editing.email) : ""}"/>
+        </div>
+        <div class="modal-field">
+          <label>Nom complet</label>
+          <input type="text" id="m-u-name" placeholder="Ex: Marie Dubois" value="${editing ? escapeHtml(editing.name) : ""}"/>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Rôle</label>
+          <select id="m-u-role">${roleOpts}</select>
+        </div>
+        <div class="modal-field">
+          <label>Franchise / Agence</label>
+          <input type="text" id="m-u-franchise" placeholder="Ex: Franchise A" value="${editing ? escapeHtml(editing.franchise) : ""}"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Mot de passe d'accès à l'app</label>
+        <div class="pwd-wrap">
+          <input type="password" id="m-u-password" placeholder="${editing ? "Laisser vide pour conserver l'actuel" : "Mot de passe de connexion"}" value=""/>
+          <button type="button" class="pwd-toggle" onclick="togglePwd('m-u-password', this)">Voir</button>
+        </div>
+        <div class="field-hint">Mot de passe que l'utilisateur saisira pour se connecter au portail.${editing ? " Laisse le champ vide pour ne pas le changer." : ""}</div>
+      </div>
+      <div class="modal-field">
+        <label>Statut du compte</label>
+        <select id="m-u-actif">
+          <option value="1" ${!editing || editing.actif ? "selected" : ""}>● Actif</option>
+          <option value="0" ${editing && !editing.actif ? "selected" : ""}>● Inactif</option>
+        </select>
+      </div>
+    `;
+  }
+  else if (type === "actu") {
     titleEl.textContent = "Nouvelle actualité";
     bodyEl.innerHTML = `
       <div class="modal-row">
@@ -1694,11 +1757,21 @@ function openModal(type) {
     `;
   }
 
+  document.getElementById("modal-save").textContent = (type === "user") ? "Enregistrer" : "Publier";
   document.getElementById("modal-bg").classList.add("on");
   setTimeout(() => {
     const first = bodyEl.querySelector("input,select,textarea");
     if (first) first.focus();
   }, 50);
+}
+
+// Affiche / masque le mot de passe saisi par l'animateur
+function togglePwd(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "Cacher" : "Voir";
 }
 
 function closeModal() {
@@ -1710,7 +1783,39 @@ function saveModal() {
   if (!modalContext) return;
   const t = modalContext.type;
 
-  if (t === "actu") {
+  if (t === "user") {
+    const editing = modalContext.editingId != null ? USERS.find(u => u.id === modalContext.editingId) : null;
+    const email = document.getElementById("m-u-email").value.trim().toLowerCase();
+    const name = document.getElementById("m-u-name").value.trim();
+    const role = document.getElementById("m-u-role").value;
+    const franchise = document.getElementById("m-u-franchise").value.trim();
+    const password = document.getElementById("m-u-password").value;
+    const actif = document.getElementById("m-u-actif").value === "1";
+
+    if (!email || !name) { alert("Email et nom complet sont obligatoires."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("Adresse email invalide."); return; }
+    // Email unique (hors compte en cours d'édition)
+    const clash = USERS.find(u => u.email.toLowerCase() === email && (!editing || u.id !== editing.id));
+    if (clash) { alert("Un compte utilise déjà cet email."); return; }
+    if (!editing && !password) { alert("Définis un mot de passe d'accès pour ce nouvel utilisateur."); return; }
+
+    if (editing) {
+      editing.email = email;
+      editing.name = name;
+      editing.role = role;
+      editing.franchise = franchise || "(non renseignée)";
+      editing.actif = actif;
+      if (password) editing.password = password; // vide = on conserve l'actuel
+    } else {
+      const newId = USERS.length ? Math.max(...USERS.map(u => u.id)) + 1 : 1;
+      USERS.push({id:newId, email, password, name, role, franchise: franchise || "(non renseignée)", actif});
+    }
+    saveUsers();
+    renderUsersTable();
+    closeModal();
+    return;
+  }
+  else if (t === "actu") {
     const catSel = document.getElementById("m-cat");
     const cat = catSel.value;
     const lbl = catSel.options[catSel.selectedIndex].dataset.lbl;
