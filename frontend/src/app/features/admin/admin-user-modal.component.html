@@ -32,6 +32,17 @@
             />
             <p class="field-hint">Min. 6 caractères</p>
           </div>
+        } @else if (user() && user()!.auth_user_id) {
+          <div class="modal-field">
+            <label for="u-password">Nouveau mot de passe</label>
+            <input
+              id="u-password"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            <p class="field-hint">Laisser vide pour conserver le mot de passe actuel. Min. 6 caractères.</p>
+          </div>
         }
 
         <div class="modal-field">

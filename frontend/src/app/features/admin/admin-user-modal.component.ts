@@ -75,11 +75,14 @@ export class AdminUserModalComponent {
           franchise: this.franchiseForForm(u.franchise),
           actif: u.actif,
         });
-        this.form.controls.password.clearValidators();
-        if (!u.auth_user_id) {
-          this.form.controls.email.disable();
-        } else {
+        // Password is optional when editing: leaving it empty keeps the current one.
+        // It can only be changed for users with a linked Auth account.
+        if (u.auth_user_id) {
+          this.form.controls.password.setValidators([Validators.minLength(6)]);
           this.form.controls.email.enable();
+        } else {
+          this.form.controls.password.clearValidators();
+          this.form.controls.email.disable();
         }
       }
       this.form.controls.password.updateValueAndValidity();
@@ -111,6 +114,7 @@ export class AdminUserModalComponent {
         role: raw.role,
         franchise: raw.franchise,
         actif: raw.actif,
+        password: raw.password.trim() ? raw.password : undefined,
       });
     }
   }

@@ -18,6 +18,8 @@ export interface PortalUserUpdate {
   role: string;
   franchise: string;
   actif: boolean;
+  /** Optional new password. Empty/undefined leaves the current password unchanged. */
+  password?: string;
 }
 
 export interface PortalUserCreate extends PortalUserUpdate {
@@ -66,5 +68,13 @@ export class PortalUsersService {
     const updated = rows.find((u) => u.id === id);
     if (!updated) throw new Error('User not found after update');
     return updated;
+  }
+
+  async setPassword(id: string, password: string): Promise<void> {
+    const { error } = await this.supabase.rpc('admin_set_portal_user_password', {
+      p_portal_user_id: id,
+      p_password: password,
+    });
+    if (error) throw error;
   }
 }
