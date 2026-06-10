@@ -21,13 +21,13 @@ import { OssatureModeService } from '../services/ossature-mode.service';
 
     <div class="filters">
       <input type="text" placeholder="🔍 Rechercher…" [ngModel]="search()" (ngModelChange)="search.set($event)" />
-      <select [ngModel]="filterFranchise()" (ngModelChange)="filterFranchise.set($event)">
-        <option value="">Tous les franchisés</option>
-        @for (f of franchises(); track f) {
-          <option [value]="f">{{ f }}</option>
-        }
-      </select>
-      @if (!mode.isFactoryScoped()) {
+      @if (!mode.isFactoryScoped() && !mode.isAgencyScoped()) {
+        <select [ngModel]="filterFranchise()" (ngModelChange)="filterFranchise.set($event)">
+          <option value="">Tous les franchisés</option>
+          @for (f of franchises(); track f) {
+            <option [value]="f">{{ f }}</option>
+          }
+        </select>
         <select [ngModel]="filterSite()" (ngModelChange)="filterSite.set($event)">
           <option value="">Toutes les usines</option>
           @for (s of sites(); track s) {
@@ -101,7 +101,12 @@ export class OssatureArchivesComponent {
 
   readonly archived = computed(() => {
     const scopedSite = this.mode.allowedOssatureSite();
-    return this.data.archivedOrders().filter((o) => !scopedSite || o.site === scopedSite);
+    const scopedAgency = this.mode.allowedAgencyName();
+    return this.data.archivedOrders().filter(
+      (o) =>
+        (!scopedSite || o.site === scopedSite) &&
+        (!scopedAgency || this.agencies.orderMatchesFranchise(o.franchise, scopedAgency)),
+    );
   });
 
   readonly filtered = computed(() => {

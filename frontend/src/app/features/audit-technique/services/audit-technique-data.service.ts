@@ -1,4 +1,5 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
+import { AuthService } from '../../../core/auth/auth.service';
 import { AgencyService } from '../../../core/services/agency.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
 import type { Agence, Audit, AuditTechniqueState, CorpsAvg, CorpsMetier, UrgentEcart } from '../audit-technique.models';
@@ -9,6 +10,8 @@ import { auditAvg, avgAudits } from '../utils/audit-score.util';
 export class AuditTechniqueDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly agencies = inject(AgencyService);
+  /** Lazy — avoids AuthService ↔ AppDataBootstrapService circular DI. */
+  private readonly injector = inject(Injector);
 
   /** Audits keyed by `agencies.id`. */
   private readonly _auditsByAgencyId = signal<Map<number, Audit[]>>(new Map());
@@ -29,8 +32,21 @@ export class AuditTechniqueDataService {
       });
     }
 
+    const linkedAgencyId = this.linkedAgencyIdForScope();
+    if (linkedAgencyId != null) {
+      return result.filter((a) => a.id === linkedAgencyId);
+    }
+
     return result;
   });
+
+  /** Franchisé scope — resolved lazily to break DI cycle with AuthService. */
+  private linkedAgencyIdForScope(): number | null {
+    const auth = this.injector.get(AuthService);
+    auth.currentUser();
+    if (!auth.isAgencyScopedFranchisee()) return null;
+    return auth.linkedAgencyId();
+  }
 
   readonly agencesSortedByScore = computed(() =>
     [...this.agences()]

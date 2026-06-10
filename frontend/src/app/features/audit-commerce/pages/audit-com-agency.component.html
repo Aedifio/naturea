@@ -2,7 +2,9 @@
   <div class="empty">Agence introuvable.</div>
 } @else {
   <div class="fade">
-    <a routerLink="/apps/audit-commerce" class="btn ghost sm" style="margin-bottom: 12px">← Réseau</a>
+    @if (!isAgencyScoped()) {
+      <a routerLink="/apps/audit-commerce" class="btn ghost sm" style="margin-bottom: 12px">← Réseau</a>
+    }
     <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px">
       <div>
         <h1 style="font-size: 30px; margin: 0">{{ agency()!.name }}</h1>

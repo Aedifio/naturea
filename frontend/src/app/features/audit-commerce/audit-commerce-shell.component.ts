@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { AuditComSettingsModalComponent } from './components/audit-com-settings-modal.component';
 import { AuditCommerceDataService } from './services/audit-commerce-data.service';
@@ -17,6 +18,9 @@ import { monthNoteStats, noteVar } from './utils/audit-commerce.utils';
 export class AuditCommerceShellComponent {
   readonly data = inject(AuditCommerceDataService);
   readonly ui = inject(AuditCommerceUiService);
+  private readonly auth = inject(AuthService);
+
+  readonly isAgencyScoped = computed(() => this.auth.isAgencyScopedFranchisee());
 
   readonly agenciesNav = computed(() => {
     const ym = this.ui.ym();

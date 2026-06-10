@@ -14,21 +14,23 @@
     </div>
     <div class="sidebar-subtitle">Audit réseau</div>
     <nav class="sidebar-nav">
-      <div class="nav-section">Vue globale</div>
-      <a class="nav-item" routerLink="/apps/audit-technique" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
-        <span class="dot"></span>Tableau de bord
-      </a>
-      <a class="nav-item" routerLink="/apps/audit-technique/urgents" routerLinkActive="active" (click)="closeSidebar()">
-        <span class="dot"></span>Écarts urgents
-        @if (openUrgents()) {
-          <span class="score-badge badge-red">{{ openUrgents() }}</span>
-        }
-      </a>
-      <a class="nav-item" routerLink="/apps/audit-technique/classement" routerLinkActive="active" (click)="closeSidebar()">
-        <span class="dot"></span>Classement
-      </a>
+      @if (!isAgencyScoped()) {
+        <div class="nav-section">Vue globale</div>
+        <a class="nav-item" routerLink="/apps/audit-technique" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+          <span class="dot"></span>Tableau de bord
+        </a>
+        <a class="nav-item" routerLink="/apps/audit-technique/urgents" routerLinkActive="active" (click)="closeSidebar()">
+          <span class="dot"></span>Écarts urgents
+          @if (openUrgents()) {
+            <span class="score-badge badge-red">{{ openUrgents() }}</span>
+          }
+        </a>
+        <a class="nav-item" routerLink="/apps/audit-technique/classement" routerLinkActive="active" (click)="closeSidebar()">
+          <span class="dot"></span>Classement
+        </a>
+      }
 
-      <div class="nav-section agences-section">Agences</div>
+      <div class="nav-section agences-section">{{ isAgencyScoped() ? 'Mon agence' : 'Agences' }}</div>
       @for (a of agencesNav(); track a.id) {
         <a
           class="nav-item agence-item"

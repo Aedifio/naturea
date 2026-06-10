@@ -19,30 +19,30 @@
   color: var(--muted);
 }
 
-.fdash-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+.fdash .reseau-grid--cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.fdash-grid .app-card {
-  cursor: default;
+.fdash .reseau-grid--cols-4 .app-card {
+  padding: 16px;
+  gap: 10px;
 }
 
-.fdash-grid .app-card:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: var(--border);
+.fdash .reseau-grid--cols-4 .app-card-name {
+  font-size: 14px;
 }
 
-.fdash-grid .app-card::before {
-  display: none;
+@media (max-width: 1100px) {
+  .fdash .reseau-grid--cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.fdash-grid .app-card-go {
-  color: var(--accent);
-  font-weight: 700;
-  text-decoration: none;
+@media (max-width: 600px) {
+  .fdash .reseau-grid--cols-4 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .muted {

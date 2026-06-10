@@ -2,19 +2,16 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { PORTAL_DASH_APPS } from '../../core/constants/portal-dash-apps.constants';
 import { KpiItem } from '../../core/models/kpi.model';
 import { KpiService } from '../../core/services/kpi.service';
 import { KpiGridComponent } from '../../shared/components/kpi-grid/kpi-grid.component';
 import { PageHeroComponent } from '../../shared/components/page-hero/page-hero.component';
 
-const RESEAU_APPS = [
-  { key: 'codir', name: 'CODIR', icon: '📈', cls: 'c-codir', app: 'CODIR', route: '/apps/codir', kpiPublic: false },
-  { key: 'recrut', name: 'Recrutement franchisés', icon: '🤝', cls: 'c-recrut', app: 'RECRUT', route: '/apps/recrutement', kpiPublic: false },
-  { key: 'ossature', name: 'Ossature / Track', icon: '🏗️', cls: 'c-ossature', app: 'OSSATURE', route: '/apps/ossature', kpiPublic: false },
-  { key: 'audit', name: 'Audit technique', icon: '📋', cls: 'c-audit', app: 'AUDIT', route: '/apps/audit-technique', kpiPublic: true },
-  { key: 'audit_com', name: 'Audit commerce', icon: '🗂️', cls: 'c-audit', app: 'AUDIT_COM', route: '/apps/audit-commerce', kpiPublic: true },
-  { key: 'chiffrage', name: 'Chiffrage', icon: '💰', cls: 'c-chiffrage', app: 'CHIFFRAGE', route: '/apps/chiffrage', kpiPublic: false },
-] as const;
+const RESEAU_APPS = PORTAL_DASH_APPS.filter((a) => a.app !== 'ADMIN').map((a) => ({
+  ...a,
+  kpiPublic: a.app === 'AUDIT' || a.app === 'AUDIT_COM',
+}));
 
 const EMPTY_KPIS: KpiItem[] = [
   { label: 'Aucune donnée', value: '—', tone: 'muted' },
