@@ -62,6 +62,10 @@ export class FactoryService {
     return this._byKey().get(key) ?? null;
   }
 
+  getById(id: number): Factory | null {
+    return this._factories().find((f) => f.id === id) ?? null;
+  }
+
   getNom(key: string): string {
     return this.getByKey(key)?.nom ?? key;
   }

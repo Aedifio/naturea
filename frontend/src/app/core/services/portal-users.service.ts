@@ -8,16 +8,25 @@ export interface PortalUserRow {
   email: string | null;
   name: string;
   role: string;
-  franchise: string;
   actif: boolean;
+  agency_id: number | null;
+  agency_nom: string | null;
+  factory_id: number | null;
+  factory_nom: string | null;
+}
+
+/** Admin list row: portal profile + auth.users.last_sign_in_at (not stored on portal_users). */
+export interface PortalUserAdminRow extends PortalUserRow {
+  last_sign_in_at: string | null;
 }
 
 export interface PortalUserUpdate {
   email: string;
   name: string;
   role: string;
-  franchise: string;
   actif: boolean;
+  agency_id: number | null;
+  factory_id: number | null;
   /** Optional new password. Empty/undefined leaves the current password unchanged. */
   password?: string;
 }
@@ -30,20 +39,21 @@ export interface PortalUserCreate extends PortalUserUpdate {
 export class PortalUsersService {
   private readonly supabase = inject(SupabaseService);
 
-  async list(): Promise<PortalUserRow[]> {
+  async list(): Promise<PortalUserAdminRow[]> {
     const { data, error } = await this.supabase.rpc('list_portal_users_admin');
     if (error) throw error;
-    return (data ?? []) as PortalUserRow[];
+    return (data ?? []) as PortalUserAdminRow[];
   }
 
-  async create(input: PortalUserCreate): Promise<PortalUserRow> {
+  async create(input: PortalUserCreate): Promise<PortalUserAdminRow> {
     const { data: portalId, error } = await this.supabase.rpc('admin_create_portal_user', {
       p_email: input.email.trim(),
       p_password: input.password,
       p_name: input.name.trim(),
       p_role: input.role,
-      p_franchise: input.franchise.trim(),
       p_actif: input.actif,
+      p_agency_id: input.agency_id,
+      p_factory_id: input.factory_id,
     });
     if (error) throw error;
 
@@ -53,14 +63,15 @@ export class PortalUsersService {
     return created;
   }
 
-  async update(id: string, patch: PortalUserUpdate): Promise<PortalUserRow> {
+  async update(id: string, patch: PortalUserUpdate): Promise<PortalUserAdminRow> {
     const { error } = await this.supabase.rpc('admin_update_portal_user', {
       p_portal_user_id: id,
       p_email: patch.email.trim(),
       p_name: patch.name.trim(),
       p_role: patch.role,
-      p_franchise: patch.franchise.trim(),
       p_actif: patch.actif,
+      p_agency_id: patch.agency_id,
+      p_factory_id: patch.factory_id,
     });
     if (error) throw error;
 

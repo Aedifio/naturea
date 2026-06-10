@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AgencyService } from '../../../core/services/agency.service';
 import { FactoryService } from '../../../core/services/factory.service';
+import { factoryKeyToOssatureSite } from '../../../core/models/factory.model';
 import { OssatureView } from '../constants/ossature.constants';
 
 @Injectable({ providedIn: 'root' })
@@ -22,10 +23,32 @@ export class OssatureModeService {
   readonly isFranchise = computed(() => this._routeView() === 'franchise');
   readonly isUsine = computed(() => this._routeView() === 'usine');
   readonly isArchives = computed(() => this._routeView() === 'archives');
-  readonly showFranchiseSelect = computed(() => this._routeView() === 'franchise');
+  readonly showFranchiseSelect = computed(() => this._routeView() === 'franchise' && !this.isFactoryScoped());
+
+  /** Non-Animateur user linked to a factory — usine + archives only. */
+  readonly isFactoryScoped = computed(() => this.auth.isOssatureFactoryScoped());
+
+  /** Ossature site label for a factory-scoped user; null when full access. */
+  readonly allowedOssatureSite = computed(() => {
+    const factoryId = this.auth.linkedFactoryId();
+    if (!factoryId || this.auth.isAnimateur()) return null;
+    const linked = this.factory.getById(factoryId);
+    return linked ? factoryKeyToOssatureSite(linked.key) : null;
+  });
+
+  readonly visibleNavViews = computed((): OssatureView[] => {
+    if (this.isFactoryScoped()) return ['usine', 'archives'];
+    return ['coord', 'franchise', 'usine', 'archives'];
+  });
 
   constructor() {
     effect(() => {
+      const scopedSite = this.allowedOssatureSite();
+      if (scopedSite) {
+        this.currentSiteUsine.set(scopedSite);
+        return;
+      }
+
       const sites = this.factory.getOssatureSites();
       if (!sites.length) return;
       if (!sites.includes(this.currentSiteUsine())) {
@@ -79,6 +102,7 @@ export class OssatureModeService {
   }
 
   setSiteUsine(site: string): void {
+    if (this.isFactoryScoped()) return;
     this.currentSiteUsine.set(site);
   }
 }

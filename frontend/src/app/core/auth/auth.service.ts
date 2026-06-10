@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { FACTORY_MANAGER_ROLE, isAdministratorRole } from '../constants/portal-roles.constants';
 import { StorageKey } from '../models/storage-keys';
 import { PortalPermissionsService } from '../services/portal-permissions.service';
 import { AppDataBootstrapService } from '../services/app-data-bootstrap.service';
@@ -18,8 +19,10 @@ interface PortalUserRow {
   legacy_id: number | null;
   name: string;
   role: string;
-  franchise: string;
   actif: boolean;
+  factory_id: number | null;
+  agency_id: number | null;
+  agencies: { name: string } | { name: string }[] | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -131,7 +134,23 @@ export class AuthService {
   }
 
   isAnimateur(): boolean {
-    return this.userSignal()?.role === 'Animateur';
+    return isAdministratorRole(this.userSignal()?.role);
+  }
+
+  /** Portal administrator (role Animateur). */
+  isAdministrator(): boolean {
+    return this.isAnimateur();
+  }
+
+  /** Canonical `factory.id` when the user is scoped to one usine in Ossature. */
+  linkedFactoryId(): number | null {
+    return this.userSignal()?.factoryId ?? null;
+  }
+
+  /** Responsable d'usine — limited Ossature nav (usine + archives for linked factory). */
+  isOssatureFactoryScoped(): boolean {
+    if (this.isAnimateur()) return false;
+    return this.userSignal()?.role === FACTORY_MANAGER_ROLE;
   }
 
   /** Refresh portal profile after admin edits the current user. */
@@ -162,7 +181,7 @@ export class AuthService {
 
     const { data: row, error } = await this.supabase
       .from('portal_users')
-      .select('legacy_id, name, role, franchise, actif')
+      .select('legacy_id, name, role, actif, factory_id, agency_id, agencies(name)')
       .eq('auth_user_id', authUser.id)
       .maybeSingle();
 
@@ -176,13 +195,17 @@ export class AuthService {
   }
 
   private mapPortalUser(row: PortalUserRow, email: string): PortalUser {
+    const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
+    const agencyName = agency?.name?.trim();
     return {
       id: row.legacy_id ?? 0,
       email,
       name: row.name,
       role: row.role as PortalUser['role'],
-      franchise: row.franchise,
+      agencyId: row.agency_id ?? null,
+      franchise: agencyName || '(siège)',
       actif: row.actif,
+      factoryId: row.factory_id ?? null,
     };
   }
 

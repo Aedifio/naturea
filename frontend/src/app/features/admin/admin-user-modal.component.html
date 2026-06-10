@@ -49,26 +49,42 @@
           <label for="u-name">Nom</label>
           <input id="u-name" type="text" formControlName="name" autocomplete="off" />
         </div>
-        <div class="modal-row">
-          <div class="modal-field">
-            <label for="u-role">Rôle</label>
-            <select id="u-role" formControlName="role">
-                @for (r of roles(); track r) {
-                <option [value]="r">{{ r }}</option>
-              }
-            </select>
-          </div>
-          <div class="modal-field">
-            <label for="u-franchise">Agence</label>
-            <select id="u-franchise" formControlName="franchise">
-              <option value="(siège)">(siège)</option>
-              @for (a of agencies(); track a.id) {
-                <option [value]="a.name">{{ a.name }}</option>
-              }
-            </select>
-            <p class="field-hint">Sans agence = accès siège.</p>
-          </div>
+
+        <div class="modal-field">
+          <label for="u-role">Rôle</label>
+          <select id="u-role" formControlName="role" (change)="onRoleChange($event)">
+            @for (r of roles(); track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
         </div>
+
+        @if (agencyFieldVisible()) {
+          <div class="modal-field">
+            <label for="u-agency">Agence</label>
+            <select id="u-agency" formControlName="agency_id">
+              <option [ngValue]="null" disabled>Sélectionner une agence…</option>
+              @for (a of agencies(); track a.id) {
+                <option [ngValue]="a.id">{{ a.name }}</option>
+              }
+            </select>
+            <p class="field-hint">Obligatoire pour le rôle « {{ franchiseeRole }} ».</p>
+          </div>
+        }
+
+        @if (factoryFieldVisible()) {
+          <div class="modal-field factory-field">
+            <label for="u-factory">Usine</label>
+            <select id="u-factory" formControlName="factory_id">
+              <option [ngValue]="null" disabled>Sélectionner une usine…</option>
+              @for (f of factories(); track f.id) {
+                <option [ngValue]="f.id">{{ f.nom }}</option>
+              }
+            </select>
+            <p class="field-hint">Obligatoire pour le rôle « {{ factoryManagerRole }} ».</p>
+          </div>
+        }
+
         <div class="modal-field modal-check">
           <label>
             <input type="checkbox" formControlName="actif" />

@@ -2,8 +2,8 @@
   <div class="card pad" style="margin-bottom: 18px">
     <div class="lab">Informations de l'agence</div>
     <div style="display: flex; gap: 12px; flex-wrap: wrap">
-      <input class="in" style="flex: 1 1 220px" [ngModel]="agency().name" (ngModelChange)="updateAgency('name', $event)" placeholder="Nom de l'agence" />
-      <input class="in" style="flex: 2 1 280px" [ngModel]="agency().address" (ngModelChange)="updateAgency('address', $event)" placeholder="Adresse" />
+      <div class="in" style="flex: 1 1 220px; background: var(--paper2); cursor: default">{{ agency().name }}</div>
+      <div class="in" style="flex: 2 1 280px; background: var(--paper2); cursor: default">{{ agency().address || '—' }}</div>
     </div>
   </div>
 

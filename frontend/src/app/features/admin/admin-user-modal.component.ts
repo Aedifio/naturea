@@ -1,5 +1,23 @@
-import { Component, computed, effect, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FACTORY_MANAGER_ROLE,
+  FRANCHISEE_ROLE,
+  isFactoryManagerRole,
+  isFranchiseeRole,
+} from '../../core/constants/portal-roles.constants';
+import { FactoryService } from '../../core/services/factory.service';
 import { AgencyService } from '../../core/services/agency.service';
 import { PortalPermissionsService } from '../../core/services/portal-permissions.service';
 import type {
@@ -19,8 +37,11 @@ export type AdminUserModalMode = 'create' | 'edit';
 })
 export class AdminUserModalComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly permissions = inject(PortalPermissionsService);
   private readonly agencyService = inject(AgencyService);
+  private readonly factoryService = inject(FactoryService);
 
   readonly open = input(false);
   readonly mode = input<AdminUserModalMode>('edit');
@@ -33,24 +54,43 @@ export class AdminUserModalComponent {
     return this.agencyService.getAll();
   });
 
+  readonly factories = computed(() => {
+    this.factoryService.factories();
+    return this.factoryService.getAll();
+  });
+
   readonly close = output<void>();
   readonly saveCreate = output<PortalUserCreate>();
   readonly saveEdit = output<PortalUserUpdate>();
 
   readonly roles = computed(() => this.permissions.knownRoles());
+  readonly franchiseeRole = FRANCHISEE_ROLE;
+  readonly factoryManagerRole = FACTORY_MANAGER_ROLE;
+
+  readonly agencyFieldVisible = signal(false);
+  readonly factoryFieldVisible = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: [''],
     name: ['', Validators.required],
     role: ['Franchisé', Validators.required],
-    franchise: ['(siège)', Validators.required],
+    agency_id: [null as number | null],
+    factory_id: [null as number | null],
     actif: [true],
   });
 
   constructor() {
+    this.form.controls.role.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((role) => this.onRoleChanged(role));
+
     effect(() => {
-      if (!this.open()) return;
+      if (!this.open()) {
+        this.agencyFieldVisible.set(false);
+        this.factoryFieldVisible.set(false);
+        return;
+      }
 
       const isCreate = this.mode() === 'create';
       const u = this.user();
@@ -61,7 +101,8 @@ export class AdminUserModalComponent {
           password: '',
           name: '',
           role: 'Franchisé',
-          franchise: '(siège)',
+          agency_id: null,
+          factory_id: null,
           actif: true,
         });
         this.form.controls.email.enable();
@@ -72,11 +113,10 @@ export class AdminUserModalComponent {
           password: '',
           name: u.name,
           role: u.role,
-          franchise: this.franchiseForForm(u.franchise),
+          agency_id: u.agency_id,
+          factory_id: u.factory_id,
           actif: u.actif,
         });
-        // Password is optional when editing: leaving it empty keeps the current one.
-        // It can only be changed for users with a linked Auth account.
         if (u.auth_user_id) {
           this.form.controls.password.setValidators([Validators.minLength(6)]);
           this.form.controls.email.enable();
@@ -86,7 +126,13 @@ export class AdminUserModalComponent {
         }
       }
       this.form.controls.password.updateValueAndValidity();
+      this.onRoleChanged(this.form.controls.role.value);
+      this.cdr.markForCheck();
     });
+  }
+
+  onRoleChange(event: Event): void {
+    this.onRoleChanged((event.target as HTMLSelectElement).value);
   }
 
   onBackdrop(e: MouseEvent): void {
@@ -98,13 +144,16 @@ export class AdminUserModalComponent {
   submit(): void {
     if (this.form.invalid) return;
     const raw = this.form.getRawValue();
+    const agency_id = isFranchiseeRole(raw.role) ? raw.agency_id : null;
+    const factory_id = isFactoryManagerRole(raw.role) ? raw.factory_id : null;
     if (this.mode() === 'create') {
       this.saveCreate.emit({
         email: raw.email,
         password: raw.password,
         name: raw.name,
         role: raw.role,
-        franchise: raw.franchise,
+        agency_id,
+        factory_id,
         actif: raw.actif,
       });
     } else {
@@ -112,15 +161,41 @@ export class AdminUserModalComponent {
         email: raw.email,
         name: raw.name,
         role: raw.role,
-        franchise: raw.franchise,
+        agency_id,
+        factory_id,
         actif: raw.actif,
         password: raw.password.trim() ? raw.password : undefined,
       });
     }
   }
 
-  private franchiseForForm(franchise: string): string {
-    if (!franchise || franchise === '(siège)') return '(siège)';
-    return this.agencyService.resolveFranchiseName(franchise) ?? '(siège)';
+  private onRoleChanged(role: string): void {
+    this.agencyFieldVisible.set(isFranchiseeRole(role));
+    this.factoryFieldVisible.set(isFactoryManagerRole(role));
+    this.applyAgencyRules(role);
+    this.applyFactoryRules(role);
+    this.cdr.markForCheck();
+  }
+
+  private applyAgencyRules(role: string): void {
+    const fc = this.form.controls.agency_id;
+    if (isFranchiseeRole(role)) {
+      fc.setValidators([Validators.required]);
+    } else {
+      fc.clearValidators();
+      if (fc.value != null) fc.setValue(null, { emitEvent: false });
+    }
+    fc.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyFactoryRules(role: string): void {
+    const fc = this.form.controls.factory_id;
+    if (isFactoryManagerRole(role)) {
+      fc.setValidators([Validators.required]);
+    } else {
+      fc.clearValidators();
+      if (fc.value != null) fc.setValue(null, { emitEvent: false });
+    }
+    fc.updateValueAndValidity({ emitEvent: false });
   }
 }

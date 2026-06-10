@@ -17,8 +17,13 @@ export interface PortalUser {
   password?: string;
   name: string;
   role: string;
+  /** Canonical agencies.id when the user is a Franchisé. */
+  agencyId: number | null;
+  /** Display label: agency name, or « (siège) » when no agency is linked. */
   franchise: string;
   actif: boolean;
+  /** When set (and user is not Animateur), Ossature usine/archives are scoped to this factory. */
+  factoryId: number | null;
 }
 
 export interface ActiveUser {

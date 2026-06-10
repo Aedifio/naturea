@@ -8,7 +8,15 @@ import { OssatureDetailModalComponent } from './components/ossature-detail-modal
 import { OssatureNewOrderModalComponent } from './components/ossature-new-order-modal.component';
 import { OssatureSignatureModalComponent } from './components/ossature-signature-modal.component';
 import { OssatureToastComponent } from './components/ossature-toast.component';
+import { OssatureView } from './constants/ossature.constants';
 import { OssatureModeService } from './services/ossature-mode.service';
+
+const OSSATURE_NAV: Array<{ label: string; route: string; icon: string; view: OssatureView }> = [
+  { label: 'Coordinateur', route: '/apps/ossature', icon: '📊', view: 'coord' },
+  { label: 'Franchisé', route: '/apps/ossature/franchise', icon: '🏠', view: 'franchise' },
+  { label: 'Usine', route: '/apps/ossature/usine', icon: '🏭', view: 'usine' },
+  { label: 'Archives', route: '/apps/ossature/archives', icon: '📦', view: 'archives' },
+];
 
 @Component({
   selector: 'app-ossature-shell',
@@ -38,12 +46,10 @@ export class OssatureShellComponent {
     return this.agencies.getNames();
   });
 
-  readonly nav = [
-    { label: 'Coordinateur', route: '/apps/ossature', icon: '📊', view: 'coord' as const },
-    { label: 'Franchisé', route: '/apps/ossature/franchise', icon: '🏠', view: 'franchise' as const },
-    { label: 'Usine', route: '/apps/ossature/usine', icon: '🏭', view: 'usine' as const },
-    { label: 'Archives', route: '/apps/ossature/archives', icon: '📦', view: 'archives' as const },
-  ];
+  readonly nav = computed(() => {
+    const allowed = new Set(this.mode.visibleNavViews());
+    return OSSATURE_NAV.filter((item) => allowed.has(item.view));
+  });
 
   onFranchiseChange(e: Event): void {
     const value = (e.target as HTMLSelectElement).value;

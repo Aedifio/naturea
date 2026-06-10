@@ -112,6 +112,11 @@
     color: #fff;
   }
 
+  &.r-usine {
+    background: #6b5b3e;
+    color: #fff;
+  }
+
   &.r-other {
     background: var(--sand2);
     color: var(--ink);
@@ -126,6 +131,12 @@
 .status-inactif {
   color: var(--danger);
   font-weight: 600;
+}
+
+.last-sign-in {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .users-status {

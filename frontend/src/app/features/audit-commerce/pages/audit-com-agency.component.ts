@@ -30,11 +30,15 @@ export class AuditComAgencyComponent {
   readonly data = inject(AuditCommerceDataService);
   readonly ui = inject(AuditCommerceUiService);
 
-  readonly agencyId = toSignal(this.route.paramMap.pipe(map((p) => p.get('agencyId') ?? '')), {
-    initialValue: this.route.snapshot.paramMap.get('agencyId') ?? '',
-  });
+  readonly agencyId = toSignal(
+    this.route.paramMap.pipe(map((p) => Number(p.get('agencyId') ?? NaN))),
+    { initialValue: Number(this.route.snapshot.paramMap.get('agencyId') ?? NaN) },
+  );
 
-  readonly agency = computed(() => this.data.getAgency(this.agencyId()));
+  readonly agency = computed(() => {
+    const id = this.agencyId();
+    return Number.isFinite(id) ? this.data.getAgency(id) : undefined;
+  });
   readonly note = computed(() => {
     const a = this.agency();
     return a ? monthNoteStats(a, this.ui.ym()).agency : null;
@@ -49,12 +53,12 @@ export class AuditComAgencyComponent {
     { id: 'docs', label: 'Documents' },
   ];
 
-  private lastAgencyId = '';
+  private lastAgencyId = 0;
 
   constructor() {
     effect(() => {
       const id = this.agencyId();
-      if (id && id !== this.lastAgencyId) {
+      if (Number.isFinite(id) && id !== this.lastAgencyId) {
         this.lastAgencyId = id;
         this.ui.resetAgencyUi();
         this.ui.auditId.set(this.data.resolveDefaultAuditId(id, this.ui.ym()));

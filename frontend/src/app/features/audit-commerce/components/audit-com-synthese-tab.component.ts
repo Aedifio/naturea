@@ -29,10 +29,6 @@ export class AuditComSyntheseTabComponent {
   readonly noteVar = noteVar;
   readonly Math = Math;
 
-  updateAgency(field: 'name' | 'address', value: string): void {
-    this.data.updateAgency(this.agency().id, { [field]: value });
-  }
-
   updateObjective(field: 'signatures' | 'ccmi' | 'transfo', value: string): void {
     const obj = { ...this.agency().objectives, [field]: value === '' ? undefined : Number(value) };
     this.data.updateAgency(this.agency().id, { objectives: obj });

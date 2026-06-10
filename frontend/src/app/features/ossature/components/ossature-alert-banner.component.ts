@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../../core/auth/auth.service';
 import { FactoryService } from '../../../core/services/factory.service';
 import { OssatureDataService } from '../services/ossature-data.service';
 import { sendAlertsRetard, sendAlertsSig } from '../utils/ossature-email.util';
@@ -97,6 +98,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
   `,
 })
 export class OssatureAlertBannerComponent {
+  private readonly auth = inject(AuthService);
   private readonly data = inject(OssatureDataService);
   private readonly factory = inject(FactoryService);
   private readonly toast = inject(OssatureToastService);
@@ -108,7 +110,13 @@ export class OssatureAlertBannerComponent {
   readonly total = computed(
     () => this.enRetardDevis().length + this.enRetardSig().length + this.enRetardPlans().length,
   );
-  readonly visible = computed(() => !this.dismissed() && this.total() > 0 && this.data.orders().length > 0);
+  readonly visible = computed(
+    () =>
+      this.auth.isAdministrator() &&
+      !this.dismissed() &&
+      this.total() > 0 &&
+      this.data.orders().length > 0,
+  );
 
   dismiss(): void {
     this.dismissed.set(true);

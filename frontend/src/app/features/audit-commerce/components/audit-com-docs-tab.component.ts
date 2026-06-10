@@ -69,7 +69,7 @@ export class AuditComDocsTabComponent implements OnInit {
       const uploaded = await this.files.upload('audit-commerce', path, blob, {
         appSlot: 'AUDIT_COM',
         entityType: 'agency',
-        entityId: this.agency().id,
+        entityId: String(this.agency().id),
         kind: 'image',
         storageKey: `fnet:doc:${id}`,
       });

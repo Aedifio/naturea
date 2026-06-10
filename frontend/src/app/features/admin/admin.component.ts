@@ -1,8 +1,10 @@
+import { DatePipe } from '@angular/common';
 import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
 import { AuthService } from '../../core/auth/auth.service';
 import {
+  PortalUserAdminRow,
   PortalUserCreate,
-  PortalUserRow,
   PortalUserUpdate,
   PortalUsersService,
 } from '../../core/services/portal-users.service';
@@ -13,7 +15,7 @@ import { AdminUserModalComponent, AdminUserModalMode } from './admin-user-modal.
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [PageHeroComponent, AdminModulesComponent, AdminUserModalComponent],
+  imports: [DatePipe, PageHeroComponent, AdminModulesComponent, AdminUserModalComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
 })
@@ -22,13 +24,13 @@ export class AdminComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly usersTableRef = viewChild<ElementRef<HTMLElement>>('usersTable');
 
-  readonly users = signal<PortalUserRow[]>([]);
+  readonly users = signal<PortalUserAdminRow[]>([]);
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
 
   readonly modalOpen = signal(false);
   readonly modalMode = signal<AdminUserModalMode>('edit');
-  readonly editingUser = signal<PortalUserRow | null>(null);
+  readonly editingUser = signal<PortalUserAdminRow | null>(null);
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
 
@@ -59,7 +61,7 @@ export class AdminComponent implements OnInit {
     this.modalOpen.set(true);
   }
 
-  openEdit(user: PortalUserRow): void {
+  openEdit(user: PortalUserAdminRow): void {
     this.saveError.set(null);
     this.modalMode.set('edit');
     this.editingUser.set(user);
@@ -123,10 +125,11 @@ export class AdminComponent implements OnInit {
     if (role === 'Animateur') return 'r-anim';
     if (role === 'Codir') return 'r-codir';
     if (role === 'Franchisé') return 'r-franchise';
+    if (role === FACTORY_MANAGER_ROLE) return 'r-usine';
     return 'r-other';
   }
 
-  trackUser(u: PortalUserRow): string {
+  trackUser(u: PortalUserAdminRow): string {
     return u.id;
   }
 
@@ -135,7 +138,10 @@ export class AdminComponent implements OnInit {
     if (msg.includes('Email already')) return 'Cet email est déjà utilisé.';
     if (msg.includes('Password must')) return 'Le mot de passe doit contenir au moins 6 caractères.';
     if (msg.includes('no linked auth account')) return 'Cet utilisateur n\'a pas de compte de connexion lié — mot de passe impossible à définir.';
-    if (msg.includes('Invalid email')) return 'Email invalide.';
+    if (msg.includes('Usine requise')) return 'Sélectionne une usine pour le rôle Responsable d\'usine.';
+    if (msg.includes('Usine réservée')) return 'L\'usine ne peut être renseignée que pour le rôle Responsable d\'usine.';
+    if (msg.includes('Agence requise')) return 'Sélectionne une agence pour le rôle Franchisé.';
+    if (msg.includes('Agence réservée')) return 'L\'agence ne peut être renseignée que pour le rôle Franchisé.';
     if (msg.includes('Forbidden')) return 'Action réservée à l\'Animateur.';
     if (msg.includes('User not found after create')) return 'Utilisateur créé mais rechargement impossible — rafraîchis la page.';
     if (msg.length > 0 && msg.length < 200) return msg;
