@@ -1,0 +1,50 @@
+<div class="app-page-title">
+  <div>
+    <div class="kicker">Membres</div>
+    <h1>Équipe CODIR</h1>
+    <div class="subtitle">
+      {{ members().length }} membre{{ members().length > 1 ? 's' : '' }} · cliquez sur un membre pour mettre à jour son nom et son rôle
+    </div>
+  </div>
+  <div class="app-page-title-actions">
+    <button type="button" class="app-btn app-btn-primary app-btn-sm app-btn-icon" (click)="openNewMember()">
+      <app-codir-icon name="plus" [size]="14" />
+      Ajouter
+    </button>
+  </div>
+</div>
+
+<!--<div class="app-info-banner">
+  Les membres ont été créés automatiquement à partir des codes responsables de votre Excel (DT, AC, EB, SG, PB, RE, MD, TG, etc.). Cliquez sur chaque membre pour renseigner le vrai nom, le rôle et l'email.
+</div>-->
+
+<div class="app-team-grid">
+  @for (m of members(); track m.id) {
+    @let stats = codir.memberStats(m.id);
+    <button type="button" class="app-team-card app-team-card-btn" (click)="openEditMember(m)">
+      <span class="app-avatar app-team-card-avatar" [style.background]="m.color">
+        {{ codir.initials(m.name) }}
+      </span>
+      <div class="app-team-card-body">
+        <div class="app-team-card-name">{{ m.name }}</div>
+        <div class="app-team-card-role">{{ m.role }}</div>
+        @if (m.email) {
+          <div class="app-team-card-email">{{ m.email }}</div>
+        }
+        <div class="app-team-card-stats">
+          {{ stats.open }} action{{ stats.open > 1 ? 's' : '' }} ouverte{{ stats.open > 1 ? 's' : '' }}
+          @if (stats.overdue) {
+            · <span class="app-text-red">{{ stats.overdue }} en retard</span>
+          }
+        </div>
+      </div>
+      <span class="app-team-card-chevron"><app-codir-icon name="chevronRight" [size]="16" /></span>
+    </button>
+  }
+</div>
+
+<app-codir-member-modal
+  [open]="modalOpen()"
+  [member]="editingMember()"
+  (close)="closeModal()"
+/>

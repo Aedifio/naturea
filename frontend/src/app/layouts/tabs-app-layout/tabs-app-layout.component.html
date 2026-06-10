@@ -1,0 +1,53 @@
+<div class="tabs-shell" [class]="'variant-' + (layout.variant || 'default')" [style.--tabs-max-width.px]="layout.maxWidth || 1320">
+  <app-return-banner [appCode]="layout.appCode" [title]="layout.title" />
+  <header class="tabs-header">
+    <div class="header-inner">
+      <div class="brand-block">
+        @if (layout.showLogo) {
+          <a routerLink="/home" class="brand-link">
+            <img [src]="logo.src" [alt]="logo.alt" class="brand-banner" />
+          </a>
+        }
+        <div class="brand-text">
+          @if (layout.tag) {
+            <div class="logo-tag">{{ layout.tag }}</div>
+          } @else {
+            <h1 class="tabs-title">{{ layout.title }}</h1>
+            @if (layout.subtitle) {
+              <p class="tabs-sub">{{ layout.subtitle }}</p>
+            }
+          }
+        </div>
+      </div>
+      <div class="header-right">
+        @if (showOverdueAlert()) {
+          <a routerLink="/apps/codir/actions" [queryParams]="{ status: 'overdue' }" class="header-alert">
+            <app-codir-icon name="bell" [size]="14" />
+            {{ overdueCount() }} en retard
+          </a>
+        }
+      </div>
+    </div>
+    <nav class="tabs-nav">
+      @for (item of navItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: tabLinkExact(item.route) }"
+          class="tab-link"
+        >
+          @if (item.iconName) {
+            <app-codir-icon [name]="item.iconName" [size]="15" />
+          }
+          {{ item.label }}
+          @if (item.badge) {
+            <span class="tab-badge" [class.muted]="item.badgeMuted">{{ item.badge }}</span>
+          }
+        </a>
+      }
+    </nav>
+  </header>
+  <main class="tabs-main">
+    <router-outlet />
+  </main>
+</div>

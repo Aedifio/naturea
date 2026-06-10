@@ -1,0 +1,102 @@
+/**
+ * Writes src/environments/environment.ts and environment.prod.ts from env vars.
+ * Generated files are gitignored — never commit credentials.
+ * Loads frontend/.env when present (local dev). Exits with error if vars are missing.
+ */
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const envDir = join(frontendRoot, 'src/environments');
+
+const pkg = JSON.parse(readFileSync(join(frontendRoot, 'package.json'), 'utf8'));
+const appVersion = pkg.version?.trim() || '0.0.0';
+const sentryRelease =
+  process.env.SENTRY_RELEASE?.trim() || `naturea-portal@${appVersion}`;
+
+function loadDotEnv() {
+  const envPath = join(frontendRoot, '.env');
+  if (!existsSync(envPath)) return;
+
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (!(key in process.env) || !process.env[key]?.trim()) {
+      process.env[key] = value;
+    }
+  }
+}
+
+function fail(message) {
+  console.error(`write-environment: ${message}`);
+  process.exit(1);
+}
+
+loadDotEnv();
+
+const required = [
+  ['SUPABASE_URL', process.env.SUPABASE_URL],
+  ['SUPABASE_ANON_KEY', process.env.SUPABASE_ANON_KEY],
+  ['SENTRY_DSN', process.env.SENTRY_DSN],
+];
+
+const missing = required
+  .filter(([, value]) => !value?.trim())
+  .map(([name]) => name);
+
+if (missing.length) {
+  fail(
+    `missing required environment variable(s): ${missing.join(', ')}. ` +
+      'Set them in Render, or locally in frontend/.env (see .env.example).',
+  );
+}
+
+const supabaseUrl = process.env.SUPABASE_URL.trim();
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY.trim();
+const sentryDsn = process.env.SENTRY_DSN.trim();
+
+const placeholderPattern = /YOUR_|CHANGE_ME|example\.com/i;
+if (
+  placeholderPattern.test(supabaseUrl) ||
+  placeholderPattern.test(supabaseAnonKey) ||
+  placeholderPattern.test(sentryDsn)
+) {
+  fail('environment variables contain placeholder values — set real credentials.');
+}
+
+function escapeTsString(value) {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function writeEnvironment(filename, production) {
+  const outPath = join(envDir, filename);
+  const contents = `/** AUTO-GENERATED — do not edit or commit. Secrets come from .env / Render env vars only. */
+export const environment = {
+  production: ${production},
+  appVersion: '${escapeTsString(appVersion)}',
+  supabaseUrl: '${escapeTsString(supabaseUrl)}',
+  supabaseAnonKey: '${escapeTsString(supabaseAnonKey)}',
+  sentryDsn: '${escapeTsString(sentryDsn)}',
+  sentryRelease: '${escapeTsString(sentryRelease)}',
+};
+`;
+  writeFileSync(outPath, contents, 'utf8');
+  console.log(`Wrote ${outPath}`);
+}
+
+writeEnvironment('environment.ts', false);
+writeEnvironment('environment.prod.ts', true);

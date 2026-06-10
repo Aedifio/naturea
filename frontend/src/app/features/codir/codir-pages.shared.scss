@@ -1,0 +1,30 @@
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: var(--sans);
+}
+
+code {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--surface-alt);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.app-card-title-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-card-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}

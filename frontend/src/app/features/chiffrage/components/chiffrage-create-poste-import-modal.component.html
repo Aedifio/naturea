@@ -1,0 +1,87 @@
+@if (open()) {
+  <div class="modal-overlay on" (click)="close()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h3>➕ Nouvel élément pour {{ usineNom() }}</h3>
+        <button type="button" class="modal-close" (click)="close()" title="Fermer">×</button>
+      </div>
+      <div class="modal-b">
+        @if (poste(); as p) {
+          <div class="detected-line">
+            <div class="detected-line-title">Ligne détectée dans le PDF :</div>
+            <div class="detected-line-label">{{ p.label_pdf }}</div>
+            <div class="detected-line-meta">
+              {{ p.unite }} · {{ fmtNum(p.qte, p.qte % 1 ? 2 : 0) }} × {{ fmtNum(p.pu, 2) }} € = {{ fmtEurR(p.total) }}
+            </div>
+          </div>
+        }
+
+        <div class="radio-group">
+          <div class="radio-card" [class.on]="mode() === 'new'" (click)="setMode('new')">
+            <div class="radio-card-title">➕ Créer un nouveau poste</div>
+            <div class="radio-card-sub">Pour un produit qui n'existe pas encore</div>
+          </div>
+          <div class="radio-card" [class.on]="mode() === 'link'" (click)="setMode('link')">
+            <div class="radio-card-title">🔗 Rattacher à un poste existant</div>
+            <div class="radio-card-sub">Quand l'usine renomme un produit</div>
+          </div>
+        </div>
+
+        @if (mode() === 'new') {
+          <div class="field">
+            <label>Libellé affiché</label>
+            <input type="text" [ngModel]="label()" (ngModelChange)="label.set($event)" placeholder="Ex. Modules plancher 80×220" />
+            <div class="field-hint">Apparaîtra dans le formulaire et le référentiel</div>
+          </div>
+          <div class="field field-row-2">
+            <div>
+              <label>Unité</label>
+              <select [ngModel]="unite()" (ngModelChange)="unite.set($event)">
+                @for (u of ['m²', 'm³', 'ml', 'u', 'forfait']; track u) {
+                  <option [value]="u">{{ u }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label>Section du formulaire</label>
+              <select [ngModel]="section()" (ngModelChange)="onSectionChange($event)">
+                @for (s of sections(); track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+                <option value="__new__">+ Créer une nouvelle section</option>
+              </select>
+            </div>
+          </div>
+          @if (section() === '__new__') {
+            <div class="field">
+              <label>Nom de la nouvelle section</label>
+              <input type="text" [ngModel]="newSectionName()" (ngModelChange)="newSectionName.set($event)" placeholder="Ex. 🪟 Menuiseries" />
+            </div>
+          }
+          <div class="field">
+            <label>Prix unitaire (€)</label>
+            <input type="number" [ngModel]="prix()" (ngModelChange)="prix.set(+$event)" step="0.01" min="0" />
+          </div>
+          <div class="field">
+            <label>Tooltip (optionnel)</label>
+            <textarea [ngModel]="tooltip()" (ngModelChange)="tooltip.set($event)" placeholder="Description courte affichée au survol du ⓘ dans le formulaire"></textarea>
+          </div>
+        } @else {
+          <div class="field">
+            <label>Poste existant</label>
+            <select [ngModel]="linkCode()" (ngModelChange)="linkCode.set($event)">
+              <option value="">— choisir —</option>
+              @for (p of existingPostes(); track p.code) {
+                <option [value]="p.code">{{ p.label }}{{ p.custom ? ' (perso)' : '' }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="close()">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="submit()">Valider</button>
+      </div>
+    </div>
+  </div>
+}

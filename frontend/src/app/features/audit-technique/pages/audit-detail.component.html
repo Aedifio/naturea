@@ -1,0 +1,94 @@
+@if (agence(); as ag) {
+  @if (audit(); as au) {
+    <div class="topbar">
+      <div>
+        <a class="btn btn-ghost" style="margin-bottom: 8px; font-size: 12px" [routerLink]="['/apps/audit-technique/agence', ag.id]">← {{ ag.nom }}</a>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <app-audit-score-ring [score]="score()" [size]="52" />
+          <div>
+            <div class="agence-ville">Rapport d'audit</div>
+            <h2>{{ fmtDate(au.date) }}</h2>
+            @if (au.auditeur) {
+              <div style="font-size: 12px; color: var(--text2)">Auditeur : {{ au.auditeur }}</div>
+            }
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-danger" (click)="deleteAudit()">Supprimer</button>
+    </div>
+    <div class="content fade-up">
+      @if (au.chantiers || au.participants) {
+        <div class="card-sm meta-row">
+          @if (au.chantiers) {
+            <div>
+              <div class="form-label" style="margin-bottom: 4px">Chantiers</div>
+              <div style="font-size: 13px; color: var(--text2)">{{ au.chantiers }}</div>
+            </div>
+          }
+          @if (au.participants) {
+            <div>
+              <div class="form-label" style="margin-bottom: 4px">Participants</div>
+              <div style="font-size: 13px; color: var(--text2)">{{ au.participants }}</div>
+            </div>
+          }
+        </div>
+      }
+      @if (urgents().length) {
+        <div class="card urgent-card">
+          <div class="section-title" style="color: var(--red)">Écarts urgents ({{ urgents().length }})</div>
+          @for (c of urgents(); track c.id) {
+            <div class="urgent-item">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px">
+                <span class="badge badge-red">{{ c.code }} {{ c.label }}</span>
+              </div>
+              @if (c.commentaire) {
+                <p style="font-size: 13px; color: var(--text2); margin-top: 4px">{{ c.commentaire }}</p>
+              }
+            </div>
+          }
+        </div>
+      }
+      <div class="card">
+        <div class="section-title">Corps de métier évalués</div>
+        @if (!relevant().length) {
+          <div class="empty">Aucun corps évalué</div>
+        } @else {
+          <table class="table">
+            <thead>
+              <tr><th>#</th><th>Corps de métier</th><th>Note</th><th>Écart</th><th>Commentaire</th></tr>
+            </thead>
+            <tbody>
+              @for (c of relevant(); track c.id) {
+                <tr>
+                  <td><span class="mono" style="color: var(--text3)">{{ c.code }}</span></td>
+                  <td style="font-weight: 500">{{ c.label }}</td>
+                  <td>
+                    @if (c.note !== null) {
+                      <span class="mono" style="font-weight: 600" [style.color]="scoreColor(c.note)">{{ c.note }}/5</span>
+                    } @else {
+                      <span style="color: var(--text3)">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (ecartMeta(c.ecart); as ec) {
+                      <span class="badge" [style.background]="ec.color + '18'" [style.color]="ec.color" [style.border-color]="ec.color + '30'">{{ ec.label }}</span>
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td style="font-size: 12px; color: var(--text2); max-width: 300px">{{ c.commentaire || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+      @if (au.commentaires) {
+        <div class="card" style="margin-top: 20px">
+          <div class="section-title">Commentaires généraux</div>
+          <p style="font-size: 13px; color: var(--text2); line-height: 1.7">{{ au.commentaires }}</p>
+        </div>
+      }
+    </div>
+  }
+}

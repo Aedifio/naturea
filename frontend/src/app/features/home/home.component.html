@@ -1,0 +1,241 @@
+<app-page-hero
+  [kicker]="greeting()"
+  titleHtml="Espace <em>réseau</em>"
+  subtitle="Toutes les applications du réseau Maisons Naturéa, centralisées et adaptées à votre profil."
+  [stats]="heroStats()"
+/>
+
+@if (franchiseDash(); as dash) {
+  <section class="fdash">
+    <div class="fdash-head">
+      <h3 class="fdash-title">Mon tableau de bord — {{ dash.franchise }}</h3>
+      <div class="fdash-sub">Indicateurs de mon agence · {{ dash.role }}</div>
+    </div>
+    <div class="fdash-grid">
+      @if (dash.role === 'Franchisé' || dash.role === 'Conducteur travaux') {
+        <div class="app-card c-audit">
+          <div class="app-card-h">
+            <div class="app-card-icon">📋</div>
+            <div class="app-card-name">Audit technique</div>
+          </div>
+          @if (dash.auditTech.found) {
+            <app-kpi-grid [items]="[
+              { label: 'Note technique', value: dash.auditTech.note != null ? dash.auditTech.note!.toFixed(1) + '/5' : '—', tone: dash.auditTech.note != null && dash.auditTech.note! < 3 ? 'red' : dash.auditTech.note != null && dash.auditTech.note! < 4 ? 'amber' : 'green' },
+              { label: 'Écarts à reprendre', value: dash.auditTech.ecarts!, tone: dash.auditTech.ecarts! > 0 ? 'red' : 'green' },
+              { label: 'Audits réalisés', value: dash.auditTech.nbAudits! }
+            ]" />
+          } @else {
+            <p class="muted">Agence non reliée</p>
+          }
+          @if (dash.role === 'Franchisé') {
+            <div class="app-card-foot">
+              <div class="app-card-updated"></div>
+              <a routerLink="/apps/audit-technique" class="app-card-go">Ouvrir mon audit →</a>
+            </div>
+          }
+        </div>
+      }
+      @if (dash.role === 'Franchisé' || dash.role === 'Commercial') {
+        <div class="app-card c-audit">
+          <div class="app-card-h">
+            <div class="app-card-icon">🗂️</div>
+            <div class="app-card-name">Audit commerce</div>
+          </div>
+          @if (dash.auditCom.found) {
+            <app-kpi-grid [items]="[
+              { label: 'Note commerce', value: dash.auditCom.note != null ? dash.auditCom.note!.toFixed(1) + '/10' : '—' },
+              { label: 'Contacts (année)', value: dash.auditCom.contactsAnnee! },
+              { label: 'Ventes (mois)', value: dash.auditCom.ventesMois!, tone: 'green' }
+            ]" />
+          } @else {
+            <p class="muted">Agence non reliée</p>
+          }
+          <div class="app-card-foot">
+            <div class="app-card-updated"></div>
+            <a routerLink="/apps/audit-commerce" class="app-card-go">Ouvrir mon audit commerce →</a>
+          </div>
+        </div>
+      }
+      @if (dash.role !== 'Commercial') {
+        <div class="app-card c-ossature">
+          <div class="app-card-h">
+            <div class="app-card-icon">🏗️</div>
+            <div class="app-card-name">Ossature</div>
+          </div>
+          <app-kpi-grid [items]="[
+            { label: 'Devis demandés', value: dash.ossature.devisDemande },
+            { label: 'Devis reçus', value: dash.ossature.devisEnvoye },
+            { label: 'Commandes', value: dash.ossature.commande, tone: 'green' }
+          ]" />
+          @if (canAccess('OSSATURE')) {
+            <div class="app-card-foot">
+              <div class="app-card-updated"></div>
+              <a routerLink="/apps/ossature" class="app-card-go">Ouvrir Ossature →</a>
+            </div>
+          }
+        </div>
+      }
+      @if (dash.role !== 'Franchisé') {
+        <div class="app-card c-chiffrage">
+          <div class="app-card-h">
+            <div class="app-card-icon">💰</div>
+            <div class="app-card-name">Chiffrage</div>
+          </div>
+          <app-kpi-grid [items]="[
+            { label: 'Devis chiffrés', value: dash.chiffrage.total },
+            { label: 'Ce mois', value: dash.chiffrage.moisCount, tone: 'green' },
+            { label: 'Montant HT', value: formatEur(dash.chiffrage.montant) }
+          ]" />
+          @if (canAccess('CHIFFRAGE')) {
+            <div class="app-card-foot">
+              <div class="app-card-updated"></div>
+              <a routerLink="/apps/chiffrage" class="app-card-go">Ouvrir Chiffrage →</a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
+<div class="home-grid">
+  <div class="home-card" [class.editable]="isAnimateur()">
+    <div class="home-card-h">
+      <div class="home-card-h-l">
+        <div class="home-card-i" style="background: var(--accent-soft); color: var(--accent)">📰</div>
+        <h3>Actualités du réseau</h3>
+      </div>
+      @if (isAnimateur()) {
+        <button type="button" class="btn-add" (click)="openModal('actu')">+ Publier</button>
+      }
+    </div>
+    <div class="home-card-b">
+      @if (!actus().length) {
+        <div class="nl-empty">
+          <div class="nl-empty-icon">📰</div>
+          <div class="nl-empty-text">
+            Pas encore d'actualités.
+            @if (isAnimateur()) {
+              Clique sur « + Publier » pour en ajouter une.
+            } @else {
+              Reviens plus tard.
+            }
+          </div>
+        </div>
+      } @else {
+        @for (a of actus(); track a.id) {
+          <article class="actu-item">
+            @if (isAnimateur()) {
+              <button type="button" class="actu-del" (click)="deleteActu(a.id)" title="Supprimer">×</button>
+            }
+            <div class="actu-h">
+              <span class="actu-cat c-{{ a.cat }}">{{ a.lbl }}</span>
+              <span class="actu-date">{{ a.date }}</span>
+            </div>
+            <div class="actu-title">{{ a.title }}</div>
+            <div class="actu-body">{{ a.body }}</div>
+          </article>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="home-card" [class.editable]="isAnimateur()">
+    <div class="home-card-h">
+      <div class="home-card-h-l">
+        <div class="home-card-i" style="background: var(--wood-soft); color: var(--wood-ink)">📅</div>
+        <h3>Planning tête de réseau</h3>
+      </div>
+      @if (isAnimateur()) {
+        <button type="button" class="btn-add" (click)="openModal('event')">+ Ajouter</button>
+      }
+    </div>
+    <div class="home-card-b">
+      @if (!events().length) {
+        <div class="nl-empty">
+          <div class="nl-empty-icon">📅</div>
+          <div class="nl-empty-text">
+            Pas encore d'événements planifiés.
+            @if (isAnimateur()) {
+              Clique sur « + Ajouter » pour en créer un.
+            } @else {
+              Reviens plus tard.
+            }
+          </div>
+        </div>
+      } @else {
+        @for (e of events(); track e.id) {
+          <div class="event-item">
+            @if (isAnimateur()) {
+              <button type="button" class="event-del" (click)="deleteEvent(e.id)" title="Supprimer">×</button>
+            }
+            <div class="event-date">
+              <div class="event-day">{{ e.day }}</div>
+              <div class="event-mon">{{ e.mon }}</div>
+            </div>
+            <div class="event-info">
+              <span class="event-tag t-{{ e.tag }}">{{ e.tlbl }}</span>
+              <div class="event-title">{{ e.title }}</div>
+              <div class="event-detail">{{ e.detail }}</div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="home-card home-card-wide" [class.editable]="isAnimateur()">
+    <div class="home-card-h">
+      <div class="home-card-h-l">
+        <div class="home-card-i" style="background: #e1f0e8; color: var(--green)">📨</div>
+        <h3>Newsletter du réseau</h3>
+      </div>
+      @if (isAnimateur()) {
+        <div class="nl-header-actions">
+          <button type="button" class="btn-add" (click)="nlFileInput.click()">📎 Importer PDF</button>
+          <button type="button" class="btn-add" (click)="openModal('newsletter-text')">✏️ Coller texte</button>
+          <input #nlFileInput type="file" accept="application/pdf" class="sr-only" (change)="onNewsletterPdf($event)" />
+        </div>
+      }
+    </div>
+    <div class="home-card-b">
+      @if (newsletter(); as nl) {
+        <div class="nl-current">
+          <div class="nl-meta">
+            <div class="nl-meta-l">
+              <div class="nl-meta-icon">{{ nl.type === 'pdf' ? '📄' : '📝' }}</div>
+              <div class="nl-meta-info">
+                <strong>{{ nl.name || 'Newsletter' }}</strong>
+                <span>Publiée le {{ nl.date }}{{ nl.type === 'pdf' ? ' — PDF' : ' — Texte' }}</span>
+              </div>
+            </div>
+            @if (isAnimateur()) {
+              <div class="nl-actions">
+                <button type="button" class="nl-btn danger" (click)="deleteNewsletter()">Supprimer</button>
+              </div>
+            }
+          </div>
+          @if (nl.type === 'pdf') {
+            <iframe class="nl-pdf-frame" [src]="newsletterPdfSrc(nl.content)" title="Newsletter PDF"></iframe>
+          } @else {
+            <div class="nl-text-content">{{ nl.content }}</div>
+          }
+        </div>
+      } @else {
+        <div class="nl-empty">
+          <div class="nl-empty-icon">📨</div>
+          <div class="nl-empty-text">
+            Pas encore de newsletter publiée.<br />
+            @if (isAnimateur()) {
+              Clique sur « 📎 Importer PDF » ou « ✏️ Coller texte » pour publier la prochaine.
+            } @else {
+              Quand l'animateur publiera une newsletter, elle s'affichera ici.
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<app-portal-modal [type]="modalType()" [open]="modalOpen()" (close)="closeModal()" />

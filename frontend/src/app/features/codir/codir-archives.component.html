@@ -1,0 +1,96 @@
+<div class="app-page-title">
+  <div>
+    <div class="kicker">Archives</div>
+    <h1>Tâches archivées</h1>
+    <div class="subtitle">
+      {{ archivedCount() }} tâche{{ archivedCount() > 1 ? 's' : '' }} archivée{{ archivedCount() > 1 ? 's' : '' }}
+    </div>
+  </div>
+</div>
+
+@if (archivedCount() === 0) {
+  <div class="app-empty-state-box">
+    <div class="empty-icon">
+      <app-codir-icon name="archive" [size]="40" />
+    </div>
+    <div class="empty-title">Aucune tâche archivée</div>
+    <div class="empty-hint">
+      Les tâches archivées depuis le plan d'action apparaîtront ici.<br/>
+      Pour archiver, sélectionnez une ou plusieurs tâches dans le plan d'action puis cliquez sur « Archiver », ou utilisez le bouton « Archiver » dans la fiche d'une tâche.
+    </div>
+  </div>
+} @else {
+  @for (group of grouped(); track group.key) {
+    <div class="app-theme-group">
+      <div class="app-theme-header app-theme-header-static">
+        <div class="app-theme-header-left">
+          <span class="app-theme-name archive-month">{{ group.label }}</span>
+        </div>
+        <div class="app-theme-counts">
+          <span class="app-theme-count done">{{ group.actions.length }} tâche{{ group.actions.length > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+      <div class="app-theme-actions">
+        @for (a of group.actions; track a.id) {
+          @let dl = codir.deadlineLabel(a);
+          @let meta = codir.statusMeta(a.status);
+          @let owners = actionOwners(a);
+          @let commentCount = a.comments?.length ?? 0;
+          <div class="app-action-row" [class.done]="a.status === 'done'" (click)="openDetail(a.id)">
+            <span class="app-select-placeholder"></span>
+            <button
+              type="button"
+              class="app-action-checkbox"
+              [class.checked]="a.status === 'done'"
+              (click)="toggleStatus($event, a.id)"
+              title="Marquer comme terminée"
+            >
+              @if (a.status === 'done') {
+                <app-codir-icon name="check" [size]="14" />
+              }
+            </button>
+            <div class="app-grow">
+              <div class="app-action-title">{{ a.title }}</div>
+              <div class="app-action-meta">
+                <span [class]="'app-text-' + dl.tone" [class.deadline-strong]="dl.tone === 'red'">{{ dl.text }}</span>
+                @if (a.priority === 'high') {
+                  <span>·</span>
+                  <span class="app-text-red deadline-strong">Haute</span>
+                }
+                @if (commentCount > 0) {
+                  <span class="app-comment-bubble">
+                    <app-codir-icon name="message" [size]="11" />
+                    {{ commentCount }}
+                  </span>
+                }
+                @if (a.archivedAt) {
+                  <span>·</span>
+                  <span class="app-text-muted">Archivée le {{ codir.formatDateShort(a.archivedAt) }}</span>
+                }
+              </div>
+            </div>
+            <div class="app-avatar-stack hide-mobile">
+              @for (o of owners.slice(0, 3); track o.id) {
+                <span class="app-avatar" [style.background]="o.color" style="width: 26px; height: 26px; font-size: 10px">
+                  {{ codir.initials(o.name) }}
+                </span>
+              }
+            </div>
+            <span class="app-status-badge hide-mobile" [class]="meta.cls"><span class="dot"></span>{{ meta.label }}</span>
+            <span class="app-row-chevron"><app-codir-icon name="chevronRight" [size]="16" /></span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}
+
+<app-codir-action-detail-modal
+  [actionId]="detailActionId()"
+  (close)="closeDetail()"
+  (saved)="showToast($event)"
+/>
+
+@if (toast()) {
+  <div class="app-toast" [class.error]="toast().includes('impossible') || toast().includes('Erreur')">{{ toast() }}</div>
+}

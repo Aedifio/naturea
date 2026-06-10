@@ -1,0 +1,45 @@
+@if (open()) {
+  <div class="modal-bg on" (click)="onBackdrop($event)">
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <div class="modal-h">
+        <h3>{{ mode() === 'create' ? 'Nouvelle agence' : 'Modifier l\'agence' }}</h3>
+        <button type="button" class="modal-x" (click)="close.emit()" aria-label="Fermer">×</button>
+      </div>
+
+      <form class="modal-b" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-field">
+          <label for="a-name">Nom de l'agence</label>
+          <input id="a-name" type="text" formControlName="name" autocomplete="off" />
+          <p class="field-hint">Identifiant affiché dans le portail et les applications (Ossature, Chiffrage…).</p>
+        </div>
+
+        <div class="modal-field">
+          <label for="a-ville">Ville</label>
+          <input id="a-ville" type="text" formControlName="ville" autocomplete="off" />
+        </div>
+
+        <div class="modal-field">
+          <label for="a-adresse">Adresse</label>
+          <textarea id="a-adresse" formControlName="adresse" rows="3"></textarea>
+        </div>
+
+        <div class="modal-field">
+          <label for="a-email">Email de contact</label>
+          <input id="a-email" type="email" formControlName="contact_email" autocomplete="off" />
+          <p class="field-hint">Utilisé pour les notifications Ossature (devis retour, etc.).</p>
+        </div>
+
+        @if (error()) {
+          <div class="modal-error">{{ error() }}</div>
+        }
+
+        <div class="modal-f">
+          <button type="button" class="btn-cancel" (click)="close.emit()" [disabled]="saving()">Annuler</button>
+          <button type="submit" class="btn-save" [disabled]="form.invalid || saving()">
+            {{ saving() ? 'Enregistrement…' : mode() === 'create' ? 'Créer' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

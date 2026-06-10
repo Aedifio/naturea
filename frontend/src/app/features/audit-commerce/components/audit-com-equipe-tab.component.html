@@ -1,0 +1,68 @@
+<div class="fade">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; flex-wrap: wrap">
+    <div class="tiny muted" style="max-width: 640px">
+      @if (currentAudit(); as cur) {
+        Audit du <b>{{ fmtDate(cur.date) }}</b>@if (locked()) { (validé/archivé) } — les notes /10 se saisissent dans l'onglet <b>Audit</b>.
+      } @else {
+        Crée ou sélectionne un audit (onglet Audit) pour noter les salariés.
+      }
+    </div>
+    <button type="button" class="btn pri sm" (click)="addEmployee()"><span style="font-weight: 800">+</span> Salarié</button>
+  </div>
+
+  @if (currentAudit() && stats().agency != null) {
+    <div class="card pad" style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; background: var(--paper2)">
+      <div>
+        <div class="lab" style="margin: 0">Note moyenne de l'agence</div>
+        <div class="tiny muted">{{ stats().rated }} salarié(s) noté(s)</div>
+      </div>
+      <div class="disp" style="font-weight: 800; font-size: 30px; color: var(--clay)">
+        {{ stats().agency!.toFixed(1) }}<span style="font-size: 16px; color: var(--ink-soft)">/10</span>
+      </div>
+    </div>
+  }
+
+  @if (!agency().employees.length) {
+    <div class="empty">Aucun salarié. Ajoute l'équipe pour pouvoir attribuer les chiffres et les noter.</div>
+  }
+  <div class="grid" style="grid-template-columns: 1fr">
+    @for (em of agency().employees; track em.id) {
+      <div class="card pad">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+          <input class="in" style="flex: 1 1 170px" [ngModel]="em.name" (ngModelChange)="updateEmployee(em.id, 'name', $event)" placeholder="Nom du salarié" />
+          <input class="in" style="flex: 1 1 170px" [ngModel]="em.role" (ngModelChange)="updateEmployee(em.id, 'role', $event)" placeholder="Fonction" />
+          <div style="text-align: right">
+            <div class="lab" style="margin: 0">Moyenne</div>
+            <div class="disp" style="font-weight: 800; font-size: 22px" [style.color]="stats().emp[em.id] ? 'var(--petrol)' : 'var(--ink-mute)'">
+              {{ stats().emp[em.id] ? stats().emp[em.id].avg.toFixed(1) : '—' }}<span style="font-size: 12px">/10</span>
+            </div>
+          </div>
+          <button type="button" class="btn sm danger ghost" (click)="deleteEmployee(em.id)">🗑️</button>
+        </div>
+        <div class="sep"></div>
+        <span class="lab">Notes par point audité</span>
+        @if (currentAudit()) {
+          @if (empNotes(em.id).length) {
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px">
+              @for (p of empNotes(em.id); track p.label) {
+                <span class="pill" style="background: #fff; border: 1px solid var(--line); color: var(--ink-soft)">
+                  {{ p.label }} · <b>{{ p.note }}</b>/10
+                </span>
+              }
+            </div>
+          } @else {
+            <div class="tiny muted" style="margin-top: 5px">Aucune note saisie pour ce salarié dans cet audit.</div>
+          }
+          <input
+            class="in"
+            style="width: 100%; margin-top: 10px"
+            [disabled]="locked()"
+            [ngModel]="currentAudit()!.empRatings[em.id].comment ?? ''"
+            (ngModelChange)="updateRating(em.id, $event)"
+            placeholder="Commentaire de synthèse sur le salarié…"
+          />
+        }
+      </div>
+    }
+  </div>
+</div>

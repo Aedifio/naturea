@@ -1,0 +1,102 @@
+<div class="fade">
+  <h1 style="font-size: 30px; margin: 0 0 4px">Vue réseau</h1>
+  <div class="muted" style="margin-bottom: 22px">
+    {{ data.agencies().length }} agence(s) · audits de <b>{{ ymLabel(ym()) }}</b>
+  </div>
+
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 22px">
+    <div class="card pad">
+      <div class="lab">Signatures vs objectif — réseau</div>
+      <div class="kpibig" style="color: var(--clay)">
+        {{ totals().s }}<span style="font-size: 18px; color: var(--ink-soft)"> / {{ totObj() }}</span>
+      </div>
+      <div class="tiny muted" style="margin-top: 4px">
+        @if (totObj() > 0) {
+          {{ Math.round((totals().s / totObj()) * 100) }}% du cumul des objectifs ({{ data.agencies().length }} agence(s))
+        } @else {
+          aucun objectif de signatures défini
+        }
+      </div>
+      @if (totObj() > 0) {
+        <div class="bar" style="margin-top: 8px">
+          <i [style.width.%]="Math.min(100, (totals().s / totObj()) * 100)" style="background: var(--clay)"></i>
+        </div>
+      }
+    </div>
+    <div class="card pad">
+      <div class="lab">Résiliations réseau</div>
+      <div class="kpibig" style="color: var(--petrol)">{{ totals().c }}</div>
+    </div>
+    <div class="card pad">
+      <div class="lab">Transfo. moyenne</div>
+      <div class="kpibig">{{ transfo().toFixed(1) }}%</div>
+    </div>
+    <div class="card pad">
+      <div class="lab">Agences en difficulté</div>
+      <div class="kpibig" [style.color]="trouble() ? 'var(--red)' : 'var(--green)'">{{ trouble() }}</div>
+      <div class="tiny muted" style="margin-top: 4px">note moyenne &lt; {{ threshold() }}/10</div>
+    </div>
+  </div>
+
+  @if (data.agencies().length) {
+    <div class="card pad" style="margin-bottom: 22px">
+      <div class="disp" style="font-weight: 700; font-size: 16px; margin-bottom: 4px">📈 Cumul réseau — contacts entrants &amp; signatures</div>
+      <div class="tiny muted" style="margin-bottom: 12px">
+        Totaux de toutes les agences par mois (année {{ ym().split('-')[0] }}) · pointillé = objectif signatures cumulé ({{ totObj() }}/mois)
+      </div>
+      <app-audit-com-network-chart [agencies]="data.agencies()" [ym]="ym()" />
+    </div>
+  }
+
+  <div class="card" style="overflow: hidden">
+    <div class="agrow head">
+      @for (h of ['Agence', 'Signatures', 'Résiliations', 'Transfo.', 'Statut']; track h) {
+        <div class="tiny" style="text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft)">{{ h }}</div>
+      }
+      <div class="tiny" style="text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); text-align: right">Note</div>
+    </div>
+    @if (!rows().length) {
+      <div class="empty">Ajoute des agences pour commencer (bouton « Agence » ou Réglages → créer plusieurs agences).</div>
+    }
+    @for (row of rows(); track row.a.id) {
+      <div class="agrow clk" (click)="goAgency(row.a.id)">
+        <div>
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 7px">
+            <span class="pill-dot" [style.background]="noteVar(row.note, threshold())"></span>
+            {{ row.a.name }}
+          </div>
+          <div class="tiny muted">{{ row.a.employees.length }} salarié(s) · {{ row.a.audits.length }} audit(s)</div>
+        </div>
+        <div>
+          <div style="font-weight: 700; font-variant-numeric: tabular-nums">
+            {{ row.k.signatures }}
+            @if (row.a.objectives.signatures) {
+              <span class="muted tiny"> / {{ row.a.objectives.signatures }}</span>
+            }
+          </div>
+          @if (row.a.objectives.signatures) {
+            <div class="bar" style="margin-top: 4px">
+              <i
+                [style.width.%]="Math.min(100, (row.k.signatures / row.a.objectives.signatures!) * 100)"
+                style="background: var(--clay)"
+              ></i>
+            </div>
+          }
+        </div>
+        <div style="font-weight: 700; font-variant-numeric: tabular-nums">
+          {{ row.k.ccmi }}
+          @if (row.a.objectives.ccmi) {
+            <span class="muted tiny"> / {{ row.a.objectives.ccmi }}</span>
+          }
+        </div>
+        <div style="font-weight: 700; font-variant-numeric: tabular-nums">{{ row.k.transfo.toFixed(1) }}%</div>
+        <div>
+          <app-audit-com-status-pill [note]="row.note" [threshold]="threshold()" />
+        </div>
+        <div class="disp" style="text-align: right; font-weight: 800" [style.color]="noteVar(row.note, threshold())">
+          {{ row.note == null ? '—' : row.note.toFixed(1) + '/10' }}
+        </div>
+      </div>
+    }
+  </div>
+</div>

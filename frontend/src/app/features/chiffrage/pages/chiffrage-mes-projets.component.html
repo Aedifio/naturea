@@ -1,0 +1,64 @@
+<div class="page-head">
+  <div class="page-kicker">Mes projets</div>
+  <h1 class="page-title">Devis <em>enregistrés</em></h1>
+  <p class="page-sub">Tous les devis que tu as sauvegardés. Clique pour rouvrir, dupliquer ou supprimer un projet.</p>
+</div>
+
+<div class="card">
+  <div class="card-h">
+    <div class="card-h-l"><div class="ico">📁</div><h3>Liste des projets sauvegardés</h3></div>
+    <div class="card-meta">{{ countLabel() }}</div>
+  </div>
+  <div class="card-b">
+    @if (projetsList().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state-ico">📁</div>
+        <div class="empty-state-txt">
+          Aucun projet enregistré pour le moment.<br />
+          Va sur <strong>Chiffrer un projet</strong>, saisis un nom de client, fais ton estimation, puis clique sur <strong>💾 Sauvegarder</strong>.
+        </div>
+      </div>
+    } @else {
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nom du projet / client</th>
+            <th>Référence</th>
+            <th>Usine</th>
+            <th class="num">Total HT</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of projetsList(); track p.id) {
+            <tr>
+              <td>
+                <div class="cell-date">{{ fmtDateFR(p.date) }}</div>
+                <div class="cell-time mono">{{ fmtTimeFR(p.date) }}</div>
+              </td>
+              <td><strong>{{ p.nom }}</strong></td>
+              <td>
+                @if (p.ref) {
+                  <span class="cell-ref">{{ p.ref }}</span>
+                } @else {
+                  <span class="cell-empty">—</span>
+                }
+              </td>
+              <td><span class="hist-pill {{ p.usine }}">{{ p.usineLabel || p.usine }}</span></td>
+              <td class="num"><strong>{{ fmtEurR(p.total) }}</strong></td>
+              <td>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="reopen(p.id)" title="Réouvrir ce projet dans l'estimateur">↗ Ouvrir</button>
+                <button type="button" class="btn btn-ghost btn-sm btn-danger-text" (click)="delete(p.id)" title="Supprimer">🗑</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+<!--<div class="note">
+  <strong>💾 Stockage local.</strong> Les projets sont enregistrés dans ton navigateur uniquement. En production, ils seront partagés via une base de données pour que toute la franchise y accède.
+</div>-->

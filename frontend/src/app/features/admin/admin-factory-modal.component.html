@@ -1,0 +1,78 @@
+@if (open()) {
+  <div class="modal-bg on" (click)="onBackdrop($event)">
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <div class="modal-h">
+        <h3>{{ mode() === 'create' ? 'Nouvelle usine' : 'Modifier l\'usine' }}</h3>
+        <button type="button" class="modal-x" (click)="close.emit()" aria-label="Fermer">×</button>
+      </div>
+
+      <form class="modal-b" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-field">
+          <label for="f-key">Clé technique</label>
+          <input
+            id="f-key"
+            type="text"
+            formControlName="key"
+            autocomplete="off"
+            placeholder="boisboreal"
+            [class.readonly]="mode() === 'edit'"
+          />
+          @if (mode() === 'create') {
+            <p class="field-hint">Minuscules, chiffres et underscores (ex. boisboreal). Non modifiable ensuite.</p>
+          } @else {
+            <p class="field-hint">Identifiant stable — non modifiable.</p>
+          }
+        </div>
+
+        <div class="modal-field">
+          <label for="f-nom">Nom affiché</label>
+          <input id="f-nom" type="text" formControlName="nom" autocomplete="off" />
+        </div>
+
+        <div class="modal-row">
+          <div class="modal-field">
+            <label for="f-couleur">Couleur</label>
+            <div class="color-field">
+              <input id="f-couleur" type="color" [value]="form.controls.couleur.value" (input)="form.controls.couleur.setValue($any($event.target).value)" />
+              <input type="text" formControlName="couleur" autocomplete="off" placeholder="#2B4A1A" />
+            </div>
+          </div>
+          <div class="modal-field modal-check">
+            <label>
+              <input type="checkbox" formControlName="actif" />
+              Usine active
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label for="f-email">Email contact</label>
+          <input id="f-email" type="email" formControlName="contact_email" autocomplete="off" />
+          <p class="field-hint">Utilisé par Ossature pour l'envoi des dossiers.</p>
+        </div>
+
+        <div class="modal-field">
+          <label for="f-desc">Description</label>
+          <textarea id="f-desc" formControlName="description" rows="3"></textarea>
+        </div>
+
+        @if (mode() === 'create') {
+          <div class="modal-warn">
+            Une nouvelle usine n'aura pas de postes chiffrage tant qu'ils ne sont pas ajoutés au référentiel.
+          </div>
+        }
+
+        @if (error()) {
+          <div class="modal-error">{{ error() }}</div>
+        }
+
+        <div class="modal-f">
+          <button type="button" class="btn-cancel" (click)="close.emit()" [disabled]="saving()">Annuler</button>
+          <button type="submit" class="btn-save" [disabled]="form.invalid || saving()">
+            {{ saving() ? 'Enregistrement…' : mode() === 'create' ? 'Créer' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

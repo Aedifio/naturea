@@ -1,0 +1,124 @@
+<div class="app-page-title">
+  <div>
+    <div class="kicker">Vue d'ensemble</div>
+    <h1>Bonjour.</h1>
+    <div class="subtitle">Nous sommes le {{ today() }}.</div>
+  </div>
+</div>
+
+@if (stats(); as s) {
+  <div class="app-stats-grid">
+    <div class="app-stat-card">
+      <div class="app-stat-label">Total actions</div>
+      <div class="app-stat-value">{{ s.total }}</div>
+    </div>
+    <div class="app-stat-card">
+      <div class="app-stat-label">En retard</div>
+      <div class="app-stat-value" [class.red]="s.overdue > 0">{{ s.overdue }}</div>
+    </div>
+    <div class="app-stat-card">
+      <div class="app-stat-label">Cette semaine</div>
+      <div class="app-stat-value amber">{{ s.upcoming }}</div>
+    </div>
+    <div class="app-stat-card">
+      <div class="app-stat-label">En cours</div>
+      <div class="app-stat-value">{{ s.inProgress }}</div>
+    </div>
+    <div class="app-stat-card">
+      <div class="app-stat-label">Terminées</div>
+      <div class="app-stat-value green">{{ s.done }}</div>
+    </div>
+  </div>
+
+  <div class="app-dashboard-grid">
+    <div class="app-card" [class.accent-red]="s.overdue > 0">
+      <div class="app-card-header">
+        <div class="app-card-title app-card-title-icon">
+          <app-codir-icon name="alert" [size]="16" />
+          Actions en retard
+        </div>
+      </div>
+      @if (s.overdue === 0) {
+        <div class="app-text-muted app-card-empty">
+          <app-codir-icon name="circleCheck" [size]="14" />
+          Tout est à jour.
+        </div>
+      } @else {
+        @for (a of s.overdueList.slice(0, 5); track a.id) {
+          <div class="app-list-row">
+            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0].color || 'var(--accent)'" style="width: 28px; height: 28px">
+              {{ codir.initials(codir.actionOwners(a)[0].name || a.ownerLabel || '?') }}
+            </span>
+            <div class="app-grow">
+              <div class="app-truncate app-action-title">{{ a.title }}</div>
+              <div class="app-text-red" style="font-size: 11px">
+                {{ a.theme }} · Retard {{ abs(codir.daysUntil(a.deadline) ?? 0) }}j
+              </div>
+            </div>
+          </div>
+        }
+        <div style="margin-top: 12px">
+          <a routerLink="/apps/codir/actions" [queryParams]="{ status: 'overdue' }" class="app-btn app-btn-ghost app-btn-sm">Voir toutes les actions en retard</a>
+        </div>
+      }
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header">
+        <div class="app-card-title app-card-title-icon">
+          <app-codir-icon name="clock" [size]="16" />
+          Échéances cette semaine
+        </div>
+      </div>
+      @if (s.upcoming === 0) {
+        <div class="app-text-muted" style="font-size: 13px">Aucune échéance imminente.</div>
+      } @else {
+        @for (a of s.upcomingList.slice(0, 5); track a.id) {
+          <div class="app-list-row">
+            <span class="app-avatar" [style.background]="codir.actionOwners(a)[0].color || 'var(--accent)'" style="width: 28px; height: 28px">
+              {{ codir.initials(codir.actionOwners(a)[0].name || a.ownerLabel || '?') }}
+            </span>
+            <div class="app-grow">
+              <div class="app-truncate app-action-title">{{ a.title }}</div>
+              <div class="app-text-amber" style="font-size: 11px">
+                {{ a.theme }} ·
+                @if (codir.daysUntil(a.deadline) === 0) {
+                  aujourd'hui
+                } @else {
+                  dans {{ codir.daysUntil(a.deadline) }}j
+                }
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header">
+        <div class="app-card-title app-card-title-icon">
+          <app-codir-icon name="list" [size]="16" />
+          Avancement par thème
+        </div>
+      </div>
+      @for (t of themeStats(); track t.theme) {
+        <div style="padding: 8px 0; cursor: pointer" [routerLink]="['/apps/codir/actions']" [queryParams]="{ theme: t.theme }">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px">
+            <span style="font-size: 13px; font-weight: 500">{{ t.theme }}</span>
+            <span style="font-size: 11px; color: var(--muted)">
+              {{ t.done }}/{{ t.total }}
+              @if (t.overdue) {
+                · <span class="app-text-red">{{ t.overdue }} retard</span>
+              }
+            </span>
+          </div>
+          <div class="app-progress-track">
+            <div class="app-progress-fill" [style.width.%]="t.total ? (t.done / t.total) * 100 : 0"></div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <p class="app-text-muted">Aucune donnée CODIR. Les données proviennent de la clé <code>codir:data:v4</code>.</p>
+}

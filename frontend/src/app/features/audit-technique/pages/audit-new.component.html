@@ -1,0 +1,222 @@
+@if (agence(); as ag) {
+  @if (activeCorps(); as c) {
+    <div class="topbar">
+      <div>
+        <button type="button" class="btn btn-ghost" style="margin-bottom: 8px; font-size: 12px" (click)="closeCorps()">← Corps de métier</button>
+        <h2 style="font-size: 18px">{{ c.code }} — {{ c.label }}</h2>
+      </div>
+      <app-audit-score-ring [score]="score()" [size]="48" />
+    </div>
+    <div class="content fade-up">
+      <div class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom: 16px">
+            <div class="section-title">Note (/5)</div>
+            <div class="note-btns">
+              @for (n of [null, 1, 2, 3, 4, 5]; track $index) {
+                <button
+                  type="button"
+                  class="note-btn"
+                  [style.background]="c.note === n ? (n === null ? 'var(--bg4)' : scoreColor(n)) : '#fff'"
+                  [style.border-color]="c.note === n ? (n === null ? 'var(--border2)' : scoreColor(n)) : 'var(--border)'"
+                  [style.color]="c.note === n ? (n === null ? 'var(--text)' : '#fff') : 'var(--text2)'"
+                  (click)="setNote(n)"
+                >{{ n ?? '—' }}</button>
+              }
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Type d'écart</div>
+            <div class="ecart-list">
+              @for (e of ecarts; track e.value) {
+                <button
+                  type="button"
+                  class="ecart-btn"
+                  [style.background]="c.ecart === e.value ? e.color + '1a' : '#fff'"
+                  [style.border-color]="c.ecart === e.value ? e.color : 'var(--border)'"
+                  [style.color]="c.ecart === e.value ? e.color : 'var(--text2)'"
+                  (click)="toggleEcart(e.value)"
+                >
+                  <span class="ecart-dot" [style.background]="e.color"></span>{{ e.label }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom: 16px">
+            <div class="section-title">Commentaire & observations</div>
+            <textarea
+              [ngModel]="corpsComment()"
+              (ngModelChange)="corpsComment.set($event)"
+              (blur)="saveCorpsComment()"
+              placeholder="Décrire les écarts constatés, observations, recommandations…"
+              style="min-height: 140px"
+            ></textarea>
+          </div>
+          <div class="card">
+            <div class="section-title">Photos</div>
+            <button type="button" class="photo-add" (click)="photoInput.click()">📷 Ajouter une photo</button>
+            <input #photoInput type="file" accept="image/*" multiple hidden (change)="onPhotoSelect($event)" />
+            @if (c.photos.length) {
+              <div class="photo-grid">
+                @for (p of c.photos; track $index; let i = $index) {
+                  <div class="photo-wrap">
+                    <img [src]="p" alt="" />
+                    <button type="button" class="photo-del" (click)="removePhoto(i)">×</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px">
+        <button type="button" class="btn btn-primary" (click)="closeCorps()">Retour à la liste →</button>
+      </div>
+    </div>
+  } @else {
+    @if (draftData(); as d) {
+    <div class="topbar">
+      <div>
+        <button type="button" class="btn btn-ghost" style="margin-bottom: 8px; font-size: 12px" (click)="cancel()">← Annuler</button>
+        <h2>Nouvel audit — {{ ag.nom }}</h2>
+      </div>
+      <app-audit-score-ring [score]="score()" [size]="48" />
+    </div>
+    <div class="content fade-up">
+      <div class="steps-bar">
+        @for (s of steps; track s; let i = $index) {
+          <div class="step-item" [class.active]="i === step()" [class.done]="i < step()">
+            <span class="step-num">{{ i < step() ? '✓' : i + 1 }}</span>
+            <span class="step-label">{{ s }}</span>
+          </div>
+        }
+      </div>
+
+      @if (step() === 0) {
+        <div class="card">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Date de l'audit</label>
+              <input type="date" [ngModel]="d.date" (ngModelChange)="patchField('date', $event)" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Auditeur</label>
+              <input type="text" [ngModel]="d.auditeur" (ngModelChange)="patchField('auditeur', $event)" placeholder="Nom de l'auditeur" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Chantiers visités</label>
+            <input type="text" [ngModel]="d.chantiers" (ngModelChange)="patchField('chantiers', $event)" placeholder="Noms / références des chantiers visités" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Participants</label>
+            <input type="text" [ngModel]="d.participants" (ngModelChange)="patchField('participants', $event)" placeholder="Personnes présentes lors de l'audit" />
+          </div>
+          <div class="form-row" style="margin-bottom: 0">
+            <label class="form-label">Commentaires généraux</label>
+            <textarea [ngModel]="d.commentaires" (ngModelChange)="patchField('commentaires', $event)" placeholder="Appréciation générale du chantier…"></textarea>
+          </div>
+        </div>
+      }
+
+      @if (step() === 1) {
+        <div class="card">
+          <div class="corps-grid">
+            @for (c of d.corps; track c.id) {
+              <button type="button" class="corps-btn" [style.border-color]="c.note !== null ? scoreColor(c.note) + '66' : 'var(--border)'" (click)="openCorps(c.id)">
+                <span class="mono corps-code">{{ c.code }}</span>
+                <span class="corps-label">{{ c.label }}</span>
+                @if (ecartMeta(c.ecart); as ec) {
+                  <span class="ecart-dot" [style.background]="ec.color"></span>
+                }
+                @if (c.note !== null) {
+                  <span class="mono corps-note" [style.color]="scoreColor(c.note)">{{ c.note }}/5</span>
+                }
+                <span class="corps-arrow">›</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (step() === 2) {
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Score final</div>
+            <div style="display: flex; align-items: center; gap: 20px; padding: 10px 0">
+              <app-audit-score-ring [score]="score()" [size]="72" />
+              <div>
+                <div class="final-score" [style.color]="scoreColor(score())">{{ score() ? score()!.toFixed(2) : '—' }}</div>
+                <div style="font-size: 14px" [style.color]="scoreColor(score())">{{ scoreLabel(score()) }}</div>
+                <div class="final-stats">
+                  <div>
+                    <div class="final-stat-v">{{ draftNotedCount() }}</div>
+                    <div class="final-stat-l">Corps notés</div>
+                  </div>
+                  @if (draftUrgentCount() > 0) {
+                    <div>
+                      <div class="final-stat-v" style="color: var(--red)">{{ draftUrgentCount() }}</div>
+                      <div class="final-stat-l">Urgents</div>
+                    </div>
+                  }
+                  @if (draftMinorCount() > 0) {
+                    <div>
+                      <div class="final-stat-v" style="color: var(--amber)">{{ draftMinorCount() }}</div>
+                      <div class="final-stat-l">Mineurs</div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+            @if (draftUrgentCount() > 0) {
+              <div class="urgent-summary">
+                <div class="urgent-summary-title">Écarts urgents</div>
+                @for (c of draftUrgentCorps(); track c.id) {
+                  <div class="urgent-summary-item">
+                    <span style="font-size: 12px; color: var(--red); font-weight: 500">{{ c.label }}</span>
+                    @if (c.commentaire) {
+                      <p style="font-size: 11px; color: var(--text2); margin-top: 3px">{{ c.commentaire }}</p>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <div class="card">
+            <div class="section-title">Récapitulatif</div>
+            @if (d.commentaires) {
+              <div style="margin-bottom: 12px">
+                <div class="form-label" style="margin-bottom: 4px">Commentaires généraux</div>
+                <p style="font-size: 13px; color: var(--text2); line-height: 1.6">{{ d.commentaires }}</p>
+              </div>
+            }
+            <div class="form-label" style="margin-bottom: 8px">Corps évalués</div>
+            @for (c of draftNotedCorps(); track c.id) {
+              <div class="recap-row">
+                <span class="mono weak-code">{{ c.code }}</span>
+                <span class="weak-label">{{ c.label }}</span>
+                <span class="mono" [style.color]="scoreColor(c.note)" style="font-weight: 600">{{ c.note }}/5</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="wizard-nav">
+        @if (step() > 0) {
+          <button type="button" class="btn btn-ghost" (click)="prevStep()">← Étape précédente</button>
+        } @else {
+          <div></div>
+        }
+        @if (step() < 2) {
+          <button type="button" class="btn btn-primary" (click)="nextStep()">Étape suivante →</button>
+        } @else {
+          <button type="button" class="btn btn-primary save-btn" (click)="saveAudit()">✓ Enregistrer l'audit</button>
+        }
+      </div>
+    </div>
+    }
+  }
+}

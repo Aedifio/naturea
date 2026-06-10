@@ -1,0 +1,63 @@
+<div class="topbar"><h2>Classement du réseau</h2></div>
+<div class="content fade-up">
+  <div class="grid-2" style="grid-template-columns: 3fr 2fr">
+    <div class="card">
+      <div class="section-title">Classement agences</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th><th>Agence</th><th>Audits</th><th>Score moyen</th><th>Tendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!sorted().length) {
+            <tr><td colspan="5" class="empty">Aucune agence</td></tr>
+          } @else {
+            @for (a of sorted(); track a.id; let i = $index) {
+            <tr class="clickable" [routerLink]="['/apps/audit-technique/agence', a.id]">
+              <td><span class="mono rank" [style.color]="rankColor(i)">{{ i + 1 }}</span></td>
+              <td>
+                <div style="font-weight: 500; color: var(--text)">{{ a.nom }}</div>
+                <div style="font-size: 11px; color: var(--text3)">{{ a.ville }}</div>
+              </td>
+              <td><span class="mono" style="color: var(--text2)">{{ a.audits.length }}</span></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <app-audit-score-ring [score]="a.score" [size]="36" />
+                  <app-audit-score-pill [score]="a.score" />
+                </div>
+              </td>
+              <td>
+                <div class="progress" style="width: 90px">
+                  <div
+                    class="progress-fill"
+                    [style.width.%]="a.score ? (a.score / 5) * 100 : 0"
+                    [style.background]="scoreColor(a.score)"
+                  ></div>
+                </div>
+              </td>
+            </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="section-title">Score moyen par corps de métier</div>
+      @if (!cmScores().length) {
+        <div class="empty">Pas de données</div>
+      } @else {
+        @for (cm of cmScores(); track cm.id) {
+          <div class="weak-row">
+            <span class="mono weak-code">{{ cm.code }}</span>
+            <span class="weak-label">{{ cm.label }}</span>
+            <div class="progress" style="width: 60px">
+              <div class="progress-fill" [style.width.%]="(cm.avg / 5) * 100" [style.background]="scoreColor(cm.avg)"></div>
+            </div>
+            <span class="mono weak-score" [style.color]="scoreColor(cm.avg)">{{ cm.avg.toFixed(1) }}</span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

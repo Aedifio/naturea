@@ -1,0 +1,94 @@
+@if (open()) {
+  <div class="modal-overlay" (click)="onBackdrop($event)">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Nouvelle action</h3>
+        <button type="button" class="icon-btn" (click)="close.emit()" aria-label="Fermer">
+          <app-codir-icon name="x" [size]="20" />
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="field field-flush">
+            <label for="na-theme">Thème</label>
+            <select id="na-theme" class="input" [ngModel]="theme()" (ngModelChange)="theme.set($event)">
+              @for (t of themes(); track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+          <div class="field field-flush">
+            <label for="na-owner">Responsable</label>
+            <select id="na-owner" class="input" [ngModel]="ownerId()" (ngModelChange)="ownerId.set($event)">
+              <option value="">— Non attribué —</option>
+              @for (m of members(); track m.id) {
+                <option [value]="m.id">{{ m.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="na-title">Titre / Tâche</label>
+          <input
+            id="na-title"
+            type="text"
+            class="input"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            autofocus
+            autocomplete="off"
+            data-lpignore="true"
+            data-form-type="other"
+          />
+        </div>
+        <div class="field">
+          <label for="na-description">Description (optionnel)</label>
+          <textarea id="na-description" class="input" rows="2" [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea>
+        </div>
+        <div class="grid-3">
+          <div class="field field-flush">
+            <label for="na-startdate">Date démarrage</label>
+            <input
+              id="na-startdate"
+              type="date"
+              class="input"
+              [ngModel]="startDate()"
+              (ngModelChange)="startDate.set($event)"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            />
+          </div>
+          <div class="field field-flush">
+            <label for="na-deadline">Échéance</label>
+            <input
+              id="na-deadline"
+              type="date"
+              class="input"
+              [ngModel]="deadline()"
+              (ngModelChange)="deadline.set($event)"
+              autocomplete="off"
+              data-lpignore="true"
+              data-form-type="other"
+            />
+          </div>
+          <div class="field field-flush">
+            <label for="na-priority">Priorité</label>
+            <select id="na-priority" class="input" [ngModel]="priority()" (ngModelChange)="priority.set($event)">
+              <option value="low">Faible</option>
+              <option value="medium">Moyenne</option>
+              <option value="high">Haute</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex-end">
+          <button type="button" class="btn btn-ghost" (click)="close.emit()">Annuler</button>
+          <button type="button" class="btn btn-primary" [disabled]="!title().trim()" (click)="save()">
+            <app-codir-icon name="save" [size]="14" />
+            Créer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

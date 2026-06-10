@@ -1,0 +1,62 @@
+<app-return-banner appCode="RECRUT" />
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <img class="sb-banner" [src]="logo.src" [alt]="logo.alt" />
+    </div>
+
+    <div class="sb-user">
+      <div class="rtag" [class.admin]="isAdmin()" [class.cand]="!isAdmin()">
+        {{ isAdmin() ? 'ADMIN' : 'CANDIDAT' }}
+      </div>
+      <div class="sb-uname">{{ displayName() }}</div>
+      <div class="sb-uemail">{{ session()?.email || '—' }}</div>
+    </div>
+
+    @if (mode.showSwitchButton()) {
+      <button type="button" class="sb-logout" (click)="mode.handleSwitch()">
+        {{ mode.switchLabel() }}
+      </button>
+    }
+
+    @if (isAdmin()) {
+      <div class="nav-sec">
+        <div class="nav-lbl">Tableau de bord</div>
+        <a class="nav-item" routerLink="/apps/recrutement" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span class="nav-icon">📊</span> Vue d'ensemble
+        </a>
+      </div>
+      <div class="nav-sec">
+        <div class="nav-lbl">Candidats</div>
+        @for (item of adminNav.slice(1); track item.route) {
+          <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
+            <span class="nav-icon">{{ item.icon }}</span> {{ item.label }}
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="nav-sec">
+        <div class="nav-lbl">Mon espace</div>
+        @for (item of candidateNav; track item.route) {
+          <a
+            class="nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="item.route.endsWith('espace') ? { exact: true } : { exact: false }"
+          >
+            <span class="nav-icon">{{ item.icon }}</span> {{ item.label }}
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <div class="main">
+    <router-outlet />
+  </div>
+</div>
+
+<app-recrut-toast />
+<app-recrut-file-viewer />
+<app-recrut-candidate-picker />

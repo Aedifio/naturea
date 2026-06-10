@@ -1,0 +1,93 @@
+<div class="topbar">
+  <h2>Tableau de bord</h2>
+  <div class="topbar-date">{{ todayLabel }}</div>
+</div>
+<div class="content fade-up">
+  <div class="grid-4" style="margin-bottom: 24px">
+    <div class="metric">
+      <div class="metric-label">Score réseau</div>
+      <div class="metric-value" [style.color]="scoreColor(gs())">{{ gs() ? gs()!.toFixed(2) : '—' }}</div>
+      <div class="metric-sub">{{ gs() ? scoreLabel(gs()) : 'Aucun audit réalisé' }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Agences auditées</div>
+      <div class="metric-value" style="color: var(--primary)">
+        {{ audited() }}<span style="font-size: 18px; color: var(--text3)">/{{ totalAgences() }}</span>
+      </div>
+      <div class="metric-sub">{{ totalAgences() - audited() }} agences non auditées</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Audits total</div>
+      <div class="metric-value" style="color: var(--text)">{{ allAudits().length }}</div>
+      <div class="metric-sub">{{ allAudits().length ? 'Dernier : ' + fmtDate(lastAuditDate()) : '—' }}</div>
+    </div>
+    <div class="metric" [style.border-color]="open().length ? 'rgba(184,69,61,.35)' : null">
+      <div class="metric-label">Écarts urgents ouverts</div>
+      <div class="metric-value" [style.color]="open().length ? 'var(--red)' : 'var(--green)'">{{ open().length }}</div>
+      <div class="metric-sub">
+        {{ urgents().length - open().length }} corrigé{{ urgents().length - open().length > 1 ? 's' : '' }} sur {{ urgents().length }}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 24px; grid-template-columns: 2fr 1fr">
+    <div class="card">
+      <div class="section-title">3 dernières agences auditées</div>
+      @if (!recentAg().length) {
+        <div class="empty">Aucun audit réalisé</div>
+      } @else {
+        @for (a of recentAg(); track a.id) {
+          <div class="recent-row">
+            <app-audit-score-ring [score]="a.score" [size]="52" />
+            <div class="recent-body">
+              <div class="recent-head">
+                <p class="recent-nom">{{ a.nom }}</p>
+                <app-audit-score-pill [score]="a.score" />
+              </div>
+              <p class="recent-meta">{{ a.ville }} · Dernier audit : {{ fmtDate(a.lastDate) }}</p>
+              <div class="progress-wrap">
+                <div class="progress">
+                  <div
+                    class="progress-fill"
+                    [style.width.%]="a.score ? (a.score / 5) * 100 : 0"
+                    [style.background]="scoreColor(a.score)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <a class="btn btn-ghost" style="font-size: 12px" [routerLink]="['/apps/audit-technique/agence', a.id]">Voir →</a>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="card">
+      <div class="section-title">Points faibles réseau</div>
+      @if (!cmScores().length) {
+        <div class="empty">Pas de données</div>
+      } @else {
+        @for (cm of cmScores(); track cm.id) {
+          <div class="weak-row">
+            <span class="mono weak-code">{{ cm.code }}</span>
+            <span class="weak-label">{{ cm.label }}</span>
+            <span class="mono weak-score" [style.color]="scoreColor(cm.avg)">{{ cm.avg.toFixed(1) }}</span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="section-title" style="margin-bottom: 0">Écarts urgents — suivi rectificatif</div>
+      @if (open().length) {
+        <a class="btn btn-ghost" style="font-size: 12px" routerLink="/apps/audit-technique/urgents">Voir tout →</a>
+      }
+    </div>
+    @if (!open().length) {
+      <div class="empty" style="color: var(--green)">✓ Aucun écart urgent en attente</div>
+    } @else {
+      <app-audit-urgents-table [items]="open().slice(0, 6)" />
+    }
+  </div>
+</div>

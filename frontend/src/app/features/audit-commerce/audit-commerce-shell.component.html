@@ -1,0 +1,49 @@
+<app-return-banner appCode="AUDIT_COM" />
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Réseau<br />Audit<small>Suivi des franchises</small></div>
+    <div class="navsec">Pilotage</div>
+    <a
+      class="navitem"
+      routerLink="/apps/audit-commerce"
+      routerLinkActive="on"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      📊 Vue réseau
+    </a>
+    <div class="navsec">Agences</div>
+    <div class="nav-scroll">
+      @if (!agenciesNav().length) {
+        <div class="tiny" style="color: #7d8074; padding: 4px 12px">Aucune agence</div>
+      }
+      @for (a of agenciesNav(); track a.id) {
+        <a class="navitem" [routerLink]="['/apps/audit-commerce/agence', a.id]" routerLinkActive="on" style="font-size: 13px">
+          <span class="pill-dot" [style.background]="a.dotColor"></span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ a.name }}</span>
+        </a>
+      }
+    </div>
+    <button type="button" class="navitem" (click)="ui.openSettings()">⚙️ Réglages</button>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span class="muted">📅</span>
+        <span class="lab" style="margin: 0">Période</span>
+        <input class="in" type="month" [value]="ui.ym()" (change)="onYmChange($event)" style="width: 160px" />
+      </div>
+      <button type="button" class="btn pri" (click)="addAgency()">
+        <span style="font-weight: 800; font-size: 16px; line-height: 1">+</span> Agence
+      </button>
+    </div>
+    <div class="content">
+      <router-outlet />
+    </div>
+  </div>
+</div>
+
+@if (ui.settingsOpen()) {
+  <app-audit-com-settings-modal />
+}

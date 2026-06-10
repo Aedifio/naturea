@@ -1,0 +1,256 @@
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px">
+  <div class="card pad">
+    <div class="lab">Contacts entrants</div>
+    <div class="kpibig">{{ kpis().entrant }}</div>
+  </div>
+  <div class="card pad">
+    <div class="lab">Signatures (cet audit)</div>
+    <div class="kpibig" style="color: var(--clay)">{{ kpis().signatures }}</div>
+  </div>
+  <div class="card pad">
+    <div class="lab">Nombre de résiliations</div>
+    <div class="kpibig" style="color: var(--petrol)">{{ kpis().ccmi }}</div>
+  </div>
+  <div class="card pad">
+    <div class="lab">Taux transfo.</div>
+    <div class="kpibig">{{ kpis().transfo.toFixed(1) }}%</div>
+    <div class="tiny muted" style="margin-top: 4px">{{ kpis().signatures }} sign. / {{ kpis().contacts }} traités</div>
+  </div>
+</div>
+
+@for (section of tree; track section.id) {
+  <div class="card" style="margin-bottom: 16px; overflow: hidden">
+    <button
+      type="button"
+      (click)="toggleSection(section.id)"
+      style="display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: var(--paper2); padding: 13px 18px; text-align: left"
+    >
+      {{ isOpen(section.id) ? '▼' : '▶' }}
+      <span class="disp" style="font-weight: 700; font-size: 16px">{{ section.label }}</span>
+    </button>
+    @if (isOpen(section.id)) {
+      <div style="padding: 4px 18px 14px">
+        @for (node of section.children ?? []; track node.id) {
+          @if (node.children) {
+            <div style="margin-top: 8px; padding-left: 14px; border-left: 2px solid var(--line2)">
+              <button
+                type="button"
+                (click)="toggleSection(node.id)"
+                style="display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: transparent; padding: 6px 0; text-align: left"
+              >
+                {{ isOpen(node.id) ? '▼' : '▶' }}
+                <span class="disp" style="font-weight: 600; font-size: 14px; color: var(--ink-soft)">{{ node.label }}</span>
+              </button>
+              @if (isOpen(node.id)) {
+                <div style="padding: 2px 0 4px">
+                  @for (child of node.children; track child.id) {
+                    <ng-container *ngTemplateOutlet="leafTpl; context: { $implicit: child }" />
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <ng-container *ngTemplateOutlet="leafTpl; context: { $implicit: node }" />
+          }
+        }
+      </div>
+    }
+  </div>
+}
+
+<ng-template #leafTpl let-node>
+  @if (node.kind === 'text') {
+    <div class="leafblock">
+      <div class="leafhead">
+        <div>
+          <b>{{ node.label }}</b>
+          @if (node.hint) { <div class="tiny muted">{{ node.hint }}</div> }
+        </div>
+        <button type="button" class="btn sm ghost" [disabled]="ro()" (click)="toggleNote(node.id)" [style.color]="(leafData(node.id).note || '').trim() ? 'var(--clay)' : 'var(--ink-mute)'">💬</button>
+      </div>
+      <textarea class="in" rows="3" [disabled]="ro()" [ngModel]="leafData(node.id).text || ''" (ngModelChange)="updateLeafText(node.id, 'text', $event)" placeholder="Texte libre…"></textarea>
+      @if (noteOpen(node.id)) {
+        <div class="fade" style="margin-top: 8px">
+          <textarea class="in" rows="2" [disabled]="ro()" [ngModel]="leafData(node.id).note || ''" (ngModelChange)="updateLeafText(node.id, 'note', $event)" placeholder="Commentaire complémentaire…"></textarea>
+        </div>
+      }
+    </div>
+  } @else if (node.kind === 'calc') {
+    <div class="leafblock">
+      <div class="leafhead">
+        <div><b>{{ node.label }}</b>@if (node.hint) { <div class="tiny muted">{{ node.hint }}</div> }</div>
+        <button type="button" class="btn sm ghost" [disabled]="ro()" (click)="toggleNote(node.id)">💬</button>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px">
+        <div class="disp" style="font-weight: 800; font-size: 24px" [style.color]="hsTotal() < 0 ? 'var(--red)' : 'var(--ink)'">{{ hsTotal() }}</div>
+        <div class="tiny muted">= entrants − (traités + à relancer)</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        @for (p of hsPerEmployee(); track p.name) {
+          <span class="pill" style="background: #fff; border: 1px solid var(--line); color: var(--ink-soft)">
+            {{ p.name || '(sans nom)' }} · <b [style.color]="p.v < 0 ? 'var(--red)' : 'var(--ink)'">{{ p.v }}</b>
+          </span>
+        }
+      </div>
+      @if (noteOpen(node.id)) {
+        <div class="fade" style="margin-top: 10px">
+          <textarea class="in" rows="2" [disabled]="ro()" [ngModel]="leafData(node.id).note || ''" (ngModelChange)="updateLeafNote(node.id, $event)"></textarea>
+        </div>
+      }
+    </div>
+  } @else if (node.kind === 'qual') {
+    <div class="leafblock">
+      <div class="leafhead">
+        <div><b>{{ node.label }}</b>@if (node.hint) { <div class="tiny muted">{{ node.hint }}</div> }</div>
+        <button type="button" class="btn sm ghost" [disabled]="ro()" (click)="toggleNote(node.id)">💬</button>
+      </div>
+      @if (!leafRows(node.id).length) {
+        <div class="tiny muted" style="margin-bottom: 6px">Aucune saisie. Ajoute un salarié pour juger la qualité de sa découverte client.</div>
+      }
+      @for (row of leafRows(node.id); track row.id) {
+        <div class="rowline">
+          <select class="in emp" [disabled]="ro()" [ngModel]="row.empId" (ngModelChange)="updateRow(node.id, row.id, 'empId', $event)">
+            <option value="">— non attribué —</option>
+            @for (e of agency().employees; track e.id) {
+              <option [value]="e.id">{{ e.name || '(sans nom)' }}</option>
+            }
+          </select>
+          <input class="in note numin" type="number" min="0" max="10" step="0.5" [disabled]="ro()" [ngModel]="row.note ?? ''" (ngModelChange)="updateRow(node.id, row.id, 'note', $event)" placeholder="/10" />
+          <input class="in cmt" [disabled]="ro()" [ngModel]="row.comment || ''" (ngModelChange)="updateRow(node.id, row.id, 'comment', $event)" placeholder="qualité de la découverte…" />
+          @if (!ro()) {
+            <button type="button" class="btn sm danger ghost" (click)="delRow(node.id, row.id)">✕</button>
+          }
+        </div>
+      }
+      @if (!ro()) {
+        <button type="button" class="btn sm" style="margin-top: 2px" (click)="addRow(node.id)">👤 Ajouter un salarié</button>
+      }
+      @if (noteOpen(node.id)) {
+        <div class="fade" style="margin-top: 10px">
+          <textarea class="in" rows="2" [disabled]="ro()" [ngModel]="leafData(node.id).note || ''" (ngModelChange)="updateLeafNote(node.id, $event)"></textarea>
+        </div>
+      }
+    </div>
+  } @else if (node.kind === 'multi') {
+    <div class="leafblock">
+      <div class="leafhead">
+        <div>
+          <b>{{ node.label }}</b>
+          @if (node.kpi) { <span class="pill" style="background: var(--clay-soft); color: var(--clay-d)">KPI</span> }
+          @if (node.hint) { <div class="tiny muted">{{ node.hint }}</div> }
+        </div>
+        <button type="button" class="btn sm ghost" [disabled]="ro()" (click)="toggleNote(node.id)">💬</button>
+      </div>
+      @if (leafRows(node.id).length) {
+        <div class="rowline mhead">
+          <span class="emp tiny mlab">Salarié</span>
+          @for (c of node.cols ?? []; track c.key) {
+            <span class="mcol tiny mlab">{{ c.label }}<br /><b>{{ multiTotal(node.id, c.key) }}</b></span>
+          }
+          <span class="note tiny mlab">/10</span>
+          <span class="cmt tiny mlab">Commentaire</span>
+        </div>
+      }
+      @if (!leafRows(node.id).length) {
+        <div class="tiny muted" style="margin-bottom: 6px">Aucune saisie. Ajoute un salarié pour renseigner ses R1 / R2 / R3 / signatures.</div>
+      }
+      @for (row of leafRows(node.id); track row.id) {
+        <div class="rowline">
+          <select class="in emp" [disabled]="ro()" [ngModel]="row.empId" (ngModelChange)="updateRow(node.id, row.id, 'empId', $event)">
+            <option value="">— non attribué —</option>
+            @for (e of agency().employees; track e.id) {
+              <option [value]="e.id">{{ e.name || '(sans nom)' }}</option>
+            }
+          </select>
+          @for (c of node.cols ?? []; track c.key) {
+            <input class="in mcol numin" type="number" [disabled]="ro()" [ngModel]="row.vals?.[c.key] ?? ''" (ngModelChange)="updateMultiVal(node.id, row.id, c.key, $event)" placeholder="0" />
+          }
+          <input class="in note numin" type="number" min="0" max="10" step="0.5" [disabled]="ro()" [ngModel]="row.note ?? ''" (ngModelChange)="updateRow(node.id, row.id, 'note', $event)" placeholder="/10" />
+          <input class="in cmt" [disabled]="ro()" [ngModel]="row.comment || ''" (ngModelChange)="updateRow(node.id, row.id, 'comment', $event)" placeholder="commentaire…" />
+          @if (!ro()) {
+            <button type="button" class="btn sm danger ghost" (click)="delRow(node.id, row.id)">✕</button>
+          }
+        </div>
+      }
+      @if (!ro()) {
+        <button type="button" class="btn sm" style="margin-top: 2px" (click)="addRow(node.id)">👤 Ajouter un salarié</button>
+      }
+      @if (noteOpen(node.id)) {
+        <div class="fade" style="margin-top: 10px">
+          <textarea class="in" rows="2" [disabled]="ro()" [ngModel]="leafData(node.id).note || ''" (ngModelChange)="updateLeafNote(node.id, $event)"></textarea>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="leafblock">
+      <div class="leafhead">
+        <div>
+          <b>{{ node.label }}</b>
+          @if (node.kpi) { <span class="pill" style="background: var(--clay-soft); color: var(--clay-d)">KPI</span> }
+          @if (node.hint) { <div class="tiny muted">{{ node.hint }}</div> }
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span class="tiny muted">Total <b>{{ numTotal(node.id) }}</b></span>
+          <button type="button" class="btn sm ghost" [disabled]="ro()" (click)="toggleNote(node.id)">💬</button>
+        </div>
+      </div>
+      @if (!leafRows(node.id).length) {
+        <div class="tiny muted" style="margin-bottom: 6px">Aucune saisie. Ajoute un salarié pour renseigner un chiffre.</div>
+      }
+      @for (row of leafRows(node.id); track row.id) {
+        <div class="rowline">
+          <select class="in emp" [disabled]="ro()" [ngModel]="row.empId" (ngModelChange)="updateRow(node.id, row.id, 'empId', $event)">
+            <option value="">— non attribué —</option>
+            @for (e of agency().employees; track e.id) {
+              <option [value]="e.id">{{ e.name || '(sans nom)' }}</option>
+            }
+          </select>
+          <input class="in val numin" type="number" [disabled]="ro()" [ngModel]="row.val ?? ''" (ngModelChange)="updateRow(node.id, row.id, 'val', $event)" placeholder="0" />
+          <input class="in note numin" type="number" min="0" max="10" step="0.5" [disabled]="ro()" [ngModel]="row.note ?? ''" (ngModelChange)="updateRow(node.id, row.id, 'note', $event)" placeholder="/10" />
+          <input class="in cmt" [disabled]="ro()" [ngModel]="row.comment || ''" (ngModelChange)="updateRow(node.id, row.id, 'comment', $event)" placeholder="commentaire…" />
+          @if (!ro()) {
+            <button type="button" class="btn sm danger ghost" (click)="delRow(node.id, row.id)">✕</button>
+          }
+        </div>
+      }
+      @if (!ro()) {
+        <button type="button" class="btn sm" style="margin-top: 2px" (click)="addRow(node.id)">👤 Ajouter un salarié</button>
+      }
+      @if (noteOpen(node.id)) {
+        <div class="fade" style="margin-top: 10px">
+          <textarea class="in" rows="2" [disabled]="ro()" [ngModel]="leafData(node.id).note || ''" (ngModelChange)="updateLeafNote(node.id, $event)"></textarea>
+        </div>
+      }
+    </div>
+  }
+</ng-template>
+
+<div class="card pad" style="margin-top: 8px; background: var(--paper2)">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+    <div>
+      <div class="disp" style="font-weight: 700; font-size: 16px">Note moyenne de l'agence</div>
+      <div class="tiny muted">{{ stats().points }} note(s) · audit du {{ fmtDate(audit().date) }}</div>
+    </div>
+    <div class="disp" style="font-weight: 800; font-size: 28px" [style.color]="stats().agency == null ? 'var(--ink-mute)' : 'var(--clay)'">
+      {{ stats().agency == null ? '—' : stats().agency!.toFixed(1) }}<span style="font-size: 16px; color: var(--ink-soft)">/10</span>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="tiny muted" style="margin-bottom: 8px">Moyenne par salarié</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 6px">
+    @if (!empRecap().length) {
+      <span class="tiny muted">Aucune note /10 saisie pour l'instant.</span>
+    }
+    @for (e of empRecap(); track e.name) {
+      <span class="pill" style="background: #fff; border: 1px solid var(--line); color: var(--ink-soft)">
+        {{ e.name || '(sans nom)' }} · <b>{{ e.avg.toFixed(1) }}</b>/10
+      </span>
+    }
+  </div>
+</div>
+
+<div class="card pad" style="margin-top: 8px">
+  <div class="disp" style="font-weight: 700; font-size: 16px; margin-bottom: 4px">📊 Ratios de conversion</div>
+  <div class="tiny muted" style="margin-bottom: 12px">Sur l'audit en cours, par salarié et pour l'agence.</div>
+  <app-audit-com-ratios-table [agency]="agency()" [audit]="audit()" />
+</div>

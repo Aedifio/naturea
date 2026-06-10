@@ -1,0 +1,141 @@
+@if (current(); as imp) {
+  <div class="card card-mb">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">🔍</div><h3>Aperçu de l'import</h3></div>
+      <div class="card-meta">{{ imp.fileEntry.name }}</div>
+    </div>
+    <div class="card-b">
+      <div class="import-meta">
+        <div>
+          <div class="import-meta-fld">Usine détectée</div>
+          <div class="import-meta-val">
+            <select [ngModel]="imp.usine ?? ''" (ngModelChange)="onUsineChange($event)">
+              <option value="">— sélectionner —</option>
+              @for (u of usineOptions(); track u.key) {
+                <option [value]="u.key">{{ u.nom }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="import-meta-fld">N° devis</div>
+          <div class="import-meta-val">{{ imp.meta.devis_num || '—' }}</div>
+        </div>
+        <div>
+          <div class="import-meta-fld">Date du devis</div>
+          <div class="import-meta-val">{{ imp.meta.devis_date ? fmtDateFR(imp.meta.devis_date) : '—' }}</div>
+        </div>
+        <div>
+          <div class="import-meta-fld">Client</div>
+          <div class="import-meta-val import-meta-client">{{ imp.meta.client || '—' }}</div>
+        </div>
+        <div>
+          <div class="import-meta-fld">Total HT</div>
+          <div class="import-meta-val">{{ imp.meta.total_ht ? fmtEurR(imp.meta.total_ht) : '—' }}</div>
+        </div>
+        <div>
+          <div class="import-meta-fld">Postes détectés</div>
+          <div class="import-meta-val">
+            {{ imp.postes.length }} ({{ mappedCount() }} mappés@if (newCount() > 0) {, {{ newCount() }} nouveaux})
+          </div>
+        </div>
+      </div>
+
+      @if (!imp.usine) {
+        <div class="import-pdfjs-warn">
+          <strong>⚠️ Usine non détectée automatiquement.</strong> Sélectionne-la dans le menu déroulant ci-dessus pour activer le mapping des postes.
+        </div>
+      }
+
+      @if (imp.postes.length === 0) {
+        <div class="empty-state-sm">
+          Aucun poste tarifaire détecté. Le format de ce PDF peut différer du parser standard.
+        </div>
+        <details class="import-debug">
+          <summary>🔧 Mode debug · voir le texte extrait par pdf.js</summary>
+          <div class="import-debug-body">
+            <div class="import-debug-hint">Texte extrait — copie-colle moi ce contenu si le parsing échoue, je pourrai adapter le parser à ton format.</div>
+            <textarea readonly class="import-debug-text" (click)="selectText($event)">{{ imp.fileEntry.parsed?.text || '(aucun texte extrait)' }}</textarea>
+          </div>
+        </details>
+        <div class="import-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Fermer</button>
+        </div>
+      } @else {
+        <div class="import-table-wrap">
+          <table class="import-table">
+            <thead>
+              <tr>
+                <th class="col-check">
+                  <input type="checkbox" [checked]="allApplicableSelected()" (change)="onSelectAll($event)" />
+                </th>
+                <th>Désignation détectée</th>
+                <th>Mappé sur</th>
+                <th class="col-num">Ancien PU</th>
+                <th class="col-num">Nouveau PU</th>
+                <th>Écart</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of imp.postes; track $index; let i = $index) {
+                @let delta = deltaHtml(p);
+                <tr [class]="rowClass(p)">
+                  <td>
+                    <input
+                      type="checkbox"
+                      [checked]="p.applique"
+                      [disabled]="!p.mapped || p.ancien_pu === null"
+                      (change)="onApplyToggle(i, $event)"
+                    />
+                  </td>
+                  <td>
+                    <div class="import-line-label">
+                      {{ p.label_pdf }}
+                      @if (isCustom(imp.usine, p.mapped)) {
+                        <span class="custom-badge">perso</span>
+                      }
+                    </div>
+                    <div class="import-line-meta">
+                      {{ p.unite }} · {{ fmtNum(p.qte, p.qte % 1 ? 2 : 0) }} × {{ fmtNum(p.pu, 2) }} = {{ fmtEurR(p.total) }}
+                    </div>
+                    @if (!p.mapped && imp.usine) {
+                      <button type="button" class="new-poste-btn" (click)="openCreatePoste(i, p)">➕ Créer ce poste / rattacher</button>
+                    }
+                  </td>
+                  <td>
+                    @if (imp.usine) {
+                      <select class="map-sel" [ngModel]="p.mapped ?? ''" (ngModelChange)="onMappingChange(i, $event)">
+                        <option value="">— ne pas mapper —</option>
+                        @for (opt of posteOptions(imp.usine); track opt.code) {
+                          <option [value]="opt.code">{{ opt.label.substring(0, 55) }}{{ opt.custom ? ' (perso)' : '' }}</option>
+                        }
+                      </select>
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="col-num">
+                    @if (p.ancien_pu !== null) {
+                      {{ fmtNum(p.ancien_pu, 2) }} €
+                    } @else {
+                      <span class="text-faint">—</span>
+                    }
+                  </td>
+                  <td class="col-num"><strong>{{ fmtNum(p.pu, 2) }} €</strong></td>
+                  <td><span class="delta-pill {{ delta.cls }}">{{ delta.text }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="import-actions">
+          <div class="summary">{{ summaryText() }}</div>
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="apply()">✓ Enregistrer & appliquer la sélection</button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<app-chiffrage-create-poste-import-modal />

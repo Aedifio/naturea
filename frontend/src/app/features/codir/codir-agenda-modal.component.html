@@ -1,0 +1,141 @@
+@if (open()) {
+  <div class="modal-overlay" (click)="onBackdrop($event)">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Préparer un ordre du jour</h3>
+        <button type="button" class="icon-btn" (click)="close.emit()" aria-label="Fermer">
+          <app-codir-icon name="x" [size]="20" />
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="agenda-composer">
+          <div class="grid-2 mb-row">
+            <div class="field field-flush">
+              <label for="ag-title">Titre de la réunion</label>
+              <input id="ag-title" type="text" class="input" [ngModel]="meetingTitle()" (ngModelChange)="meetingTitle.set($event); refreshPreview()" autocomplete="off" data-lpignore="true" data-form-type="other" />
+            </div>
+            <div class="field field-flush">
+              <label for="ag-location">Lieu (optionnel)</label>
+              <input
+                id="ag-location"
+                type="text"
+                class="input"
+                placeholder="Visio, salle de réunion..."
+                [ngModel]="meetingLocation()"
+                (ngModelChange)="meetingLocation.set($event); refreshPreview()"
+                autocomplete="off" data-lpignore="true" data-form-type="other"
+              />
+            </div>
+          </div>
+          <div class="grid-2 mb-row">
+            <div class="field field-flush">
+              <label for="ag-date">Date</label>
+              <input id="ag-date" type="date" class="input" [ngModel]="meetingDate()" (ngModelChange)="meetingDate.set($event); refreshPreview()" autocomplete="off" data-lpignore="true" data-form-type="other" />
+            </div>
+            <div class="field field-flush">
+              <label for="ag-time">Heure (optionnel)</label>
+              <input id="ag-time" type="time" class="input" [ngModel]="meetingTime()" (ngModelChange)="meetingTime.set($event); refreshPreview()" autocomplete="off" data-lpignore="true" data-form-type="other" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="ag-intro">Introduction (optionnel)</label>
+            <textarea
+              id="ag-intro"
+              class="input"
+              rows="2"
+              placeholder="Mot d'introduction, objectifs de la réunion..."
+              [ngModel]="intro()"
+              (ngModelChange)="intro.set($event); refreshPreview()"
+            ></textarea>
+          </div>
+
+          <div class="detail-section detail-section-first">
+            <h4>Tâches sélectionnées ({{ selectedActions().length }})</h4>
+            <div class="agenda-items-list">
+              @for (group of selectedByTheme(); track group.theme) {
+                <div class="agenda-theme">
+                  <div class="agenda-theme-name">{{ group.theme }}</div>
+                  @for (a of group.actions; track a.id) {
+                    <div class="agenda-item-row">
+                      <button type="button" class="icon-btn" title="Retirer de l'ordre du jour" (click)="removeFromAgenda(a.id)">
+                        <app-codir-icon name="x" [size]="14" />
+                      </button>
+                      <span class="grow truncate">{{ a.title }}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="180"
+                        class="duration-input-mini"
+                        [ngModel]="durationFor(a.id)"
+                        (ngModelChange)="setDuration(a.id, $event)"
+                      />
+                      <span class="text-muted duration-suffix">min</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Options du document</h4>
+            <div class="options-row">
+              <label class="checkbox-label">
+                <input type="checkbox" [ngModel]="includeOwners()" (ngModelChange)="includeOwners.set($event); refreshPreview()" />
+                Inclure les responsables
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [ngModel]="includeStatus()" (ngModelChange)="includeStatus.set($event); refreshPreview()" />
+                Inclure le statut et l'échéance
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [ngModel]="includeComments()" (ngModelChange)="includeComments.set($event); refreshPreview()" />
+                Inclure le dernier commentaire
+              </label>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Destinataires</h4>
+            <div class="recipient-row">
+              @for (m of codir.members(); track m.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.active]="recipients()[m.id]"
+                  [disabled]="!m.email"
+                  [title]="m.email || 'Pas d\u2019email renseigné'"
+                  [style.opacity]="m.email ? null : '0.4'"
+                  (click)="toggleRecipient(m.id)"
+                >
+                  {{ m.name }}@if (!m.email) { (✕) }
+                </button>
+              }
+            </div>
+            <div class="field-hint field-hint-spaced">
+              Les membres sans email renseigné ne peuvent être sélectionnés. Allez dans <strong>Équipe</strong> pour les renseigner.
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Aperçu du message</h4>
+            <textarea class="input agenda-preview" rows="14" [ngModel]="preview()" (ngModelChange)="preview.set($event)"></textarea>
+            <div class="field-hint field-hint-tight">Vous pouvez modifier librement le texte avant envoi.</div>
+          </div>
+
+          <div class="flex-end agenda-actions">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="close.emit()">Annuler</button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="copy()">
+              <app-codir-icon name="copy" [size]="14" />
+              Copier
+            </button>
+            <button type="button" class="btn btn-accent btn-sm" (click)="sendMail()">
+              <app-codir-icon name="send" [size]="14" />
+              Ouvrir dans le mail
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

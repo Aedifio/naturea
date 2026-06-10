@@ -1,0 +1,64 @@
+<app-page-hero
+  kicker="Administration"
+  titleHtml="Gestion des <em>accès</em>"
+  [subtitleHtml]="subtitleHtml"
+/>
+
+<app-admin-modules active="users" (scrollToUsers)="scrollToUsers()" />
+
+<div class="card">
+  <div class="chd">
+    <div class="chl">
+      <div class="ci ci-users">👥</div>
+      <h3>Utilisateurs</h3>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreate()">+ Nouvel utilisateur</button>
+  </div>
+
+  @if (loading()) {
+    <p class="users-status">Chargement…</p>
+  } @else if (loadError()) {
+    <p class="users-status users-status-err">{{ loadError() }}</p>
+    <button type="button" class="btn-retry" (click)="loadUsers()">Réessayer</button>
+  } @else {
+    <table #usersTable class="users-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Nom</th>
+          <th>Rôle</th>
+          <th>Agence</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of users(); track trackUser(u)) {
+          <tr>
+            <td><code class="user-email">{{ u.email ?? '—' }}</code></td>
+            <td>{{ u.name }}</td>
+            <td><span class="role-badge {{ roleClass(u.role) }}">{{ u.role }}</span></td>
+            <td>{{ u.franchise }}</td>
+            <td [class]="u.actif ? 'status-actif' : 'status-inactif'">
+              {{ u.actif ? '● Actif' : '● Inactif' }}
+            </td>
+            <td>
+              <button type="button" class="btn-edit" (click)="openEdit(u)">Modifier</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<app-admin-user-modal
+  [open]="modalOpen()"
+  [mode]="modalMode()"
+  [user]="editingUser()"
+  [saving]="saving()"
+  [error]="saveError()"
+  (close)="closeModal()"
+  (saveCreate)="onCreate($event)"
+  (saveEdit)="onUpdate($event)"
+/>

@@ -1,0 +1,99 @@
+<div class="page-head">
+  <div class="page-kicker">Référentiel</div>
+  <h1 class="page-title">Tarifs <em>moyens</em> par usine</h1>
+  <p class="page-sub">Prix unitaires observés sur les devis intégrés. Un 💶 indique un prix personnalisé (Paramètres). Min / Max / Moyenne pour chaque poste.</p>
+</div>
+
+<div class="ref-grid">
+  @for (u of usines(); track u.key) {
+    <div class="card ref-card" [style.border-top]="'4px solid ' + u.ref.couleur">
+      <div class="card-h">
+        <div class="card-h-l">
+          <div class="ico" [style.background]="u.ref.couleur + '22'" [style.color]="u.ref.couleur">🏭</div>
+          <div>
+            <h3 class="title-reset">{{ u.ref.nom }}</h3>
+            <div class="ref-desc">{{ u.ref.description }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="ref-postes">
+          @for (code of posteCodes(u.key); track code) {
+            @if (getPoste(u.key, code); as p) {
+              @let hasPx = hasPrixOverride(u.key, code);
+              @let pxVal = hasPx ? getPrix(u.key, code) : p.moyen;
+              <div class="ref-poste">
+                <div class="ref-poste-name">
+                  {{ p.label_user }}
+                  @if (hasOverride(u.key, code)) { <span class="mark-terra" title="Libellé personnalisé">●</span> }
+                  @if (hasPx) { <span class="mark-prix" title="Prix personnalisé">💶</span> }
+                  @if (isCustom(u.key, code)) { <span class="custom-badge">perso</span> }
+                  <span class="unite">
+                    {{ p.unite === 'forfait' ? 'forfait' : p.unite === '€/m²' ? '€/m²' : p.unite === '€/u' ? '€/unité' : p.unite }}
+                    · {{ p.n }} devis · <span class="fiabilite {{ p.fiabilite }}">{{ p.fiabilite }}</span>
+                  </span>
+                </div>
+                <div>
+                  <div class="ref-poste-val" [style.color]="hasPx ? '#1565C0' : null">
+                    {{ p.unite === 'forfait' ? fmtEurR(pxVal) : fmtNum(pxVal, 2) + ' €' }}
+                  </div>
+                  <div class="ref-poste-range">stats: {{ fmtNum(p.moyen, 2) }} € (min {{ fmtNum(p.min, 2) }} → max {{ fmtNum(p.max, 2) }})</div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="ref-meta">
+        <div>
+          <div class="ref-meta-n">{{ u.ref.devis_count }}</div>
+          <div style="margin-top: 2px">devis sources</div>
+        </div>
+        <div class="ref-meta-right">
+          <span class="fiabilite {{ fiabiliteUsine(u.ref.devis_count) }}">Fiabilité {{ fiabiliteUsine(u.ref.devis_count) }}</span>
+          <div class="text-faint-sm" style="margin-top: 6px">Dernière MAJ : {{ fmtDateFR(data.getFactoryUpdatedAt(u.key)) }}</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="card ref-card ref-charpente-card">
+    <div class="card-h">
+      <div class="card-h-l">
+        <div class="ico ico-terra-soft">🏗️</div>
+        <div>
+          <h3 class="title-terra">Charpente Externe</h3>
+          <div class="ref-desc">Tarif de référence — usines sans production charpente</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-b">
+      <div class="ref-section-kicker">Fermettes (€/m² de toiture)</div>
+      <div class="ref-postes">
+        @for (f of charpenteExt.fermettes; track f.id) {
+          <div class="ref-poste">
+            <div class="ref-poste-name">{{ f.label }}<span class="unite">€/m² toiture</span></div>
+            <div><div class="ref-poste-val">{{ fmtNum(f.prix, 2) }} €</div></div>
+          </div>
+        }
+      </div>
+      <div class="ref-section-kicker ref-section-kicker-spaced">Accessoires</div>
+      <div class="ref-postes">
+        @for (a of charpenteExt.accessoires; track a.id) {
+          <div class="ref-poste">
+            <div class="ref-poste-name">{{ a.label }}<span class="unite">€/{{ a.unite }}</span></div>
+            <div><div class="ref-poste-val">{{ fmtNum(a.prix, 2) }} €</div></div>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="ref-meta">
+      <div><div class="text-muted-sm">Tarif coordinateur réseau</div></div>
+      <div class="ref-meta-right"><span class="fiabilite haute h-pill-terra">Tarif fixe réseau</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>📥 Mise à jour des tarifs.</strong> Les prix SICOB 2026 (10 nouveaux devis intégrés) montrent une hausse de +5,9% sur le MOB habitation (103,91 → 110,06 €/m²) et une forte hausse sur les pignons (94,80 → 128,39 €/m²).
+</div>

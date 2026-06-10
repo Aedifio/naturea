@@ -1,0 +1,45 @@
+<div class="login-screen">
+  <div class="login-box">
+    <div class="login-brand">
+      <img [src]="logo.src" [alt]="logo.alt" class="login-logo" />
+    </div>
+    <div class="login-sub">Portail Réseau — Connexion</div>
+
+    @if (error()) {
+      <div class="login-error show">{{ error() }}</div>
+    }
+
+    <form class="login-form" autocomplete="on" (submit)="onSubmit($event)">
+      <div class="login-field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          name="username"
+          type="email"
+          [(ngModel)]="email"
+          [ngModelOptions]="{ standalone: true }"
+          autocomplete="username"
+          inputmode="email"
+          spellcheck="false"
+          autocapitalize="none"
+          required
+          placeholder="prenom.nom@naturea.fr"
+        />
+      </div>
+      <div class="login-field">
+        <label for="password">Mot de passe</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          [ngModelOptions]="{ standalone: true }"
+          autocomplete="current-password"
+          required
+          placeholder="••••••••"
+        />
+      </div>
+      <button type="submit" class="login-btn" [disabled]="loading()">Se connecter</button>
+    </form>
+  </div>
+</div>

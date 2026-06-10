@@ -1,0 +1,19 @@
+@use './admin-user-modal.component.scss';
+
+textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 72px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--wood);
+  }
+}

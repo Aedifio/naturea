@@ -1,0 +1,68 @@
+<app-page-hero
+  kicker="Administration"
+  titleHtml="Gestion des <em>usines</em>"
+  [subtitleHtml]="subtitleHtml"
+/>
+
+<app-admin-modules active="factories" />
+
+<div class="card">
+  <div class="chd">
+    <div class="chl">
+      <div class="ci ci-factories">🏭</div>
+      <h3>Usines</h3>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreate()">+ Nouvelle usine</button>
+  </div>
+
+  @if (loading()) {
+    <p class="users-status">Chargement…</p>
+  } @else if (loadError()) {
+    <p class="users-status users-status-err">{{ loadError() }}</p>
+    <button type="button" class="btn-retry" (click)="loadFactories()">Réessayer</button>
+  } @else {
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Couleur</th>
+          <th>Nom</th>
+          <th>Clé</th>
+          <th>Email</th>
+          <th>Statut</th>
+          <th>Mise à jour</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of factories(); track trackFactory(f)) {
+          <tr>
+            <td>
+              <span class="color-swatch" [style.background]="f.couleur" [title]="f.couleur"></span>
+            </td>
+            <td>{{ f.nom }}</td>
+            <td><code class="factory-key">{{ f.key }}</code></td>
+            <td>{{ f.contact_email ?? '—' }}</td>
+            <td [class]="f.actif ? 'status-actif' : 'status-inactif'">
+              {{ f.actif ? '● Actif' : '● Inactif' }}
+            </td>
+            <td class="updated-at">{{ f.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <button type="button" class="btn-edit" (click)="openEdit(f)">Modifier</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<app-admin-factory-modal
+  [open]="modalOpen()"
+  [mode]="modalMode()"
+  [factory]="editingFactory()"
+  [saving]="saving()"
+  [error]="saveError()"
+  (close)="closeModal()"
+  (saveCreate)="onCreate($event)"
+  (saveEdit)="onUpdate($event)"
+/>

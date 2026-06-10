@@ -1,0 +1,240 @@
+.tabs-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: var(--return-banner-h, 50px);
+  z-index: 100;
+}
+
+.header-inner {
+  max-width: var(--tabs-max-width, 1320px);
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.brand-link {
+  flex-shrink: 0;
+}
+
+.brand-banner {
+  height: 44px;
+  width: auto;
+  display: block;
+  border-radius: 6px;
+}
+
+.logo-tag {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding-left: 14px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.portal-link {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+  margin-bottom: 4px;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.tabs-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.tabs-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.tabs-nav {
+  max-width: var(--tabs-max-width, 1320px);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.tab-link {
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 150ms ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    color: var(--ink);
+  }
+
+  &.active {
+    border-bottom-color: var(--accent);
+    color: var(--ink);
+    font-weight: 800;
+  }
+}
+
+.tab-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  &.muted {
+    background: var(--subtle);
+  }
+}
+
+.tabs-main {
+  flex: 1;
+  max-width: var(--tabs-max-width, 1320px);
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    padding: 10px 16px;
+  }
+
+  .brand-banner {
+    height: 36px;
+  }
+
+  .logo-tag {
+    display: none;
+  }
+
+  .tabs-nav {
+    padding: 0 12px;
+  }
+}
+
+/* OssatureTrack — green sticky header */
+.variant-ossature {
+  .tabs-header {
+    background: #355222;
+    border-bottom: 2px solid #243919;
+    box-shadow: 0 1px 8px rgba(31, 46, 37, 0.12);
+    top: var(--return-banner-h, 50px);
+  }
+
+  .logo-tag {
+    color: rgba(255, 255, 255, 0.65);
+    border-left-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .portal-link,
+  .back-link {
+    color: rgba(255, 255, 255, 0.75);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  .tabs-nav {
+    padding-top: 0;
+    gap: 0;
+  }
+
+  .tab-link {
+    padding: 7px 16px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid transparent;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11.5px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    &.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-weight: 800;
+      border-bottom-color: #d69362;
+    }
+  }
+}

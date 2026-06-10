@@ -1,0 +1,45 @@
+<div class="page-head">
+  <div class="page-kicker">Estimateur</div>
+  <h1 class="page-title">Chiffrer <em>un projet</em></h1>
+  <p class="page-sub">Choisis une usine, saisis les métrés, l'estimation se calcule en temps réel à partir des prix de référence (modifiables dans Paramètres).</p>
+</div>
+
+<div class="card card-mb">
+  <div class="card-h">
+    <div class="card-h-l"><div class="ico">📝</div><h3>Identification du projet</h3></div>
+  </div>
+  <div class="card-b proj-id-grid">
+    <div>
+      <label class="form-lbl">Nom du client / projet *</label>
+      <input
+        type="text"
+        placeholder="Ex: DUPONT (Nantes) — maison contemporaine 4 ch."
+        [ngModel]="ui.projetNom()"
+        (ngModelChange)="ui.projetNom.set($event)"
+        autocomplete="off" data-lpignore="true" data-form-type="other"
+      />
+    </div>
+    <div>
+      <label class="form-lbl">Référence interne</label>
+      <input type="text" placeholder="(facultatif)" [ngModel]="ui.projetRef()" (ngModelChange)="ui.projetRef.set($event)" autocomplete="off" data-lpignore="true" data-form-type="other" />
+    </div>
+  </div>
+</div>
+
+<div class="est-grid">
+  <div class="card">
+    <div class="card-h">
+      <div class="card-h-l"><div class="ico">📐</div><h3>Saisie du projet</h3></div>
+    </div>
+    <div class="card-b">
+      <div class="section-label">▸ Choix de l'usine</div>
+      <app-chiffrage-usine-picker [selected]="ui.currentUsine()" (usineChange)="onUsineChange($event)" />
+      <app-chiffrage-form />
+    </div>
+  </div>
+  <app-chiffrage-recap (save)="onSave()" (exportPdf)="onExport()" (reset)="onReset()" />
+</div>
+
+<div class="note">
+  <strong>💡 À savoir.</strong> Les prix SICOB ont été mis à jour avec les tarifs 2026 (110,06 €/m² vs 103,91 €/m² en 2025, +5,9%). Dans <strong>Paramètres</strong>, tu peux modifier manuellement n'importe quel prix unitaire ou le définir comme ratio d'un autre poste.
+</div>
