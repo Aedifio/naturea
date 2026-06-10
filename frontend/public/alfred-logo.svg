@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 150" role="img" aria-label="alfred by Maisons Naturéa">
+  <text x="6" y="120"
+        font-family="'Nunito','Baloo 2','Quicksand','Arial Rounded MT Bold',system-ui,sans-serif"
+        font-size="132" font-weight="800" letter-spacing="-4" fill="#f1eee0">alfred</text>
+  <!-- feuille orange -->
+  <path d="M452 26
+           c46 6 73 42 67 96
+           c-53 3-86-31-81-81
+           c1-10 5-13 14-15 Z" fill="#cf8a52"/>
+</svg>

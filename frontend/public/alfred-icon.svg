@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="alfred">
+  <rect width="512" height="512" rx="120" fill="#46592c"/>
+  <!-- lettre « a » (single-story) : bol + fût droit -->
+  <g fill="#f1eee0">
+    <path d="M236 196
+             a104 104 0 1 0 0 208
+             a104 104 0 1 0 0-208 Z
+             M236 252
+             a48 48 0 1 1 0 96
+             a48 48 0 1 1 0-96 Z" fill-rule="evenodd"/>
+    <rect x="296" y="150" width="52" height="262" rx="26"/>
+  </g>
+  <!-- feuille orange -->
+  <path d="M372 96
+           c44 6 70 40 64 92
+           c-50 2-82-30-78-78
+           c1-9 6-13 14-14 Z" fill="#cf8a52"/>
+</svg>

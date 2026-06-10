@@ -53,7 +53,7 @@
   --danger: var(--red);
 
   --nav-h: 58px;
-  --return-banner-h: 50px;
+  --return-banner-h: var(--nav-h);
 }
 
 /* === CHARTE NATURÉA (plaquette V10) — coque portail === */

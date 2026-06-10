@@ -2,10 +2,6 @@
 
 <div class="app">
   <nav class="sidebar">
-    <div class="sb-logo">
-      <img class="sb-banner" [src]="logo.src" [alt]="logo.alt" />
-    </div>
-
     <div class="sb-user">
       <div class="rtag" [class.admin]="isAdmin()" [class.cand]="!isAdmin()">
         {{ isAdmin() ? 'ADMIN' : 'CANDIDAT' }}

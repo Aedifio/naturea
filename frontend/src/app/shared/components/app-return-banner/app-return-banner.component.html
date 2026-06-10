@@ -1,4 +1,47 @@
-<div class="app-return-bar">
-  <a routerLink="/home" class="return-btn">← Retour au portail</a>
-  <span class="return-label">{{ displayLabel() }}</span>
-</div>
+<nav class="top-nav">
+  <a class="nav-brand" routerLink="/home">
+    <img [src]="logo.src" [alt]="logo.alt" class="nav-logo" />
+  </a>
+  <span class="nsep"></span>
+  <a class="nav-link" routerLink="/home" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: false }">
+    🏠 Accueil
+  </a>
+  <span class="nsep"></span>
+  <div class="nav-apps">
+    @for (app of navApps; track app.code) {
+      @if (canShow(app.code)) {
+        <a
+          class="nab {{ app.navClass }}"
+          [class.on]="isAppActive(app.code)"
+          [routerLink]="app.route"
+          [title]="permLabel(app.code)"
+        >
+          <span class="nd">{{ app.icon }}</span>
+          {{ app.navLabel }}
+        </a>
+      }
+    }
+    @if (canShow('ADMIN')) {
+      <a class="nab a-admin" routerLink="/admin" routerLinkActive="on">
+        <span class="nd">⚙️</span> Admin
+      </a>
+    }
+  </div>
+  <div class="nav-right">
+    <div class="nav-user">
+      <div>
+        <div class="nu-name">{{ user()?.name }}</div>
+        <div class="nu-role">{{ user()?.role }}</div>
+      </div>
+      <div class="nav-av">{{ initials() }}</div>
+    </div>
+    <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
+  </div>
+</nav>
+<div class="nav-spacer"></div>
+
+@if (showHero()) {
+  <div class="app-hero-wrap">
+    <app-page-hero [kicker]="heroKicker()" [titleHtml]="heroName()" [subtitle]="heroDesc()" />
+  </div>
+}

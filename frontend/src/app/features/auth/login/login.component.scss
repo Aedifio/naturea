@@ -1,7 +1,12 @@
 .login-screen {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #41532a 0%, #2d3a1c 100%);
+  background-color: #2d3a1c;
+  background-image: linear-gradient(135deg, rgba(65, 83, 42, 0.6) 0%, rgba(45, 58, 28, 0.72) 100%),
+    url('/alfred-icon.svg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
