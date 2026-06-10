@@ -5,6 +5,7 @@ import { FactoryService } from '../../../core/services/factory.service';
 import { AgencyService } from '../../../core/services/agency.service';
 import { OssatureDataService } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
+import { OssatureModeService } from '../services/ossature-mode.service';
 
 @Component({
   selector: 'app-ossature-archives',
@@ -26,12 +27,14 @@ import { OssatureModalService } from '../services/ossature-modal.service';
           <option [value]="f">{{ f }}</option>
         }
       </select>
-      <select [ngModel]="filterSite()" (ngModelChange)="filterSite.set($event)">
-        <option value="">Toutes les usines</option>
-        @for (s of sites(); track s) {
-          <option [value]="s">{{ s }}</option>
-        }
-      </select>
+      @if (!mode.isFactoryScoped()) {
+        <select [ngModel]="filterSite()" (ngModelChange)="filterSite.set($event)">
+          <option value="">Toutes les usines</option>
+          @for (s of sites(); track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      }
     </div>
 
     <div class="stats-row">
@@ -80,6 +83,7 @@ import { OssatureModalService } from '../services/ossature-modal.service';
 export class OssatureArchivesComponent {
   readonly data = inject(OssatureDataService);
   readonly modals = inject(OssatureModalService);
+  readonly mode = inject(OssatureModeService);
   private readonly factory = inject(FactoryService);
   private readonly agencies = inject(AgencyService);
 
@@ -95,7 +99,10 @@ export class OssatureArchivesComponent {
   readonly filterFranchise = signal('');
   readonly filterSite = signal('');
 
-  readonly archived = computed(() => this.data.archivedOrders());
+  readonly archived = computed(() => {
+    const scopedSite = this.mode.allowedOssatureSite();
+    return this.data.archivedOrders().filter((o) => !scopedSite || o.site === scopedSite);
+  });
 
   readonly filtered = computed(() => {
     const q = this.search().toLowerCase();

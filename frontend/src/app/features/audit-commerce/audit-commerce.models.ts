@@ -15,7 +15,8 @@ export interface AuditCommerceState {
 }
 
 export interface Agency {
-  id: string;
+  /** Canonical `agencies.id`. */
+  id: number;
   name: string;
   address: string;
   employees: Employee[];

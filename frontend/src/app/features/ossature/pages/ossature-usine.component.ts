@@ -20,11 +20,15 @@ import { OssatureModeService } from '../services/ossature-mode.service';
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px">
-      <div class="site-pills" style="margin-bottom: 0">
-        @for (s of sites(); track s) {
-          <button type="button" class="site-pill" [class.active]="mode.currentSiteUsine() === s" (click)="mode.setSiteUsine(s)">{{ s }}</button>
-        }
-      </div>
+      @if (!mode.isFactoryScoped()) {
+        <div class="site-pills" style="margin-bottom: 0">
+          @for (s of sites(); track s) {
+            <button type="button" class="site-pill" [class.active]="mode.currentSiteUsine() === s" (click)="mode.setSiteUsine(s)">{{ s }}</button>
+          }
+        </div>
+      } @else {
+        <div class="page-sub" style="margin: 0">{{ mode.currentSiteUsine() }}</div>
+      }
       <select class="year-select" [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set($event)">
         <option [ngValue]="currentYear">Année en cours</option>
         @for (y of years(); track y) {
@@ -85,9 +89,11 @@ export class OssatureUsineComponent {
   readonly mode = inject(OssatureModeService);
   private readonly factory = inject(FactoryService);
 
-  readonly sites = computed(() =>
-    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
-  );
+  readonly sites = computed(() => {
+    const scoped = this.mode.allowedOssatureSite();
+    if (scoped) return [scoped];
+    return this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site));
+  });
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
 

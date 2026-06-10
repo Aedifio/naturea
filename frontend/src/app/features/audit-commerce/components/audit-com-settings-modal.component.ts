@@ -18,21 +18,6 @@ export class AuditComSettingsModalComponent {
     this.data.updateSettings({ noteThreshold: v });
   }
 
-  onBulkInput(e: Event): void {
-    this.ui.bulkText.set((e.target as HTMLTextAreaElement).value);
-  }
-
-  bulkAdd(): void {
-    const names = this.ui
-      .bulkText()
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (names.length) this.data.addAgencies(names);
-    this.ui.bulkText.set('');
-    this.ui.closeSettings();
-  }
-
   exportBackup(): void {
     void this.data.exportBackup();
   }

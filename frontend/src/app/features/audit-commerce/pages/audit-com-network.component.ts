@@ -58,7 +58,7 @@ export class AuditComNetworkComponent {
   readonly ymLabel = ymLabel;
   readonly noteVar = noteVar;
 
-  goAgency(id: string): void {
+  goAgency(id: number): void {
     this.router.navigate(['/apps/audit-commerce/agence', id]);
   }
 }

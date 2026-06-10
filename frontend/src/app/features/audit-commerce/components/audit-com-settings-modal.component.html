@@ -33,17 +33,5 @@
       <b class="disp" style="width: 48px">{{ noteThreshold() }}/10</b>
     </div>
     <div class="tiny muted" style="margin-bottom: 18px">Sous cette note moyenne, l'agence est signalée en rouge (« en difficulté »).</div>
-    <div class="sep"></div>
-    <span class="lab">Créer plusieurs agences (une par ligne)</span>
-    <textarea
-      class="in"
-      rows="5"
-      placeholder="Agence Lyon&#10;Agence Bordeaux&#10;Agence Lille&#10;…"
-      [value]="ui.bulkText()"
-      (input)="onBulkInput($event)"
-    ></textarea>
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <button type="button" class="btn pri" (click)="bulkAdd()">➕ Ajouter les agences</button>
-    </div>
   </div>
 </div>

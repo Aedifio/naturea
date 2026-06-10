@@ -34,9 +34,6 @@
         <span class="lab" style="margin: 0">Période</span>
         <input class="in" type="month" [value]="ui.ym()" (change)="onYmChange($event)" style="width: 160px" />
       </div>
-      <button type="button" class="btn pri" (click)="addAgency()">
-        <span style="font-weight: 800; font-size: 16px; line-height: 1">+</span> Agence
-      </button>
     </div>
     <div class="content">
       <router-outlet />

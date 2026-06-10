@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { AuditComSettingsModalComponent } from './components/audit-com-settings-modal.component';
 import { AuditCommerceDataService } from './services/audit-commerce-data.service';
@@ -18,8 +18,6 @@ export class AuditCommerceShellComponent {
   readonly data = inject(AuditCommerceDataService);
   readonly ui = inject(AuditCommerceUiService);
 
-  private readonly router = inject(Router);
-
   readonly agenciesNav = computed(() => {
     const ym = this.ui.ym();
     const th = this.data.settings().noteThreshold;
@@ -32,11 +30,5 @@ export class AuditCommerceShellComponent {
 
   onYmChange(e: Event): void {
     this.ui.setYm((e.target as HTMLInputElement).value);
-  }
-
-  addAgency(): void {
-    const created = this.data.addAgency();
-    this.ui.resetAgencyUi();
-    void this.router.navigate(['/apps/audit-commerce/agence', created.id]);
   }
 }

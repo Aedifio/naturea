@@ -1,21 +1,29 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { AgencyService } from '../../../core/services/agency.service';
 import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
 import type {
   Agency,
+  AgencyObjectives,
   Audit,
   AuditCommerceState,
   BackupBundle,
   DocMeta,
+  Employee,
   LeafData,
   StoredDoc,
 } from '../audit-commerce.models';
-import { AUDIT_COMMERCE_SEED } from '../constants/audit-commerce-seed.constants';
 import { DOC_KEY_PREFIX, LEAF_KIND } from '../constants/audit-commerce.constants';
 import { defaultAuditId, newAuditDate, todayISO, uid } from '../utils/audit-commerce.utils';
 
-function emptyState(): AuditCommerceState {
-  return { version: 2, agencies: [], settings: { threshold: 0.8, noteThreshold: 5 } };
+interface CommerceExt {
+  employees: Employee[];
+  objectives: AgencyObjectives;
+  documents: DocMeta[];
+}
+
+function emptyCommerceExt(): CommerceExt {
+  return { employees: [], objectives: {}, documents: [] };
 }
 
 function convOldLeaf(id: string, v: { val?: string | number; note?: string; emp?: string } | undefined): LeafData {
@@ -45,223 +53,233 @@ function normLeaf(id: string, lf: LeafData | undefined): LeafData {
   return convOldLeaf(id, lf as { val?: string | number; note?: string; emp?: string });
 }
 
-function migrate(data: Partial<AuditCommerceState> | null): AuditCommerceState {
-  const base = data ?? {};
-  const agencies = (base.agencies ?? []).map((a) => {
-    const ag = { ...a };
-    ag.employees = ag.employees ?? [];
-    ag.objectives = ag.objectives ?? {};
-    ag.documents = ag.documents ?? [];
-    if (!ag.audits) {
-      ag.audits = [];
-      const months = (a as Agency & { months?: Record<string, { audit?: Record<string, unknown>; visitDate?: string; empRatings?: Audit['empRatings']; note?: string | number }> }).months ?? {};
-      Object.keys(months)
-        .sort()
-        .forEach((ym) => {
-          const m = months[ym];
-          const leaves: Record<string, LeafData> = {};
-          Object.keys(m.audit ?? {}).forEach((id) => {
-            leaves[id] = convOldLeaf(id, m.audit![id] as { val?: string | number; note?: string; emp?: string });
-          });
-          ag.audits!.push({
-            id: uid(),
-            date: m.visitDate ?? `${ym}-15`,
-            status: 'validated',
-            leaves,
-            empRatings: m.empRatings ?? {},
-            note: m.note ?? '',
-          });
-        });
-    }
-    ag.audits = (ag.audits ?? []).map((au) => {
-      const audit = { ...au, leaves: { ...au.leaves }, empRatings: { ...au.empRatings } };
-      if ((audit.status as string) === 'published') audit.status = 'validated';
-      if (!audit.status) audit.status = 'draft';
-      Object.keys(audit.leaves).forEach((id) => {
-        audit.leaves[id] = normLeaf(id, audit.leaves[id]);
-      });
-      return audit;
-    });
-    return ag;
+function normAudit(au: Audit): Audit {
+  const audit = { ...au, leaves: { ...au.leaves }, empRatings: { ...au.empRatings } };
+  if ((audit.status as string) === 'published') audit.status = 'validated';
+  if (!audit.status) audit.status = 'draft';
+  Object.keys(audit.leaves).forEach((id) => {
+    audit.leaves[id] = normLeaf(id, audit.leaves[id]);
   });
-  return {
-    version: 2,
-    agencies,
-    settings: { threshold: 0.8, noteThreshold: 5, ...base.settings },
-  };
+  return audit;
+}
+
+function parseAgencyId(id: number | string): number | null {
+  const n = typeof id === 'number' ? id : Number(id);
+  return Number.isFinite(n) ? n : null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuditCommerceDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly files = inject(FileStorageService);
+  private readonly agenciesSvc = inject(AgencyService);
   private readonly docCache = new Map<string, StoredDoc>();
   private docsHydrated = false;
-  private readonly _state = signal<AuditCommerceState>(emptyState());
 
-  readonly state = this._state.asReadonly();
-  readonly agencies = computed(() => this._state().agencies);
-  readonly settings = computed(() => this._state().settings);
+  private readonly _commerceExt = signal<Map<number, CommerceExt>>(new Map());
+  private readonly _auditsByAgencyId = signal<Map<number, Audit[]>>(new Map());
+  private readonly _settings = signal<AuditCommerceState['settings']>({ threshold: 0.8, noteThreshold: 5 });
+
+  /** Agency list: metadata from `agencies`, commerce data from audit-commerce tables. */
+  readonly agencies = computed(() => {
+    this.agenciesSvc.agencies();
+    const extMap = this._commerceExt();
+    const auditsMap = this._auditsByAgencyId();
+    return this.agenciesSvc.getAll().map((a) => {
+      const ext = extMap.get(a.id) ?? emptyCommerceExt();
+      return {
+        id: a.id,
+        name: a.name,
+        address: a.adresse ?? '',
+        employees: ext.employees,
+        objectives: ext.objectives,
+        documents: ext.documents,
+        audits: auditsMap.get(a.id) ?? [],
+      };
+    });
+  });
+
+  readonly settings = computed(() => this._settings());
+  readonly state = computed(
+    (): AuditCommerceState => ({
+      version: 2,
+      agencies: this.agencies(),
+      settings: this._settings(),
+    }),
+  );
 
   async load(): Promise<void> {
-    const [settingsRes, agenciesRes, auditsRes] = await Promise.all([
-      this.supabase.from('audit_commerce_settings').select('*').eq('id', 1).maybeSingle(),
-      this.supabase.from('audit_commerce_agencies').select('*').order('name'),
-      this.supabase.from('audit_commerce_audits').select('*').order('audit_date'),
-    ]);
+    if (!this.agenciesSvc.ready()) {
+      await this.agenciesSvc.load();
+    }
 
-    if (agenciesRes.error) {
-      console.error('[AuditCommerce] load failed', agenciesRes.error);
-      this._state.set(emptyState());
+    if (!this.agenciesSvc.getAll().length) {
+      this.clearCaches();
       return;
     }
 
-    const auditsByAgency = new Map<string, Audit[]>();
+    const [settingsRes, extRes, auditsRes] = await Promise.all([
+      this.supabase.from('audit_commerce_settings').select('*').eq('id', 1).maybeSingle(),
+      this.supabase.from('audit_commerce_agencies').select('agency_id, objectives, employees, documents'),
+      this.supabase.from('audit_commerce_audits').select('*').order('audit_date'),
+    ]);
+
+    if (extRes.error) {
+      console.error('[AuditCommerce] load failed', extRes.error);
+      this.clearCaches();
+      return;
+    }
+
+    const extMap = new Map<number, CommerceExt>();
+    for (const row of extRes.data ?? []) {
+      extMap.set(row.agency_id, {
+        employees: (row.employees as Employee[]) ?? [],
+        objectives: (row.objectives as AgencyObjectives) ?? {},
+        documents: (row.documents as DocMeta[]) ?? [],
+      });
+    }
+
+    const auditsByAgencyId = new Map<number, Audit[]>();
     for (const a of auditsRes.data ?? []) {
-      const audit: Audit = {
+      const audit = normAudit({
         id: a.id,
         date: a.audit_date,
         status: a.status as Audit['status'],
         leaves: a.leaves ?? {},
         empRatings: a.emp_ratings ?? {},
         note: a.note ?? '',
-      };
-      Object.keys(audit.leaves).forEach((id) => {
-        audit.leaves[id] = normLeaf(id, audit.leaves[id]);
       });
-      const list = auditsByAgency.get(a.agency_id) ?? [];
+      const list = auditsByAgencyId.get(a.agency_id) ?? [];
       list.push(audit);
-      auditsByAgency.set(a.agency_id, list);
+      auditsByAgencyId.set(a.agency_id, list);
     }
 
-    const agencies: Agency[] = (agenciesRes.data ?? []).map((ag) => ({
-      id: ag.id,
-      name: ag.name,
-      address: '',
-      employees: ag.employees ?? [],
-      objectives: ag.objectives ?? {},
-      documents: ag.documents ?? [],
-      audits: auditsByAgency.get(ag.id) ?? [],
-    }));
-
     const settingsRow = settingsRes.data;
-    const state = migrate({
-      version: 2,
-      agencies,
-      settings: settingsRow
+    this._commerceExt.set(extMap);
+    this._auditsByAgencyId.set(auditsByAgencyId);
+    this._settings.set(
+      settingsRow
         ? { threshold: Number(settingsRow.threshold), noteThreshold: Number(settingsRow.note_threshold) }
         : { threshold: 0.8, noteThreshold: 5 },
-    });
-    this._state.set(state);
+    );
   }
 
-  private persist(state: AuditCommerceState): void {
-    this._state.set(state);
-    void this.persistToDb(state);
+  private clearCaches(): void {
+    this._commerceExt.set(new Map());
+    this._auditsByAgencyId.set(new Map());
   }
 
-  private async persistToDb(state: AuditCommerceState): Promise<void> {
+  private async persistSettings(): Promise<void> {
+    const settings = this._settings();
     await this.supabase.from('audit_commerce_settings').upsert({
       id: 1,
-      version: state.version,
-      threshold: state.settings.threshold,
-      note_threshold: state.settings.noteThreshold,
+      version: 2,
+      threshold: settings.threshold,
+      note_threshold: settings.noteThreshold,
     });
+  }
 
-    for (const ag of state.agencies) {
-      await this.supabase.from('audit_commerce_agencies').upsert({
-        id: ag.id,
-        name: ag.name,
+  private async persistAgency(agencyId: number): Promise<void> {
+    const ag = this.getAgency(agencyId);
+    if (!ag) return;
+
+    await this.supabase.from('audit_commerce_agencies').upsert(
+      {
+        agency_id: ag.id,
         objectives: ag.objectives ?? {},
         employees: ag.employees ?? [],
         documents: ag.documents ?? [],
-      });
+      },
+      { onConflict: 'agency_id' },
+    );
 
-      for (const au of ag.audits) {
-        await this.supabase.from('audit_commerce_audits').upsert({
-          id: au.id,
-          agency_id: ag.id,
-          audit_date: au.date,
-          status: au.status,
-          leaves: au.leaves,
-          emp_ratings: au.empRatings,
-          note: au.note != null ? String(au.note) : null,
-        });
-      }
+    for (const au of ag.audits) {
+      await this.supabase.from('audit_commerce_audits').upsert({
+        id: au.id,
+        agency_id: ag.id,
+        audit_date: au.date,
+        status: au.status,
+        leaves: au.leaves,
+        emp_ratings: au.empRatings,
+        note: au.note != null ? String(au.note) : null,
+      });
     }
   }
 
-  getAgency(id: string): Agency | undefined {
-    return this.agencies().find((a) => a.id === id);
+  getAgency(id: number | string): Agency | undefined {
+    const agencyId = parseAgencyId(id);
+    if (agencyId == null) return undefined;
+    return this.agencies().find((a) => a.id === agencyId);
   }
 
-  getAudit(agencyId: string, auditId: string): Audit | undefined {
-    return this.getAgency(agencyId)?.audits.find((a) => a.id === auditId);
+  getAudit(agencyId: number | string, auditId: string): Audit | undefined {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return undefined;
+    return this.getAgency(id)?.audits.find((a) => a.id === auditId);
   }
 
   updateSettings(patch: Partial<AuditCommerceState['settings']>): void {
-    const state = structuredClone(this._state());
-    state.settings = { ...state.settings, ...patch };
-    this.persist(state);
+    this._settings.update((s) => ({ ...s, ...patch }));
+    void this.persistSettings();
   }
 
-  addAgencies(names: string[]): Agency[] {
-    const state = structuredClone(this._state());
-    const created = names.map((n) => ({
-      id: uid(),
-      name: n.trim(),
-      address: '',
-      employees: [],
-      objectives: {},
-      audits: [],
-      documents: [],
-    }));
-    state.agencies.push(...created);
-    this.persist(state);
-    return created;
+  updateAgency(agencyId: number | string, patch: Partial<Pick<Agency, 'objectives'>>): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = { ...(next.get(id) ?? emptyCommerceExt()) };
+      if (patch.objectives) ext.objectives = { ...ext.objectives, ...patch.objectives };
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  addAgency(name = 'Nouvelle agence'): Agency {
-    return this.addAgencies([name])[0];
+  addEmployee(agencyId: number | string): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = { ...(next.get(id) ?? emptyCommerceExt()), employees: [...(next.get(id)?.employees ?? [])] };
+      ext.employees.push({ id: uid(), name: '', role: '' });
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  updateAgency(agencyId: string, patch: Partial<Pick<Agency, 'name' | 'address' | 'objectives'>>): void {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) return;
-    Object.assign(ag, patch);
-    if (patch.objectives) ag.objectives = { ...ag.objectives, ...patch.objectives };
-    this.persist(state);
+  updateEmployee(agencyId: number | string, empId: string, field: 'name' | 'role', value: string): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = structuredClone(next.get(id) ?? emptyCommerceExt());
+      const emp = ext.employees.find((e) => e.id === empId);
+      if (!emp) return m;
+      emp[field] = value;
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  addEmployee(agencyId: string): void {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) return;
-    ag.employees.push({ id: uid(), name: '', role: '' });
-    this.persist(state);
+  deleteEmployee(agencyId: number | string, empId: string): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = structuredClone(next.get(id) ?? emptyCommerceExt());
+      ext.employees = ext.employees.filter((e) => e.id !== empId);
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  updateEmployee(agencyId: string, empId: string, field: 'name' | 'role', value: string): void {
-    const state = structuredClone(this._state());
-    const emp = state.agencies.find((a) => a.id === agencyId)?.employees.find((e) => e.id === empId);
-    if (!emp) return;
-    emp[field] = value;
-    this.persist(state);
-  }
-
-  deleteEmployee(agencyId: string, empId: string): void {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) return;
-    ag.employees = ag.employees.filter((e) => e.id !== empId);
-    this.persist(state);
-  }
-
-  newAudit(agencyId: string, ym: string): Audit {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) throw new Error('Agency not found');
+  newAudit(agencyId: number | string, ym: string): Audit {
+    const id = parseAgencyId(agencyId);
+    if (id == null) throw new Error('Agency not found');
     const au: Audit = {
       id: uid(),
       date: newAuditDate(ym),
@@ -270,56 +288,89 @@ export class AuditCommerceDataService {
       empRatings: {},
       note: '',
     };
-    ag.audits.push(au);
-    this.persist(state);
+    this._auditsByAgencyId.update((m) => {
+      const next = new Map(m);
+      next.set(id, [...(next.get(id) ?? []), au]);
+      return next;
+    });
+    void this.persistAgency(id);
     return au;
   }
 
-  updateAudit(agencyId: string, auditId: string, patch: Partial<Audit>): void {
-    const state = structuredClone(this._state());
-    const au = state.agencies.find((a) => a.id === agencyId)?.audits.find((a) => a.id === auditId);
-    if (!au) return;
-    Object.assign(au, patch);
-    if (patch.leaves) au.leaves = patch.leaves;
-    if (patch.empRatings) au.empRatings = patch.empRatings;
-    this.persist(state);
+  updateAudit(agencyId: number | string, auditId: string, patch: Partial<Audit>): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._auditsByAgencyId.update((m) => {
+      const next = new Map(m);
+      const audits = structuredClone(next.get(id) ?? []);
+      const au = audits.find((a) => a.id === auditId);
+      if (!au) return m;
+      Object.assign(au, patch);
+      if (patch.leaves) au.leaves = patch.leaves;
+      if (patch.empRatings) au.empRatings = patch.empRatings;
+      next.set(id, audits);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  setAuditStatus(agencyId: string, auditId: string, status: Audit['status']): void {
+  setAuditStatus(agencyId: number | string, auditId: string, status: Audit['status']): void {
     this.updateAudit(agencyId, auditId, { status });
   }
 
-  deleteAudit(agencyId: string, auditId: string): void {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
+  deleteAudit(agencyId: number | string, auditId: string): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._auditsByAgencyId.update((m) => {
+      const next = new Map(m);
+      next.set(id, (next.get(id) ?? []).filter((a) => a.id !== auditId));
+      return next;
+    });
+    void this.persistAgency(id);
+  }
+
+  ensureLeaf(agencyId: number | string, auditId: string, leafId: string): LeafData {
+    const id = parseAgencyId(agencyId);
+    if (id == null) throw new Error('Agency not found');
+    let leaf!: LeafData;
+    this._auditsByAgencyId.update((m) => {
+      const next = new Map(m);
+      const audits = structuredClone(next.get(id) ?? []);
+      const au = audits.find((a) => a.id === auditId);
+      if (!au) throw new Error('Audit not found');
+      au.leaves = au.leaves ?? {};
+      if (!au.leaves[leafId]) {
+        au.leaves[leafId] = LEAF_KIND[leafId] === 'text' ? { text: '', note: '' } : { rows: [], note: '' };
+      }
+      leaf = au.leaves[leafId];
+      next.set(id, audits);
+      return next;
+    });
+    void this.persistAgency(id);
+    return leaf;
+  }
+
+  mutateAudit(agencyId: number | string, auditId: string, fn: (au: Audit, ag: Agency) => void): void {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    const ag = this.getAgency(id);
     if (!ag) return;
-    ag.audits = ag.audits.filter((a) => a.id !== auditId);
-    this.persist(state);
+    this._auditsByAgencyId.update((m) => {
+      const next = new Map(m);
+      const audits = structuredClone(next.get(id) ?? []);
+      const au = audits.find((a) => a.id === auditId);
+      if (!au) return m;
+      fn(au, ag);
+      next.set(id, audits);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  ensureLeaf(agencyId: string, auditId: string, leafId: string): LeafData {
-    const state = structuredClone(this._state());
-    const au = state.agencies.find((a) => a.id === agencyId)?.audits.find((a) => a.id === auditId);
-    if (!au) throw new Error('Audit not found');
-    au.leaves = au.leaves ?? {};
-    if (!au.leaves[leafId]) {
-      au.leaves[leafId] = LEAF_KIND[leafId] === 'text' ? { text: '', note: '' } : { rows: [], note: '' };
-    }
-    this.persist(state);
-    return au.leaves[leafId];
-  }
-
-  mutateAudit(agencyId: string, auditId: string, fn: (au: Audit, ag: Agency) => void): void {
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    const au = ag?.audits.find((a) => a.id === auditId);
-    if (!ag || !au) return;
-    fn(au, ag);
-    this.persist(state);
-  }
-
-  resolveDefaultAuditId(agencyId: string, ym: string): string | null {
-    return defaultAuditId(this.getAgency(agencyId), ym);
+  resolveDefaultAuditId(agencyId: number | string, ym: string): string | null {
+    const id = parseAgencyId(agencyId);
+    if (id == null) return null;
+    return defaultAuditId(this.getAgency(id), ym);
   }
 
   /* ---- Documents (Supabase app_kv_store + Storage) ---- */
@@ -380,23 +431,32 @@ export class AuditCommerceDataService {
     return [...this.docCache.keys()].map((id) => this.docKey(id));
   }
 
-  addDocument(agencyId: string, meta: DocMeta, payload: StoredDoc): void {
+  addDocument(agencyId: number | string, meta: DocMeta, payload: StoredDoc): void {
     this.setDoc(meta.id, payload);
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) return;
-    ag.documents = ag.documents ?? [];
-    ag.documents.unshift(meta);
-    this.persist(state);
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = structuredClone(next.get(id) ?? emptyCommerceExt());
+      ext.documents.unshift(meta);
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
-  removeDocument(agencyId: string, docId: string): void {
+  removeDocument(agencyId: number | string, docId: string): void {
     this.deleteDoc(docId);
-    const state = structuredClone(this._state());
-    const ag = state.agencies.find((a) => a.id === agencyId);
-    if (!ag) return;
-    ag.documents = (ag.documents ?? []).filter((d) => d.id !== docId);
-    this.persist(state);
+    const id = parseAgencyId(agencyId);
+    if (id == null) return;
+    this._commerceExt.update((m) => {
+      const next = new Map(m);
+      const ext = structuredClone(next.get(id) ?? emptyCommerceExt());
+      ext.documents = ext.documents.filter((d) => d.id !== docId);
+      next.set(id, ext);
+      return next;
+    });
+    void this.persistAgency(id);
   }
 
   async exportBackup(): Promise<void> {
@@ -405,7 +465,7 @@ export class AuditCommerceDataService {
       app: 'reseau-audit',
       version: 2,
       exportedAt: new Date().toISOString(),
-      data: this._state(),
+      data: this.state(),
       docs: {},
     };
     for (const k of this.listDocKeys()) {
@@ -439,13 +499,42 @@ export class AuditCommerceDataService {
           }
         }
       }
-      const migrated = migrate(JSON.parse(JSON.stringify(data)));
-      this.persist(migrated);
-      return migrated.agencies.length;
+      this.applyImportedState(data);
+      return this.agencies().length;
     });
   }
 
   replaceState(state: AuditCommerceState): void {
-    this.persist(migrate(state));
+    this.applyImportedState(state);
+  }
+
+  private applyImportedState(data: AuditCommerceState): void {
+    const extMap = new Map<number, CommerceExt>();
+    const auditsMap = new Map<number, Audit[]>();
+    const canonicalByName = new Map(this.agenciesSvc.getAll().map((a) => [a.name.trim().toLowerCase(), a.id]));
+
+    for (const ag of data.agencies) {
+      let agencyId = typeof ag.id === 'number' ? ag.id : null;
+      if (agencyId == null || !this.agenciesSvc.getById(agencyId)) {
+        agencyId = canonicalByName.get(ag.name.trim().toLowerCase()) ?? null;
+      }
+      if (agencyId == null) continue;
+
+      extMap.set(agencyId, {
+        employees: ag.employees ?? [],
+        objectives: ag.objectives ?? {},
+        documents: ag.documents ?? [],
+      });
+      auditsMap.set(agencyId, (ag.audits ?? []).map(normAudit));
+    }
+
+    this._commerceExt.set(extMap);
+    this._auditsByAgencyId.set(auditsMap);
+    this._settings.set({ ...{ threshold: 0.8, noteThreshold: 5 }, ...data.settings });
+
+    void this.persistSettings();
+    for (const agencyId of new Set([...extMap.keys(), ...auditsMap.keys()])) {
+      void this.persistAgency(agencyId);
+    }
   }
 }
