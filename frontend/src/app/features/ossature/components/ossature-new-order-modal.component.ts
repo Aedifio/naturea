@@ -85,7 +85,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
                     <span style="font-size: 20px">{{ docsJoints()[doc.id] ? '✅' : '📎' }}</span>
                     <span style="flex: 1; font-size: 13px">
                       <strong>{{ doc.label }}</strong><br />
-                      <span style="font-size: 11px; color: #9ca3af">{{ docsJoints()[doc.id] || 'Appuyer ici pour joindre' }}</span>
+                      <span style="font-size: 11px; color: #9ca3af">{{ docFileName(doc.id) || 'Appuyer ici pour joindre' }}</span>
                     </span>
                     <span class="join-btn" [class.done]="!!docsJoints()[doc.id]" (click)="fileInput.click(); $event.preventDefault()">
                       {{ docsJoints()[doc.id] ? '✓ Joint' : 'Joindre' }}
@@ -192,7 +192,7 @@ export class OssatureNewOrderModalComponent {
   site = '';
   readonly minDeliveryDate = this.computeMinDeliveryDate();
 
-  readonly docsJoints = signal<Record<string, string>>({});
+  readonly docsJoints = signal<Record<string, File>>({});
   readonly showWarn = signal(false);
 
   constructor() {
@@ -219,9 +219,13 @@ export class OssatureNewOrderModalComponent {
     return minDate.toISOString().slice(0, 10);
   }
 
+  docFileName(docId: string): string {
+    return this.docsJoints()[docId]?.name ?? '';
+  }
+
   onFile(docId: string, input: HTMLInputElement): void {
     if (input.files?.[0]) {
-      this.docsJoints.update((m) => ({ ...m, [docId]: input.files![0].name }));
+      this.docsJoints.update((m) => ({ ...m, [docId]: input.files![0] }));
       this.showWarn.set(false);
     }
   }
@@ -247,7 +251,7 @@ export class OssatureNewOrderModalComponent {
     e.preventDefault();
     (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
     const f = e.dataTransfer?.files[0];
-    if (f) this.docsJoints.update((m) => ({ ...m, [docId]: f.name }));
+    if (f) this.docsJoints.update((m) => ({ ...m, [docId]: f }));
   }
 
   save(): void {
@@ -271,19 +275,34 @@ export class OssatureNewOrderModalComponent {
       alert('Franchisé ou usine invalide');
       return;
     }
-    const docs = DOCS_REQUIS.map((d) => this.docsJoints()[d.id]).filter(Boolean);
-    const order = this.data.createOrder({
-      agencyId,
-      factoryId: factory.id,
-      reference: this.reference.trim(),
-      surface,
-      plancher,
-      deliveryDate: this.deliveryDate,
-      permis: this.permis || null,
-      docs,
-    });
-    this.modals.closeNewOrder();
-    this.toast.show(`✅ Commande ${order.reference} créée — notification email envoyée au coordinateur et à l'usine`);
+    void this.createOrderAsync(agencyId, factory.id, surface, plancher);
+  }
+
+  private async createOrderAsync(
+    agencyId: number,
+    factoryId: number,
+    surface: number,
+    plancher: number | null,
+  ): Promise<void> {
+    try {
+      const order = await this.data.createOrder(
+        {
+          agencyId,
+          factoryId,
+          reference: this.reference.trim(),
+          surface,
+          plancher,
+          deliveryDate: this.deliveryDate,
+          permis: this.permis || null,
+        },
+        this.docsJoints(),
+      );
+      this.modals.closeNewOrder();
+      this.toast.show(`✅ Commande ${order.reference} créée — notification email envoyée au coordinateur et à l'usine`);
+    } catch (err) {
+      console.error('[Ossature] create order failed', err);
+      this.toast.show('⚠️ Erreur lors de la création de la commande');
+    }
   }
 
   close(): void {

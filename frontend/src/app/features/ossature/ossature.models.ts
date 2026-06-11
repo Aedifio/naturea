@@ -51,7 +51,23 @@ export interface OssatureOrder {
 
 export type NewOrderInput = Pick<
   OssatureOrder,
-  'agencyId' | 'factoryId' | 'reference' | 'surface' | 'plancher' | 'deliveryDate' | 'permis' | 'docs'
+  'agencyId' | 'factoryId' | 'reference' | 'surface' | 'plancher' | 'deliveryDate' | 'permis'
 >;
+
+export type OssatureOrderFileKind =
+  | 'doc_requis'
+  | 'devis_retour'
+  | 'signature'
+  | 'ar'
+  | 'plan_fab'
+  | 'plan_val';
+
+export interface OssatureOrderFileRef {
+  kind: OssatureOrderFileKind;
+  slot: string;
+  portalFileId: string;
+  filename: string;
+  path: string;
+}
 
 export type SignatureMode = 'devis' | 'plan_val';

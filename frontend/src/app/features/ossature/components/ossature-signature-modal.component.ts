@@ -37,7 +37,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
                   <div style="flex: 1; min-width: 0">
                     <div style="font-weight: 600; font-size: 12px">{{ doc.label }}</div>
                     <div style="font-size: 11px; color: var(--faint); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                      {{ sigDocs()[doc.id] || 'Cliquer pour joindre' }}
+                      {{ sigDocName(doc.id) || 'Cliquer pour joindre' }}
                     </div>
                   </div>
                   @if (sigDocs()[doc.id]) {
@@ -153,7 +153,7 @@ export class OssatureSignatureModalComponent {
     return `Date : ${now.toLocaleDateString('fr-FR')} à ${now.toTimeString().slice(0, 5)}`;
   });
 
-  readonly sigDocs = signal<Record<string, string>>({});
+  readonly sigDocs = signal<Record<string, File>>({});
   readonly showDocWarn = signal(false);
   readonly showEmptyWarn = signal(false);
 
@@ -236,10 +236,14 @@ export class OssatureSignatureModalComponent {
     return true;
   }
 
+  sigDocName(docId: string): string {
+    return this.sigDocs()[docId]?.name ?? '';
+  }
+
   onFile(docId: string, e: Event): void {
     const input = e.target as HTMLInputElement;
     if (input.files?.[0]) {
-      this.sigDocs.update((m) => ({ ...m, [docId]: input.files![0].name }));
+      this.sigDocs.update((m) => ({ ...m, [docId]: input.files![0] }));
       this.showDocWarn.set(false);
     }
   }
@@ -276,7 +280,7 @@ export class OssatureSignatureModalComponent {
     el.style.borderColor = 'var(--border)';
     el.style.background = '#f9fafb';
     const f = e.dataTransfer?.files[0];
-    if (f) this.sigDocs.update((m) => ({ ...m, [docId]: f.name }));
+    if (f) this.sigDocs.update((m) => ({ ...m, [docId]: f }));
   }
 
   save(): void {
@@ -299,14 +303,22 @@ export class OssatureSignatureModalComponent {
     }
 
     const sigData = canvas.toDataURL('image/png');
-    if (this.isDevis()) {
-      const docsList = DOCS_SIGNATURE.map((d) => this.sigDocs()[d.id]).filter(Boolean);
-      this.data.saveSignature(id, sigData, docsList);
-    } else {
-      this.data.savePlanValidationSignature(id, sigData);
+    void this.saveAsync(id, sigData);
+  }
+
+  private async saveAsync(id: string, sigData: string): Promise<void> {
+    try {
+      if (this.isDevis()) {
+        await this.data.saveSignature(id, sigData, this.sigDocs());
+      } else {
+        await this.data.savePlanValidationSignature(id, sigData);
+      }
+      this.modals.closeSignature();
+      this.modals.openDetail(id);
+    } catch (err) {
+      console.error('[Ossature] signature save failed', err);
+      this.toast.show('⚠️ Erreur lors de l’enregistrement');
     }
-    this.modals.closeSignature();
-    this.modals.openDetail(id);
   }
 
   close(): void {

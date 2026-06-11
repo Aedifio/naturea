@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
-import { OssatureOrder } from '../ossature.models';
+import { DOCS_REQUIS, DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
+import { OssatureOrder, OssatureOrderFileKind } from '../ossature.models';
 import {
   daysSince,
   devisDelaiDepasse,
@@ -39,6 +39,38 @@ export class OssatureDetailModalComponent {
   readonly order = computed(() => {
     const id = this.modals.detailOrderId();
     return id ? this.data.getById(id) : undefined;
+  });
+
+  readonly docsRequis = computed(() => {
+    const o = this.order();
+    if (!o) return [];
+    const bySlot = new Map(
+      this.data
+        .getOrderFileRefs(o.id)
+        .filter((r) => r.kind === 'doc_requis')
+        .map((r) => [r.slot, r]),
+    );
+    return DOCS_REQUIS.filter((d) => bySlot.has(d.id)).map((d) => ({
+      slot: d.id,
+      label: d.label,
+      filename: bySlot.get(d.id)!.filename,
+    }));
+  });
+
+  readonly signatureFiles = computed(() => {
+    const o = this.order();
+    if (!o) return [];
+    const bySlot = new Map(
+      this.data
+        .getOrderFileRefs(o.id)
+        .filter((r) => r.kind === 'signature')
+        .map((r) => [r.slot, r]),
+    );
+    return DOCS_SIGNATURE.map((d, sigIdx) => {
+      const ref = bySlot.get(d.id);
+      if (!ref) return null;
+      return { slot: d.id, label: d.label, filename: ref.filename, sigIdx };
+    }).filter((x): x is NonNullable<typeof x> => !!x);
   });
 
   readonly showDocs = signal(true);
@@ -148,24 +180,27 @@ export class OssatureDetailModalComponent {
   onDevisUpload(e: Event): void {
     const input = e.target as HTMLInputElement;
     const id = this.order()?.id;
-    if (!id || !input.files?.[0]) return;
-    this.data.uploadDevisRetour(id, input.files[0].name);
+    const file = input.files?.[0];
+    if (!id || !file) return;
+    void this.data.uploadDevisRetour(id, file);
     input.value = '';
   }
 
   onARUpload(e: Event): void {
     const input = e.target as HTMLInputElement;
     const id = this.order()?.id;
-    if (!id || !input.files?.[0]) return;
-    this.data.uploadAR(id, input.files[0].name);
+    const file = input.files?.[0];
+    if (!id || !file) return;
+    void this.data.uploadAR(id, file);
     input.value = '';
   }
 
   onPlanFabUpload(e: Event): void {
     const input = e.target as HTMLInputElement;
     const id = this.order()?.id;
-    if (!id || !input.files?.[0]) return;
-    this.data.uploadPlanFab(id, input.files[0].name);
+    const file = input.files?.[0];
+    if (!id || !file) return;
+    void this.data.uploadPlanFab(id, file);
     input.value = '';
   }
 
@@ -173,22 +208,24 @@ export class OssatureDetailModalComponent {
     e.preventDefault();
     const id = this.order()?.id;
     const f = e.dataTransfer?.files[0];
-    if (id && f) this.data.uploadPlanFab(id, f.name);
+    if (id && f) void this.data.uploadPlanFab(id, f);
   }
 
   onPlanValDoc(e: Event): void {
     const input = e.target as HTMLInputElement;
     const id = this.order()?.id;
-    if (!id || !input.files?.[0]) return;
-    this.data.addPlanValDoc(id, input.files[0].name);
+    const file = input.files?.[0];
+    if (!id || !file) return;
+    void this.data.addPlanValDoc(id, file);
     input.value = '';
   }
 
   onSigDocReplace(idx: number, e: Event): void {
     const input = e.target as HTMLInputElement;
     const id = this.order()?.id;
-    if (!id || !input.files?.[0]) return;
-    this.data.replaceSigDoc(id, idx, input.files[0].name);
+    const file = input.files?.[0];
+    if (!id || !file) return;
+    void this.data.replaceSigDoc(id, idx, file);
     input.value = '';
   }
 
@@ -196,7 +233,7 @@ export class OssatureDetailModalComponent {
     e.preventDefault();
     const id = this.order()?.id;
     const f = e.dataTransfer?.files[0];
-    if (id && f) this.data.replaceSigDoc(id, idx, f.name);
+    if (id && f) void this.data.replaceSigDoc(id, idx, f);
   }
 
   alertDelai(o: OssatureOrder): void {
@@ -235,7 +272,9 @@ export class OssatureDetailModalComponent {
     if (id) this.modals.openSignature(id, 'plan_val');
   }
 
-  download(fname: string): void {
-    this.data.downloadDoc(fname);
+  download(kind: OssatureOrderFileKind, slot: string): void {
+    const id = this.order()?.id;
+    if (!id) return;
+    void this.data.downloadOrderFile(id, kind, slot);
   }
 }

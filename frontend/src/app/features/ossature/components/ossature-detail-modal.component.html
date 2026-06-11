@@ -65,11 +65,14 @@
       </div>
       @if (showDocs()) {
         <div style="margin-bottom: 22px">
-          @if (o.docs.length) {
-            @for (d of o.docs; track d) {
+          @if (docsRequis().length) {
+            @for (d of docsRequis(); track d.slot) {
               <div class="doc-chip" style="justify-content: space-between">
-                <span>📄 {{ d }}</span>
-                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; margin-left: 8px" (click)="download(d); $event.preventDefault()">⬇ Télécharger</a>
+                <div style="min-width: 0">
+                  <div style="font-weight: 700; font-size: 13px">📄 {{ d.label }}</div>
+                  <div style="font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px">{{ d.filename }}</div>
+                </div>
+                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; margin-left: 8px" (click)="download('doc_requis', d.slot); $event.preventDefault()">⬇ Télécharger</a>
               </div>
             }
           } @else {
@@ -133,7 +136,7 @@
             <div class="doc-chip" style="justify-content: space-between; background: #d1fae5">
               <span>✅ {{ o.devis_retour }} <span style="color: var(--faint); font-size: 11px">(déposé le {{ o.devis_retour_date || '—' }})</span></span>
               <div style="display: flex; gap: 4px">
-                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.devis_retour!); $event.preventDefault()">⬇ Télécharger</a>
+                <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download('devis_retour', 'main'); $event.preventDefault()">⬇ Télécharger</a>
                 @if (isUsine()) {
                   <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deleteDevisRetour(o.id)">🗑</button>
                 }
@@ -159,28 +162,28 @@
             <div style="background: #f0fdf4; border-radius: 10px; padding: 12px 14px">
               <div style="font-size: 12px; font-weight: 700; color: #065f46; margin-bottom: 8px">✅ Signé le {{ o.signature_date }} à {{ o.signature_heure || '—' }}</div>
               <img [src]="o.signature" style="max-width: 100%; border-radius: 8px; border: 1px solid #d1fae5" alt="Signature" />
-              @if (o.signature_docs?.length) {
+              @if (signatureFiles().length) {
                 <div style="margin-top: 12px">
                   <div style="font-size: 11px; font-weight: 700; color: #065f46; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px">📎 Pièces jointes validation</div>
-                  @for (d of o.signature_docs; track $index; let i = $index) {
+                  @for (d of signatureFiles(); track d.slot) {
                     <div class="doc-chip" style="justify-content: space-between; background: #fff; border: 1px solid #d1fae5; margin-bottom: 6px">
                       <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
                         <div style="width: 24px; height: 24px; border-radius: 6px; background: #d1fae5; display: flex; align-items: center; justify-content: center; font-size: 12px">📄</div>
                         <div style="min-width: 0">
-                          <div style="font-weight: 700; font-size: 12px; color: #065f46">{{ docsSignature[i].label || d }}</div>
-                          <div style="font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px">{{ d }}</div>
+                          <div style="font-weight: 700; font-size: 12px; color: #065f46">{{ d.label }}</div>
+                          <div style="font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px">{{ d.filename }}</div>
                         </div>
                       </div>
                       @if (isFranchise()) {
                         <div style="display: flex; gap: 4px">
                           <label style="background: #fff7ed; color: #f97316; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px dashed #fcd34d">
-                            <input type="file" accept=".pdf,.dwg,.png,.jpg" hidden (change)="onSigDocReplace(i, $event)" />
+                            <input type="file" accept=".pdf,.dwg,.png,.jpg" hidden (change)="onSigDocReplace(d.sigIdx, $event)" />
                             🔄 Remplacer
                           </label>
-                          <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.removeSigDocFromOrder(o.id, i)">🗑</button>
+                          <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.removeSigDocFromOrder(o.id, d.sigIdx)">🗑</button>
                         </div>
                       } @else if (isCoord() || isUsine()) {
-                        <a href="#" style="background: var(--blue); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(d); $event.preventDefault()">⬇ Télécharger</a>
+                        <a href="#" style="background: var(--blue); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download('signature', d.slot); $event.preventDefault()">⬇ Télécharger</a>
                       }
                     </div>
                   }
@@ -208,7 +211,7 @@
                 <div style="font-size: 11px; color: #059669; margin-top: 2px">Déposé le {{ o.ar_date || '—' }} à {{ o.ar_heure || '—' }}</div>
               </div>
               <div style="display: flex; gap: 6px">
-                <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.ar_fichier!); $event.preventDefault()">⬇ Télécharger</a>
+                <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download('ar', 'main'); $event.preventDefault()">⬇ Télécharger</a>
                 @if (isUsine()) {
                   <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deleteAR(o.id)">🗑</button>
                 }
@@ -235,7 +238,7 @@
                   <div style="font-size: 11px; color: #059669; margin-top: 2px">Déposé le {{ o.plan_fab_date || '—' }}</div>
                 </div>
                 <div style="display: flex; gap: 6px">
-                  <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(o.plan_fab!); $event.preventDefault()">⬇ Télécharger</a>
+                  <a href="#" style="background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download('plan_fab', 'main'); $event.preventDefault()">⬇ Télécharger</a>
                   @if (isUsine()) {
                     <label style="background: #fff7ed; color: #f97316; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer">🔄<input type="file" accept=".pdf,.dwg,.png" hidden (change)="onPlanFabUpload($event)" /></label>
                     <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deletePlanFab(o.id)">🗑</button>
@@ -271,7 +274,7 @@
                       <div style="font-size: 11px; color: var(--faint)">{{ d.date }}</div>
                     </div>
                     <div style="display: flex; gap: 4px">
-                      <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download(d.name); $event.preventDefault()">⬇</a>
+                      <a href="#" style="background: var(--blue); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none" (click)="download('plan_val', '' + i); $event.preventDefault()">⬇</a>
                       @if (isFranchise()) {
                         <button type="button" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer" (click)="data.deletePlanValDoc(o.id, i)">🗑</button>
                       }

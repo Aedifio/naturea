@@ -2,9 +2,15 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { factoryKeyToOssatureSite } from '../../../core/models/factory.model';
 import { AgencyService } from '../../../core/services/agency.service';
 import { FactoryService } from '../../../core/services/factory.service';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
-import { DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
-import { NewOrderInput, OssatureOrder } from '../ossature.models';
+import { DOCS_REQUIS, DOCS_SIGNATURE, STATUTS } from '../constants/ossature.constants';
+import {
+  NewOrderInput,
+  OssatureOrder,
+  OssatureOrderFileKind,
+  OssatureOrderFileRef,
+} from '../ossature.models';
 import {
   sendDevisRetourEmail,
   sendEmailCommandeConfirmee,
@@ -94,13 +100,17 @@ function nowFrDate(): string {
   return new Date().toLocaleDateString('fr-FR');
 }
 
+const SINGLE_FILE_SLOT = 'main';
+
 @Injectable({ providedIn: 'root' })
 export class OssatureDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly factory = inject(FactoryService);
   private readonly agencies = inject(AgencyService);
+  private readonly files = inject(FileStorageService);
   private readonly toast = inject(OssatureToastService);
   private readonly _orders = signal<OssatureOrder[]>([]);
+  private readonly _orderFiles = signal<Map<string, OssatureOrderFileRef[]>>(new Map());
   private readonly _version = signal(0);
 
   readonly orders = computed(() => {
@@ -129,15 +139,28 @@ export class OssatureDataService {
   }
 
   async load(): Promise<void> {
-    const { data, error } = await this.supabase
-      .from('ossature_orders')
-      .select('*, agency:agency_id(id, name, contact_email), factory:factory_id(id, key, nom, contact_email)')
-      .order('created', { ascending: false });
-    if (error) {
-      console.error('[Ossature] load failed', error);
+    const [ordersRes, filesRes] = await Promise.all([
+      this.supabase
+        .from('ossature_orders')
+        .select('*, agency:agency_id(id, name, contact_email), factory:factory_id(id, key, nom, contact_email)')
+        .order('created', { ascending: false }),
+      this.supabase
+        .from('ossature_order_files')
+        .select('order_id, kind, slot, file:portal_file_id(id, path, filename)'),
+    ]);
+
+    if (ordersRes.error) {
+      console.error('[Ossature] load failed', ordersRes.error);
       return;
     }
-    const list = (data ?? []).map((r) => this.rowToOrder(r as Record<string, unknown>));
+    if (filesRes.error) console.warn('[Ossature] order files load failed', filesRes.error);
+
+    const filesByOrder = this.groupFileRefs(filesRes.data ?? []);
+    this._orderFiles.set(filesByOrder);
+
+    const list = (ordersRes.data ?? []).map((r) =>
+      this.applyFileRefsToOrder(this.rowToOrder(r as Record<string, unknown>), filesByOrder.get(String(r['id'])) ?? []),
+    );
     const migrated = this.migrateStatuts(list);
     this._orders.set(migrated);
     this._version.update((v) => v + 1);
@@ -214,7 +237,7 @@ export class OssatureDataService {
     return updated;
   }
 
-  createOrder(input: NewOrderInput): OssatureOrder {
+  async createOrder(input: NewOrderInput, docFiles: Record<string, File>): Promise<OssatureOrder> {
     const agency = this.agencies.getById(input.agencyId);
     const factory = this.factory.getById(input.factoryId);
     const order: OssatureOrder = {
@@ -229,13 +252,22 @@ export class OssatureDataService {
       statut: 'Devis demandé',
       deliveryDate: input.deliveryDate,
       permis: input.permis ?? null,
-      docs: input.docs,
+      docs: [],
       docs_date: todayIso(),
       created: todayIso(),
     };
-    void this.save([order, ...this.orders()]);
-    sendEmailUsine(order, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
-    return order;
+
+    await this.save([order, ...this.orders()]);
+
+    for (const doc of DOCS_REQUIS) {
+      const file = docFiles[doc.id];
+      if (file) await this.uploadOrderFile(order.id, file, 'doc_requis', doc.id);
+    }
+
+    await this.refreshOrderFiles(order.id);
+    const created = this.getById(order.id) ?? order;
+    sendEmailUsine(created, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
+    return created;
   }
 
   updateStatut(id: string, newStatut: string): boolean {
@@ -254,7 +286,8 @@ export class OssatureDataService {
     this.toast.show('📦 Commande archivée');
   }
 
-  uploadDevisRetour(orderId: string, fname: string, promptEmail = true): void {
+  async uploadDevisRetour(orderId: string, file: File, promptEmail = true): Promise<void> {
+    const fname = await this.replaceOrderFile(orderId, file, 'devis_retour', SINGLE_FILE_SLOT);
     this.updateOrder(orderId, {
       devis_retour: fname,
       devis_retour_date: todayIso(),
@@ -270,7 +303,7 @@ export class OssatureDataService {
     }
   }
 
-  deleteDevisRetour(orderId: string): void {
+  async deleteDevisRetour(orderId: string): Promise<void> {
     if (
       !confirm(
         'Supprimer le devis envoyé ?\nLe statut repassera à "Devis demandé" et le franchisé ne pourra plus le signer.',
@@ -280,6 +313,7 @@ export class OssatureDataService {
     }
     const o = this.getById(orderId);
     if (!o) return;
+    await this.removeOrderFile(orderId, 'devis_retour', SINGLE_FILE_SLOT);
     const patch: Partial<OssatureOrder> = {
       devis_retour: undefined,
       devis_retour_date: undefined,
@@ -304,7 +338,20 @@ export class OssatureDataService {
     this.toast.show('↩️ Confirmation annulée');
   }
 
-  saveSignature(orderId: string, sigData: string, sigDocs: string[], promptEmail = true): void {
+  async saveSignature(
+    orderId: string,
+    sigData: string,
+    sigDocFiles: Record<string, File>,
+    promptEmail = true,
+  ): Promise<void> {
+    const sigDocs: string[] = [];
+    for (const doc of DOCS_SIGNATURE) {
+      const file = sigDocFiles[doc.id];
+      if (!file) continue;
+      const fname = await this.replaceOrderFile(orderId, file, 'signature', doc.id);
+      sigDocs.push(fname);
+    }
+
     this.updateOrder(orderId, {
       signature: sigData,
       signature_date: nowFrDate(),
@@ -325,19 +372,24 @@ export class OssatureDataService {
     }
   }
 
-  replaceSigDoc(orderId: string, idx: number, fname: string): void {
+  async replaceSigDoc(orderId: string, idx: number, file: File): Promise<void> {
     const o = this.getById(orderId);
     if (!o) return;
+    const doc = DOCS_SIGNATURE[idx];
+    if (!doc) return;
+    const fname = await this.replaceOrderFile(orderId, file, 'signature', doc.id);
     const docs = [...(o.signature_docs ?? [])];
     docs[idx] = fname;
     this.updateOrder(orderId, { signature_docs: docs });
     this.toast.show('📎 Document remplacé');
   }
 
-  removeSigDocFromOrder(orderId: string, idx: number): void {
+  async removeSigDocFromOrder(orderId: string, idx: number): Promise<void> {
     if (!confirm('Supprimer ce document ?')) return;
     const o = this.getById(orderId);
     if (!o) return;
+    const doc = DOCS_SIGNATURE[idx];
+    if (doc) await this.removeOrderFile(orderId, 'signature', doc.id);
     const docs = (o.signature_docs ?? []).filter((_, i) => i !== idx);
     const patch: Partial<OssatureOrder> = {
       signature_docs: docs,
@@ -350,41 +402,49 @@ export class OssatureDataService {
     this.toast.show('🗑 Document supprimé — veuillez signer à nouveau');
   }
 
-  uploadAR(orderId: string, fname: string): void {
+  async uploadAR(orderId: string, file: File): Promise<void> {
+    const fname = await this.replaceOrderFile(orderId, file, 'ar', SINGLE_FILE_SLOT);
     this.updateOrder(orderId, { ar_fichier: fname, ar_date: todayIso(), ar_heure: nowTime() });
     this.toast.show(`✅ Accusé de réception déposé le ${todayIso()} à ${nowTime()}`);
   }
 
-  deleteAR(orderId: string): void {
+  async deleteAR(orderId: string): Promise<void> {
     if (!confirm("Supprimer l'accusé de réception ?")) return;
+    await this.removeOrderFile(orderId, 'ar', SINGLE_FILE_SLOT);
     this.updateOrder(orderId, { ar_fichier: undefined, ar_date: undefined, ar_heure: undefined });
     this.toast.show('🗑 Accusé de réception supprimé');
   }
 
-  uploadPlanFab(orderId: string, fname: string): void {
+  async uploadPlanFab(orderId: string, file: File): Promise<void> {
+    const fname = await this.replaceOrderFile(orderId, file, 'plan_fab', SINGLE_FILE_SLOT);
     this.updateOrder(orderId, { plan_fab: fname, plan_fab_date: todayIso() });
     this.toast.show('✅ Plan de fabrication déposé');
   }
 
-  deletePlanFab(orderId: string): void {
+  async deletePlanFab(orderId: string): Promise<void> {
     if (!confirm('Supprimer le plan de fabrication ?')) return;
+    await this.removeOrderFile(orderId, 'plan_fab', SINGLE_FILE_SLOT);
     this.updateOrder(orderId, { plan_fab: undefined, plan_fab_date: undefined });
     this.toast.show('🗑 Plan de fabrication supprimé');
   }
 
-  addPlanValDoc(orderId: string, fname: string): void {
+  async addPlanValDoc(orderId: string, file: File): Promise<void> {
     const o = this.getById(orderId);
     if (!o) return;
+    const slot = String((o.plan_val_docs ?? []).length);
+    const fname = await this.uploadOrderFile(orderId, file, 'plan_val', slot);
     const docs = [...(o.plan_val_docs ?? []), { name: fname, date: todayIso() }];
     this.updateOrder(orderId, { plan_val_docs: docs });
     this.toast.show('📎 Document ajouté');
   }
 
-  deletePlanValDoc(orderId: string, idx: number): void {
+  async deletePlanValDoc(orderId: string, idx: number): Promise<void> {
     const o = this.getById(orderId);
     if (!o) return;
+    await this.removeOrderFile(orderId, 'plan_val', String(idx));
     const docs = (o.plan_val_docs ?? []).filter((_, i) => i !== idx);
     this.updateOrder(orderId, { plan_val_docs: docs });
+    await this.reindexPlanValSlots(orderId);
     this.toast.show('🗑 Document supprimé');
   }
 
@@ -460,10 +520,23 @@ export class OssatureDataService {
     this.toast.show('🗑 Date supprimée — statut repassé à "Commande confirmée"');
   }
 
-  downloadDoc(fname: string): void {
-    alert(
-      `📄 ${fname}\n\nLe téléchargement sera disponible une fois connecté à la base de données (option B).\nPour l'instant les fichiers sont référencés par nom.`,
-    );
+  getOrderFileRefs(orderId: string): OssatureOrderFileRef[] {
+    this._version();
+    return this._orderFiles().get(orderId) ?? [];
+  }
+
+  async downloadOrderFile(orderId: string, kind: OssatureOrderFileKind, slot: string): Promise<void> {
+    const ref = this.getOrderFileRefs(orderId).find((r) => r.kind === kind && r.slot === slot);
+    if (!ref) {
+      this.toast.show('⚠️ Fichier introuvable');
+      return;
+    }
+    const url = await this.files.getSignedUrl('ossature', ref.path);
+    if (!url) {
+      this.toast.show('⚠️ Téléchargement impossible');
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
   }
 
   statutIndex(statut: string): number {
@@ -535,5 +608,170 @@ export class OssatureDataService {
     delete merged['livraison'];
     delete merged['annee'];
     return merged as unknown as OssatureOrder;
+  }
+
+  private groupFileRefs(
+    rows: Array<Record<string, unknown>>,
+  ): Map<string, OssatureOrderFileRef[]> {
+    const map = new Map<string, OssatureOrderFileRef[]>();
+    for (const row of rows) {
+      const file = this.parseJoinedFile(row['file']);
+      if (!file) continue;
+      const orderId = String(row['order_id']);
+      const ref: OssatureOrderFileRef = {
+        kind: row['kind'] as OssatureOrderFileKind,
+        slot: String(row['slot'] ?? ''),
+        portalFileId: file.id,
+        filename: file.filename,
+        path: file.path,
+      };
+      const list = map.get(orderId) ?? [];
+      list.push(ref);
+      map.set(orderId, list);
+    }
+    return map;
+  }
+
+  private parseJoinedFile(value: unknown): { id: string; path: string; filename: string } | null {
+    const row = Array.isArray(value) ? value[0] : value;
+    if (!row || typeof row !== 'object') return null;
+    const r = row as Record<string, unknown>;
+    if (!r['id'] || !r['path']) return null;
+    return {
+      id: String(r['id']),
+      path: String(r['path']),
+      filename: String(r['filename'] ?? ''),
+    };
+  }
+
+  private applyFileRefsToOrder(order: OssatureOrder, refs: OssatureOrderFileRef[]): OssatureOrder {
+    if (!refs.length) return order;
+
+    const byKindSlot = new Map(refs.map((r) => [`${r.kind}:${r.slot}`, r]));
+    const pick = (kind: OssatureOrderFileKind, slot: string) => byKindSlot.get(`${kind}:${slot}`)?.filename;
+
+    const docs = DOCS_REQUIS.map((d) => pick('doc_requis', d.id)).filter((n): n is string => !!n);
+    const signature_docs = DOCS_SIGNATURE.map((d) => pick('signature', d.id)).filter((n): n is string => !!n);
+    const plan_val_docs = refs
+      .filter((r) => r.kind === 'plan_val')
+      .sort((a, b) => Number(a.slot) - Number(b.slot))
+      .map((r) => ({
+        name: r.filename,
+        date: order.plan_val_docs?.find((d) => d.name === r.filename)?.date ?? todayIso(),
+      }));
+
+    return {
+      ...order,
+      docs: docs.length ? docs : order.docs,
+      devis_retour: pick('devis_retour', SINGLE_FILE_SLOT) ?? order.devis_retour,
+      signature_docs: signature_docs.length ? signature_docs : order.signature_docs,
+      ar_fichier: pick('ar', SINGLE_FILE_SLOT) ?? order.ar_fichier,
+      plan_fab: pick('plan_fab', SINGLE_FILE_SLOT) ?? order.plan_fab,
+      plan_val_docs: plan_val_docs.length ? plan_val_docs : order.plan_val_docs,
+    };
+  }
+
+  private async refreshOrderFiles(orderId: string): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('ossature_order_files')
+      .select('order_id, kind, slot, file:portal_file_id(id, path, filename)')
+      .eq('order_id', orderId);
+    if (error) {
+      console.warn('[Ossature] refresh order files failed', error);
+      return;
+    }
+
+    const refs = this.groupFileRefs(data ?? []).get(orderId) ?? [];
+    this._orderFiles.update((m) => {
+      const next = new Map(m);
+      next.set(orderId, refs);
+      return next;
+    });
+
+    const order = this.getById(orderId);
+    if (!order) return;
+    const hydrated = this.applyFileRefsToOrder(order, refs);
+    this._orders.update((list) => list.map((o) => (o.id === orderId ? hydrated : o)));
+    this.bump();
+  }
+
+  private storagePath(orderId: string, kind: string, slot: string, filename: string): string {
+    const safeName = filename.replace(/[^\w.\-]+/g, '_');
+    const slotPart = slot ? `${slot}/` : '';
+    return `orders/${orderId}/${kind}/${slotPart}${safeName}`;
+  }
+
+  private async uploadOrderFile(
+    orderId: string,
+    file: File,
+    kind: OssatureOrderFileKind,
+    slot: string,
+  ): Promise<string> {
+    const path = this.storagePath(orderId, kind, slot, file.name);
+    const uploaded = await this.files.upload('ossature', path, file, {
+      appSlot: 'OSSATURE',
+      entityType: 'ossature_order',
+      entityId: orderId,
+      kind: slot ? `${kind}:${slot}` : kind,
+    });
+
+    const { error } = await this.supabase.from('ossature_order_files').upsert(
+      {
+        order_id: orderId,
+        portal_file_id: uploaded.portalFileId,
+        kind,
+        slot,
+      },
+      { onConflict: 'order_id,kind,slot' },
+    );
+    if (error) throw error;
+
+    await this.refreshOrderFiles(orderId);
+    return uploaded.filename;
+  }
+
+  private async replaceOrderFile(
+    orderId: string,
+    file: File,
+    kind: OssatureOrderFileKind,
+    slot: string,
+  ): Promise<string> {
+    await this.removeOrderFile(orderId, kind, slot);
+    return this.uploadOrderFile(orderId, file, kind, slot);
+  }
+
+  private async removeOrderFile(orderId: string, kind: OssatureOrderFileKind, slot: string): Promise<void> {
+    const refs = this._orderFiles().get(orderId) ?? [];
+    const ref = refs.find((r) => r.kind === kind && r.slot === slot);
+    if (!ref) return;
+
+    try {
+      await this.files.delete('ossature', ref.path);
+    } catch (err) {
+      console.warn('[Ossature] storage delete failed', err);
+    }
+
+    await this.supabase.from('ossature_order_files').delete().eq('portal_file_id', ref.portalFileId);
+    await this.refreshOrderFiles(orderId);
+  }
+
+  private async reindexPlanValSlots(orderId: string): Promise<void> {
+    const refs = [...(this._orderFiles().get(orderId) ?? [])]
+      .filter((r) => r.kind === 'plan_val')
+      .sort((a, b) => Number(a.slot) - Number(b.slot));
+
+    for (let i = 0; i < refs.length; i++) {
+      await this.supabase
+        .from('ossature_order_files')
+        .update({ slot: `tmp-${i}` })
+        .eq('portal_file_id', refs[i].portalFileId);
+    }
+    for (let i = 0; i < refs.length; i++) {
+      await this.supabase
+        .from('ossature_order_files')
+        .update({ slot: String(i) })
+        .eq('portal_file_id', refs[i].portalFileId);
+    }
+    await this.refreshOrderFiles(orderId);
   }
 }
