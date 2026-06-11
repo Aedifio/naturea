@@ -1,0 +1,34 @@
+---
+description: Require user confirmation before any database schema change
+alwaysApply: true
+---
+
+# Database schema changes
+
+Never rename a table, or add, remove, or rename a column (field) without **explicit user confirmation first**.
+
+## Requires confirmation
+
+- `CREATE TABLE` / `DROP TABLE` / `RENAME TABLE`
+- `ALTER TABLE … ADD COLUMN` / `DROP COLUMN` / `RENAME COLUMN`
+- Changing column type, nullability, or constraints in ways that alter the contract
+- Supabase migrations (`supabase/migrations/*.sql`) or `apply_migration` MCP calls that perform the above
+- Matching frontend model / service / RPC updates that assume a schema change already happened
+
+## Allowed without asking (unless the user forbids it)
+
+- Read-only inspection (`SELECT`, describe schema, list tables)
+- Fixing a bug in application code against the **existing** schema
+- Drafting migration SQL in chat **without applying it**, clearly labeled as a proposal
+
+## Workflow
+
+1. State the intended schema change (table, column, before → after).
+2. Ask the user to confirm before writing or applying any migration.
+3. Only after confirmation: create the migration file and apply it (if requested).
+
+## Example
+
+User: "Store factory address."
+
+Agent: proposes `ALTER TABLE factory ADD COLUMN address text` → waits for confirmation → then implements.
