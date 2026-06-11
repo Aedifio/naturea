@@ -2,6 +2,7 @@ import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 import type { AgencyTab } from '../audit-commerce.models';
 import { AuditCommerceDataService } from '../services/audit-commerce-data.service';
 import { AuditCommerceUiService } from '../services/audit-commerce-ui.service';
@@ -27,8 +28,11 @@ import { AuditComStatusPillComponent } from '../components/audit-com-status-pill
 })
 export class AuditComAgencyComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
   readonly data = inject(AuditCommerceDataService);
   readonly ui = inject(AuditCommerceUiService);
+
+  readonly isAgencyScoped = computed(() => this.auth.isAgencyScopedFranchisee());
 
   readonly agencyId = toSignal(
     this.route.paramMap.pipe(map((p) => Number(p.get('agencyId') ?? NaN))),

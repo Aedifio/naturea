@@ -2,16 +2,18 @@
 
 <div class="shell">
   <aside class="side">
-    <div class="navsec">Pilotage</div>
-    <a
-      class="navitem"
-      routerLink="/apps/audit-commerce"
-      routerLinkActive="on"
-      [routerLinkActiveOptions]="{ exact: true }"
-    >
-      📊 Vue réseau
-    </a>
-    <div class="navsec">Agences</div>
+    @if (!isAgencyScoped()) {
+      <div class="navsec">Pilotage</div>
+      <a
+        class="navitem"
+        routerLink="/apps/audit-commerce"
+        routerLinkActive="on"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        📊 Vue réseau
+      </a>
+    }
+    <div class="navsec">{{ isAgencyScoped() ? 'Mon agence' : 'Agences' }}</div>
     <div class="nav-scroll">
       @if (!agenciesNav().length) {
         <div class="tiny" style="color: #7d8074; padding: 4px 12px">Aucune agence</div>
@@ -23,7 +25,9 @@
         </a>
       }
     </div>
-    <button type="button" class="navitem" (click)="ui.openSettings()">⚙️ Réglages</button>
+    @if (!isAgencyScoped()) {
+      <button type="button" class="navitem" (click)="ui.openSettings()">⚙️ Réglages</button>
+    }
   </aside>
 
   <div class="main">

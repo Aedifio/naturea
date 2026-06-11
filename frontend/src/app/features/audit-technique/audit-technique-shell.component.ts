@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { NATUREA_LOGO } from '../../shared/constants/branding';
 import { AuditTechniqueDataService } from './services/audit-technique-data.service';
@@ -15,7 +16,10 @@ import { avgAudits, scoreColor } from './utils/audit-score.util';
 })
 export class AuditTechniqueShellComponent {
   readonly data = inject(AuditTechniqueDataService);
+  private readonly auth = inject(AuthService);
   readonly logo = NATUREA_LOGO;
+
+  readonly isAgencyScoped = computed(() => this.auth.isAgencyScopedFranchisee());
 
   readonly sidebarOpen = signal(false);
 

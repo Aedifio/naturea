@@ -1,4 +1,5 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
+import { AuthService } from '../../../core/auth/auth.service';
 import { AgencyService } from '../../../core/services/agency.service';
 import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
@@ -73,6 +74,8 @@ export class AuditCommerceDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly files = inject(FileStorageService);
   private readonly agenciesSvc = inject(AgencyService);
+  /** Lazy — avoids AuthService ↔ AppDataBootstrapService circular DI. */
+  private readonly injector = inject(Injector);
   private readonly docCache = new Map<string, StoredDoc>();
   private docsHydrated = false;
 
@@ -85,7 +88,7 @@ export class AuditCommerceDataService {
     this.agenciesSvc.agencies();
     const extMap = this._commerceExt();
     const auditsMap = this._auditsByAgencyId();
-    return this.agenciesSvc.getAll().map((a) => {
+    const all = this.agenciesSvc.getAll().map((a) => {
       const ext = extMap.get(a.id) ?? emptyCommerceExt();
       return {
         id: a.id,
@@ -97,7 +100,22 @@ export class AuditCommerceDataService {
         audits: auditsMap.get(a.id) ?? [],
       };
     });
+
+    const linkedAgencyId = this.linkedAgencyIdForScope();
+    if (linkedAgencyId != null) {
+      return all.filter((a) => a.id === linkedAgencyId);
+    }
+
+    return all;
   });
+
+  /** Franchisé scope — resolved lazily to break DI cycle with AuthService. */
+  private linkedAgencyIdForScope(): number | null {
+    const auth = this.injector.get(AuthService);
+    auth.currentUser();
+    if (!auth.isAgencyScopedFranchisee()) return null;
+    return auth.linkedAgencyId();
+  }
 
   readonly settings = computed(() => this._settings());
   readonly state = computed(

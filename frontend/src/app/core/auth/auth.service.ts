@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FACTORY_MANAGER_ROLE, isAdministratorRole } from '../constants/portal-roles.constants';
+import { FACTORY_MANAGER_ROLE, FRANCHISEE_ROLE, isAdministratorRole } from '../constants/portal-roles.constants';
 import { StorageKey } from '../models/storage-keys';
 import { PortalPermissionsService } from '../services/portal-permissions.service';
 import { AppDataBootstrapService } from '../services/app-data-bootstrap.service';
@@ -147,10 +147,26 @@ export class AuthService {
     return this.userSignal()?.factoryId ?? null;
   }
 
+  /** Canonical `agencies.id` when the user is a linked Franchisé. */
+  linkedAgencyId(): number | null {
+    return this.userSignal()?.agencyId ?? null;
+  }
+
   /** Responsable d'usine — limited Ossature nav (usine + archives for linked factory). */
   isOssatureFactoryScoped(): boolean {
     if (this.isAnimateur()) return false;
     return this.userSignal()?.role === FACTORY_MANAGER_ROLE;
+  }
+
+  /** Franchisé linked to an agency — scoped views in Ossature and audits. */
+  isAgencyScopedFranchisee(): boolean {
+    if (this.isAnimateur()) return false;
+    return this.userSignal()?.role === FRANCHISEE_ROLE && this.linkedAgencyId() != null;
+  }
+
+  /** @deprecated Prefer isAgencyScopedFranchisee — kept for Ossature call sites. */
+  isOssatureAgencyScoped(): boolean {
+    return this.isAgencyScopedFranchisee();
   }
 
   /** Refresh portal profile after admin edits the current user. */

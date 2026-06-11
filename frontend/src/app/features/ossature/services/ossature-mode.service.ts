@@ -23,10 +23,15 @@ export class OssatureModeService {
   readonly isFranchise = computed(() => this._routeView() === 'franchise');
   readonly isUsine = computed(() => this._routeView() === 'usine');
   readonly isArchives = computed(() => this._routeView() === 'archives');
-  readonly showFranchiseSelect = computed(() => this._routeView() === 'franchise' && !this.isFactoryScoped());
+  readonly showFranchiseSelect = computed(
+    () => this._routeView() === 'franchise' && !this.isFactoryScoped() && !this.isAgencyScoped(),
+  );
 
-  /** Non-Animateur user linked to a factory — usine + archives only. */
+  /** Non-Animateur Responsable d'usine — usine + archives only. */
   readonly isFactoryScoped = computed(() => this.auth.isOssatureFactoryScoped());
+
+  /** Franchisé linked to an agency — franchise + archives only. */
+  readonly isAgencyScoped = computed(() => this.auth.isOssatureAgencyScoped());
 
   /** Ossature site label for a factory-scoped user; null when full access. */
   readonly allowedOssatureSite = computed(() => {
@@ -36,8 +41,16 @@ export class OssatureModeService {
     return linked ? factoryKeyToOssatureSite(linked.key) : null;
   });
 
+  /** Agency name for an agency-scoped user; null when full access. */
+  readonly allowedAgencyName = computed(() => {
+    const agencyId = this.auth.linkedAgencyId();
+    if (!agencyId || this.auth.isAnimateur()) return null;
+    return this.agencies.getById(agencyId)?.name ?? null;
+  });
+
   readonly visibleNavViews = computed((): OssatureView[] => {
     if (this.isFactoryScoped()) return ['usine', 'archives'];
+    if (this.isAgencyScoped()) return ['franchise', 'archives'];
     return ['coord', 'franchise', 'usine', 'archives'];
   });
 
@@ -58,6 +71,13 @@ export class OssatureModeService {
 
     effect(() => {
       this.agencies.agencies();
+
+      const lockedAgency = this.allowedAgencyName();
+      if (lockedAgency) {
+        this.selectedFranchise.set(lockedAgency);
+        return;
+      }
+
       const names = this.agencies.getNames();
       if (!names.length) return;
 
@@ -98,11 +118,19 @@ export class OssatureModeService {
   }
 
   setFranchise(value: string): void {
+    if (this.isFactoryScoped() || this.isAgencyScoped()) return;
     this.selectedFranchise.set(value);
   }
 
   setSiteUsine(site: string): void {
     if (this.isFactoryScoped()) return;
     this.currentSiteUsine.set(site);
+  }
+
+  /** Whether an order belongs to the current user's agency scope (always true when not agency-scoped). */
+  orderMatchesAgencyScope(orderFranchise: string): boolean {
+    const agency = this.allowedAgencyName();
+    if (!agency) return true;
+    return this.agencies.orderMatchesFranchise(orderFranchise, agency);
   }
 }
