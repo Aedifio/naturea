@@ -1,7 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { permissionLabel } from '../../core/models/kpi.model';
 import { APPS_META } from '../../core/models/permissions.model';
@@ -18,7 +16,6 @@ import { ChiffrageDataService } from './services/chiffrage-data.service';
 })
 export class ChiffrageShellComponent {
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   readonly data = inject(ChiffrageDataService);
 
   readonly headStats = computed(() => this.data.headStats());
@@ -33,14 +30,4 @@ export class ChiffrageShellComponent {
     return `${app?.icon ?? '💰'} ${app?.name ?? 'Chiffrage Naturéa'}${suffix}`;
   });
 
-  constructor() {
-    this.data.reload();
-
-    this.router.events
-      .pipe(
-        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => this.data.reload());
-  }
 }

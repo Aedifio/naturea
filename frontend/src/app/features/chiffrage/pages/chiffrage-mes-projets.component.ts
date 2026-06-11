@@ -26,7 +26,7 @@ export class ChiffrageMesProjetsComponent {
   fmtTimeFR = fmtTimeFR;
 
   constructor() {
-    this.data.reload();
+    void this.data.reload();
   }
 
   reopen(id: number): void {
@@ -36,6 +36,6 @@ export class ChiffrageMesProjetsComponent {
 
   delete(id: number): void {
     if (!confirm('Supprimer définitivement ce projet ?')) return;
-    this.ui.deleteProjet(id);
+    void this.ui.deleteProjet(id);
   }
 }

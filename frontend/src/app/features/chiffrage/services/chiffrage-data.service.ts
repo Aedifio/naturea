@@ -28,10 +28,13 @@ import { EMPTY_CHARPENTE_EXT } from '../chiffrage.models';
 
 @Injectable({ providedIn: 'root' })
 export class ChiffrageDataService {
+  private static readonly LEGACY_PROJETS_STORAGE_KEY = 'chiffrage:mes_projets:v1';
+
   private readonly supabase = inject(SupabaseService);
   private readonly factory = inject(FactoryService);
   private readonly files = inject(FileStorageService);
   private readonly injector = inject(Injector);
+  private loadGeneration = 0;
 
   readonly overrides = signal<OverridesStore>({});
   readonly customPostes = signal<CustomPostesStore>({});
@@ -46,6 +49,9 @@ export class ChiffrageDataService {
   });
 
   async load(): Promise<void> {
+    const generation = ++this.loadGeneration;
+    this.projets.set([]);
+
     const [ovRes, cpRes, foRes, projRes, histRes] = await Promise.all([
       this.supabase.from('chiffrage_overrides').select('data').eq('id', 1).maybeSingle(),
       this.supabase.from('chiffrage_custom_postes').select('data').eq('id', 1).maybeSingle(),
@@ -66,12 +72,16 @@ export class ChiffrageDataService {
     this.customPostes.set((cpRes.data?.data as CustomPostesStore) ?? {});
     this.formOverrides.set((foRes.data?.data as FormOverridesStore) ?? {});
 
-    if (projRes.error) {
-      console.warn('[Chiffrage] projets load failed', projRes.error);
-      this.projets.set([]);
-    } else {
-      this.projets.set(this.mapProjetsFromRows(projRes.data ?? []));
+    if (generation === this.loadGeneration) {
+      if (projRes.error) {
+        console.warn('[Chiffrage] projets load failed', projRes.error);
+        this.projets.set([]);
+      } else {
+        this.projets.set(this.mapProjetsFromRows(projRes.data ?? []));
+      }
     }
+
+    void this.purgeLegacyProjetStorage();
 
     const imports = histRes.data ?? [];
     if (imports.length) {
@@ -118,8 +128,8 @@ export class ChiffrageDataService {
   }
 
   /** Reload chiffrage data from Supabase (e.g. when opening Mes projets). */
-  reload(): void {
-    void this.load();
+  reload(): Promise<void> {
+    return this.load();
   }
 
   readonly headerStats = computed<HeaderStats>(() => {
@@ -549,10 +559,14 @@ export class ChiffrageDataService {
     void this.persistProjetToDb(projet);
   }
 
-  deleteProjet(id: number): void {
-    const list = this.projets().filter((p) => p.id !== id);
-    this.projets.set(list);
-    void this.supabase.from('chiffrage_projets').delete().eq('id', id);
+  async deleteProjet(id: number): Promise<boolean> {
+    const { error } = await this.supabase.from('chiffrage_projets').delete().eq('id', id);
+    if (error) {
+      console.warn('[Chiffrage] delete projet failed', error);
+      return false;
+    }
+    this.projets.update((list) => list.filter((p) => p.id !== id));
+    return true;
   }
 
   getTarifsHistory(): ImportHistoryEntry[] {
@@ -789,6 +803,20 @@ export class ChiffrageDataService {
       charpente_ext: p.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
       lines: p.lines ?? [],
     };
+  }
+
+  /** Drop legacy browser / KV caches that used to back-fill `chiffrage_projets`. */
+  private async purgeLegacyProjetStorage(): Promise<void> {
+    try {
+      localStorage.removeItem(ChiffrageDataService.LEGACY_PROJETS_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    const { error } = await this.supabase
+      .from('app_kv_store')
+      .delete()
+      .eq('storage_key', ChiffrageDataService.LEGACY_PROJETS_STORAGE_KEY);
+    if (error) console.warn('[Chiffrage] legacy projets KV purge failed', error);
   }
 
   private async persistProjetToDb(projet: ChiffrageProjet): Promise<void> {

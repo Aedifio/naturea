@@ -166,10 +166,14 @@ export class ChiffrageUiService {
     return { ok: true, projet };
   }
 
-  deleteProjet(id: number): boolean {
+  async deleteProjet(id: number): Promise<boolean> {
     const existed = this.data.projets().some((p) => p.id === id);
     if (!existed) return false;
-    this.data.deleteProjet(id);
+    const ok = await this.data.deleteProjet(id);
+    if (!ok) {
+      this.toast.show('⚠️ Suppression impossible — réessayez');
+      return false;
+    }
     this.toast.show('🗑 Projet supprimé');
     return true;
   }
