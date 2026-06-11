@@ -2,7 +2,7 @@
 
 <div id="header">
   <div id="header-inner">
-    @for (item of nav; track item.route) {
+    @for (item of nav(); track item.route) {
       <a
         class="nav-btn"
         [routerLink]="item.route"
