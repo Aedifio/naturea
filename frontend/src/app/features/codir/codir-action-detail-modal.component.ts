@@ -22,7 +22,7 @@ export class CodirActionDetailModalComponent {
 
   readonly action = computed(() => this.codir.actionById(this.actionId()));
   readonly themes = this.codir.themes;
-  readonly members = this.codir.members;
+  readonly assignees = this.codir.assignees;
 
   readonly modalTitle = computed(() => {
     const t = this.action()?.title ?? '';
@@ -70,15 +70,20 @@ export class CodirActionDetailModalComponent {
   }
 
   onOwnerChange(id: string, value: string): void {
-    const name = value ? this.codir.memberById(value)?.name ?? value : 'Non attribué';
-    this.patch(id, { ownerId: value || undefined }, `Responsable → ${name}`);
+    this.codir.setOwner(id, value || undefined);
+    this.saved.emit('Responsable mis à jour');
   }
 
   toggleCoOwner(memberId: string): void {
     const id = this.actionId();
     if (!id) return;
+    if (memberId === this.action()?.ownerId) return;
     this.codir.toggleCoOwner(id, memberId);
     this.saved.emit('Co-responsables mis à jour');
+  }
+
+  isCoOwnerCandidate(memberId: string): boolean {
+    return memberId !== this.action()?.ownerId;
   }
 
   isCoOwner(memberId: string): boolean {
@@ -126,7 +131,7 @@ export class CodirActionDetailModalComponent {
 
   commentAuthorName(authorId?: string | null): string {
     if (!authorId) return 'Anonyme';
-    return this.codir.memberById(authorId)?.name ?? 'Anonyme';
+    return this.codir.assigneeById(authorId)?.name ?? 'Anonyme';
   }
 
   isImportedComment(commentId?: string): boolean {

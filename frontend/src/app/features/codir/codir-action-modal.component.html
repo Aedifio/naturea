@@ -21,7 +21,7 @@
             <label for="na-owner">Responsable</label>
             <select id="na-owner" class="input" [ngModel]="ownerId()" (ngModelChange)="ownerId.set($event)">
               <option value="">— Non attribué —</option>
-              @for (m of members(); track m.id) {
+              @for (m of assignees(); track m.id) {
                 <option [value]="m.id">{{ m.name }}</option>
               }
             </select>

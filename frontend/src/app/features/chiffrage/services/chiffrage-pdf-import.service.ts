@@ -18,8 +18,7 @@ import {
 import { ChiffrageDataService } from './chiffrage-data.service';
 import { ChiffrageToastService } from './chiffrage-toast.service';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
 
 @Injectable({ providedIn: 'root' })
 export class ChiffragePdfImportService {
@@ -160,10 +159,17 @@ export class ChiffragePdfImportService {
       }
     });
 
+    const factoryId = this.data.resolveFactoryId(usineKey);
+    if (!factoryId) {
+      this.toast.show('⚠️ Usine introuvable — réessayez dans un instant');
+      return;
+    }
+
     const histEntry: ImportHistoryEntry = {
       id: Date.now(),
       date_import: new Date().toISOString(),
       filename: current.fileEntry.name,
+      factoryId,
       usine: usineKey,
       devis_num: current.meta.devis_num ?? null,
       devis_date: current.meta.devis_date ?? null,

@@ -98,7 +98,7 @@
           <div class="detail-section">
             <h4>Destinataires</h4>
             <div class="recipient-row">
-              @for (m of codir.members(); track m.id) {
+              @for (m of codir.assignees(); track m.id) {
                 <button
                   type="button"
                   class="chip"

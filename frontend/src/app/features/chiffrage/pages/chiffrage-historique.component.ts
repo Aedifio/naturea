@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DEVIS_HIST } from '../constants/chiffrage-devis-hist.constants';
 import type { HistoryUsineStat, ImportHistoryEntry } from '../chiffrage.models';
 import { fmtDateFR, fmtDateTimeFR, fmtEurR, fmtNum } from '../utils/chiffrage.utils';
 import { ChiffrageImportPreviewComponent } from '../components/chiffrage-import-preview.component';
@@ -16,7 +15,6 @@ export class ChiffrageHistoriqueComponent {
   readonly importSvc = inject(ChiffragePdfImportService);
   readonly data = inject(ChiffrageDataService);
 
-  readonly devisHist = [...DEVIS_HIST].sort((a, b) => b.date.localeCompare(a.date));
   readonly dragOver = signal(false);
 
   readonly importHistory = computed(() => {
@@ -52,10 +50,6 @@ export class ChiffrageHistoriqueComponent {
 
   usineNom(key: string): string {
     return this.data.getUsineLabel(key);
-  }
-
-  isSicob2026(date: string, usine: string): boolean {
-    return usine === 'sicob' && date >= '2026-01-01';
   }
 
   onFileInput(event: Event): void {

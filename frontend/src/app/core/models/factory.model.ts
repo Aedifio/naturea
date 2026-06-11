@@ -5,6 +5,7 @@ export interface Factory {
   nom: string;
   couleur: string;
   description: string | null;
+  address: string | null;
   contact_email: string | null;
   actif: boolean;
   created_at: string;
@@ -16,6 +17,7 @@ export interface FactoryCreate {
   nom: string;
   couleur: string;
   description: string;
+  address: string;
   contact_email: string;
   actif: boolean;
 }
@@ -24,6 +26,7 @@ export interface FactoryUpdate {
   nom: string;
   couleur: string;
   description: string;
+  address: string;
   contact_email: string;
   actif: boolean;
 }

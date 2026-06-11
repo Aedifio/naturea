@@ -54,6 +54,11 @@ export class AgencyService {
     return agency?.name ?? null;
   }
 
+  /** Maps a franchise label to canonical `agencies.id`. */
+  resolveAgencyId(label: string): number | null {
+    return findAgency(this._agencies(), label, (a) => a.name)?.id ?? null;
+  }
+
   /** Whether an order's franchise field belongs to the selected agency. */
   orderMatchesFranchise(orderFranchise: string, franchiseName: string): boolean {
     if (!orderFranchise || !franchiseName) return false;

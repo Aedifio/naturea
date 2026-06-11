@@ -14,6 +14,7 @@ interface FactoryRow {
   nom: string;
   couleur: string;
   description: string | null;
+  address: string | null;
   contact_email: string | null;
   actif: boolean;
   created_at: string;
@@ -86,8 +87,9 @@ export class FactoryService {
   }
 
   getOssatureSiteAddress(site: string): string {
-    const description = this.getFactoryByOssatureSite(site)?.description?.trim();
-    if (description) return description;
+    const factory = this.getFactoryByOssatureSite(site);
+    const address = factory?.address?.trim();
+    if (address) return address;
     return '—';
   }
 
@@ -113,6 +115,7 @@ export class FactoryService {
       p_nom: input.nom.trim(),
       p_couleur: input.couleur.trim(),
       p_description: input.description.trim() || null,
+      p_address: input.address.trim() || null,
       p_contact_email: input.contact_email.trim() || null,
       p_actif: input.actif,
     });
@@ -127,6 +130,7 @@ export class FactoryService {
       p_nom: input.nom.trim(),
       p_couleur: input.couleur.trim(),
       p_description: input.description.trim() || null,
+      p_address: input.address.trim() || null,
       p_contact_email: input.contact_email.trim() || null,
       p_actif: input.actif,
     });

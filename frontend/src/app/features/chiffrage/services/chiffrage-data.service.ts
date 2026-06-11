@@ -3,8 +3,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { StorageKey } from '../../../core/models/storage-keys';
 import { LocalStorageAdapter } from '../../../core/storage/local-storage.adapter';
 import { FactoryService } from '../../../core/services/factory.service';
+import { AgencyService } from '../../../core/services/agency.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
-import { DEVIS_HIST } from '../constants/chiffrage-devis-hist.constants';
 import { FIELD_TO_POSTE, FORM_SCHEMAS } from '../constants/chiffrage-form.constants';
 import { REFS } from '../constants/chiffrage-refs.constants';
 import type {
@@ -51,8 +51,16 @@ export class ChiffrageDataService {
       this.supabase.from('chiffrage_overrides').select('data').eq('id', 1).maybeSingle(),
       this.supabase.from('chiffrage_custom_postes').select('data').eq('id', 1).maybeSingle(),
       this.supabase.from('chiffrage_form_overrides').select('data').eq('id', 1).maybeSingle(),
-      this.supabase.from('chiffrage_projets').select('*').order('projet_date', { ascending: false }),
-      this.supabase.from('chiffrage_tarifs_imports').select('*').order('date_import', { ascending: false }),
+      this.supabase
+        .from('chiffrage_projets')
+        .select(
+          '*, factory:factory_id(id, key, nom), agency:agency_id(id, name), creator:created_by(id, name, role)',
+        )
+        .order('projet_date', { ascending: false }),
+      this.supabase
+        .from('chiffrage_tarifs_imports')
+        .select('*, factory:factory_id(id, key, nom)')
+        .order('date_import', { ascending: false }),
     ]);
 
     this.overrides.set((ovRes.data?.data as OverridesStore) ?? {});
@@ -98,17 +106,12 @@ export class ChiffrageDataService {
         postesByImport.set(row.import_id, list);
       }
       this._tarifsHistory.set(
-        imports.map((h) => ({
-          id: h.id,
-          date_import: h.date_import,
-          filename: h.filename ?? '',
-          usine: h.usine ?? '',
-          devis_num: h.devis_num ?? '',
-          devis_date: h.devis_date ?? '',
-          client: h.client ?? '',
-          total_ht: h.total_ht != null ? Number(h.total_ht) : null,
-          postes: postesByImport.get(h.id) ?? [],
-        })),
+        imports.map((h) => {
+          const row = h as Record<string, unknown>;
+          const entry = this.mapTarifImportRow(row);
+          entry.postes = postesByImport.get(String(row['id'])) ?? [];
+          return entry;
+        }),
       );
     } else {
       this._tarifsHistory.set([]);
@@ -132,7 +135,7 @@ export class ChiffrageDataService {
     const usineCount = this.factory.getAll().length || Object.keys(REFS).length;
     return {
       usines: usineCount,
-      devis: DEVIS_HIST.length,
+      devis: this._tarifsHistory().length,
       postes: totalPostes,
     };
   });
@@ -141,6 +144,8 @@ export class ChiffrageDataService {
   readonly headStats = this.headerStats;
 
   readonly mesProjetsCount = computed(() => this.projets().length);
+
+  readonly tarifsHistoryCount = computed(() => this._tarifsHistory().length);
 
   readonly hasPersonalizations = computed(() => {
     return (
@@ -568,11 +573,17 @@ export class ChiffrageDataService {
 
   private async persistTarifsHistory(list: ImportHistoryEntry[]): Promise<void> {
     for (const entry of list) {
+      const factoryId = entry.factoryId || this.resolveFactoryId(entry.usine);
+      if (!factoryId) {
+        console.warn('[Chiffrage] skip tarif import persist: unknown factory', entry.usine);
+        continue;
+      }
+
       await this.supabase.from('chiffrage_tarifs_imports').upsert({
         id: String(entry.id),
         date_import: entry.date_import,
         filename: entry.filename,
-        usine: entry.usine,
+        factory_id: factoryId,
         devis_num: entry.devis_num,
         devis_date: entry.devis_date,
         client: entry.client,
@@ -659,7 +670,32 @@ export class ChiffrageDataService {
   }
 
   getActiveAgence(): string | null {
+    const id = this.getActiveAgencyId();
+    if (id != null) {
+      return this.injector.get(AgencyService).getById(id)?.name ?? null;
+    }
     return this.injector.get(AuthService).currentUser()?.franchise ?? null;
+  }
+
+  getActiveAgencyId(): number | null {
+    const auth = this.injector.get(AuthService);
+    const linked = auth.linkedAgencyId();
+    if (linked != null) return linked;
+    const label = auth.currentUser()?.franchise;
+    if (!label || label === '(siège)') return null;
+    return this.injector.get(AgencyService).resolveAgencyId(label);
+  }
+
+  resolveFactoryId(usine: UsineKey): number | null {
+    return this.factory.getByKey(usine)?.id ?? null;
+  }
+
+  getCurrentCreatorId(): string | null {
+    return this.injector.get(AuthService).portalUserId();
+  }
+
+  getActiveCreatorName(): string | null {
+    return this.injector.get(AuthService).currentUser()?.name ?? null;
   }
 
   private persistOverrides(): void {
@@ -672,37 +708,89 @@ export class ChiffrageDataService {
     return raw.map((p) => this.normalizeProjet(p));
   }
 
+  private mapTarifImportRow(h: Record<string, unknown>): ImportHistoryEntry {
+    const factory = this.parseJoinedRow<{ id: number; key: string; nom: string }>(h['factory']);
+    const legacyUsine = h['usine'] as UsineKey | undefined;
+    const factoryFromKey = legacyUsine ? this.factory.getByKey(legacyUsine) : null;
+    const resolvedFactory = factory ?? factoryFromKey;
+    const factoryId = Number(h['factory_id'] ?? resolvedFactory?.id ?? 0);
+    const usine = (resolvedFactory?.key ?? legacyUsine ?? 'boisboreal') as UsineKey;
+    const idRaw = h['id'];
+
+    return {
+      id: typeof idRaw === 'number' ? idRaw : Number(idRaw),
+      date_import: String(h['date_import'] ?? new Date().toISOString()),
+      filename: String(h['filename'] ?? ''),
+      factoryId,
+      usine,
+      devis_num: (h['devis_num'] as string | null) ?? null,
+      devis_date: (h['devis_date'] as string | null) ?? null,
+      client: (h['client'] as string | null) ?? null,
+      total_ht: h['total_ht'] != null ? Number(h['total_ht']) : null,
+      postes: [],
+    };
+  }
+
   private mapProjetsFromRows(rows: Record<string, unknown>[]): ChiffrageProjet[] {
-    return rows.map((p) =>
-      this.normalizeProjet({
-        id: Number(p['id']),
-        nom: String(p['nom'] ?? ''),
-        ref: String(p['ref'] ?? ''),
-        usine: p['usine'] as UsineKey,
-        usineLabel: String(p['usine_label'] ?? ''),
-        total: Number(p['total']),
-        agence: (p['agence'] as string | null) ?? null,
-        date: String(p['projet_date'] ?? p['date'] ?? new Date().toISOString()),
-        user_name: (p['user_name'] as string | null) ?? null,
-        values: (p['values'] as Record<string, number>) ?? {},
-        charpente_ext: (p['charpente_ext'] as ChiffrageProjet['charpente_ext']) ?? { ...EMPTY_CHARPENTE_EXT },
-        lines: (p['lines'] as ChiffrageProjet['lines']) ?? [],
-      }),
-    );
+    return rows.map((p) => this.normalizeProjet(this.rowToProjetPartial(p)));
+  }
+
+  private rowToProjetPartial(p: Record<string, unknown>): Partial<ChiffrageProjet> & { id: number } {
+    const factory = this.parseJoinedRow<{ id: number; key: string; nom: string }>(p['factory']);
+    const agency = this.parseJoinedRow<{ id: number; name: string }>(p['agency']);
+    const creator = this.parseJoinedRow<{ id: string; name: string; role: string }>(p['creator']);
+    const legacyUsine = p['usine'] as UsineKey | undefined;
+    const factoryFromKey = legacyUsine ? this.factory.getByKey(legacyUsine) : null;
+    const resolvedFactory = factory ?? factoryFromKey;
+    const factoryId = Number(p['factory_id'] ?? resolvedFactory?.id ?? 0);
+    const usine = (resolvedFactory?.key ?? legacyUsine ?? 'boisboreal') as UsineKey;
+
+    return {
+      id: Number(p['id']),
+      nom: String(p['nom'] ?? ''),
+      ref: String(p['ref'] ?? ''),
+      factoryId,
+      agencyId: agency?.id ?? (p['agency_id'] != null ? Number(p['agency_id']) : null),
+      usine,
+      usineLabel: resolvedFactory?.nom ?? String(p['usine_label'] ?? this.getUsineLabel(usine)),
+      agence: agency?.name ?? (p['agence'] as string | null) ?? null,
+      total: Number(p['total']),
+      date: String(p['projet_date'] ?? p['date'] ?? new Date().toISOString()),
+      createdBy: creator?.id ?? (p['created_by'] as string | null) ?? null,
+      createdByName: creator?.name ?? (p['user_name'] as string | null) ?? null,
+      values: (p['values'] as Record<string, number>) ?? {},
+      charpente_ext: (p['charpente_ext'] as ChiffrageProjet['charpente_ext']) ?? { ...EMPTY_CHARPENTE_EXT },
+      lines: (p['lines'] as ChiffrageProjet['lines']) ?? [],
+    };
+  }
+
+  private parseJoinedRow<T>(value: unknown): T | null {
+    if (!value || typeof value !== 'object') return null;
+    return value as T;
   }
 
   private normalizeProjet(p: Partial<ChiffrageProjet> & { id: number }): ChiffrageProjet {
     const usine = (p.usine ?? 'boisboreal') as UsineKey;
+    const factoryId = p.factoryId ?? this.resolveFactoryId(usine) ?? 0;
+    const factory = this.factory.getById(factoryId) ?? this.factory.getByKey(usine);
+    const agencyId = p.agencyId ?? null;
+    const agencyName =
+      p.agence ??
+      (agencyId != null ? this.injector.get(AgencyService).getById(agencyId)?.name ?? null : null);
+
     return {
       id: Number(p.id),
       nom: p.nom ?? '',
       ref: p.ref ?? '',
-      usine,
-      usineLabel: p.usineLabel || this.getUsineLabel(usine),
+      factoryId,
+      agencyId,
+      usine: (factory?.key ?? usine) as UsineKey,
+      usineLabel: p.usineLabel || factory?.nom || this.getUsineLabel(usine),
+      agence: agencyName,
       total: Number(p.total) || 0,
-      agence: p.agence ?? null,
       date: p.date ?? new Date().toISOString(),
-      user_name: p.user_name ?? null,
+      createdBy: p.createdBy ?? null,
+      createdByName: p.createdByName ?? null,
       values: p.values ?? {},
       charpente_ext: p.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
       lines: p.lines ?? [],
@@ -723,16 +811,21 @@ export class ChiffrageDataService {
   }
 
   private async persistProjetToDb(projet: ChiffrageProjet): Promise<void> {
+    const factoryId = projet.factoryId || this.resolveFactoryId(projet.usine);
+    if (!factoryId) {
+      console.warn('[Chiffrage] persist projet failed: unknown factory', projet.usine);
+      return;
+    }
+
     const { error } = await this.supabase.from('chiffrage_projets').upsert({
       id: projet.id,
       projet_date: projet.date,
       nom: projet.nom,
       ref: projet.ref,
-      usine: projet.usine,
-      usine_label: projet.usineLabel,
+      factory_id: factoryId,
+      agency_id: projet.agencyId,
+      created_by: projet.createdBy,
       total: projet.total,
-      agence: projet.agence,
-      user_name: projet.user_name,
       values: projet.values ?? {},
       charpente_ext: projet.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
       lines: projet.lines ?? [],

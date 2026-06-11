@@ -88,9 +88,6 @@
           @if (a.deadlineNote && !a.deadline) {
             <div class="field-hint">Note d'échéance importée : « {{ a.deadlineNote }} »</div>
           }
-          @if (a.ownerLabel) {
-            <div class="field-hint">Code responsable importé : « {{ a.ownerLabel }} »</div>
-          }
         </div>
 
         <div class="detail-section">
@@ -98,8 +95,8 @@
           <div class="field">
             <label for="ad-owner">Responsable principal</label>
             <select id="ad-owner" class="input" [ngModel]="a.ownerId ?? ''" (ngModelChange)="onOwnerChange(a.id, $event)">
-              <option value="">— Non attribué —</option>
-              @for (m of members(); track m.id) {
+              <option value="">— À attribuer —</option>
+              @for (m of assignees(); track m.id) {
                 <option [value]="m.id">{{ m.name }} ({{ m.role }})</option>
               }
             </select>
@@ -107,10 +104,12 @@
           <div class="field">
             <label>Co-responsables (optionnel)</label>
             <div class="coowner-chips">
-              @for (m of members(); track m.id) {
-                <button type="button" class="app-chip" [class.active]="isCoOwner(m.id)" (click)="toggleCoOwner(m.id)">
-                  {{ m.name }}
-                </button>
+              @for (m of assignees(); track m.id) {
+                @if (isCoOwnerCandidate(m.id)) {
+                  <button type="button" class="app-chip" [class.active]="isCoOwner(m.id)" (click)="toggleCoOwner(m.id)">
+                    {{ m.name }}
+                  </button>
+                }
               }
             </div>
           </div>
@@ -129,7 +128,7 @@
             <div class="comment-compose-actions">
               <select class="input input-inline" [ngModel]="commentAuthorId()" (ngModelChange)="commentAuthorId.set($event)">
                 <option value="">— Anonyme —</option>
-                @for (m of members(); track m.id) {
+                @for (m of assignees(); track m.id) {
                   <option [value]="m.id">{{ m.name }}</option>
                 }
               </select>
@@ -144,8 +143,8 @@
                 <div class="comment-header">
                   <div class="comment-author">
                     @if (c.authorId; as aid) {
-                      @if (codir.memberById(aid); as author) {
-                        <span class="app-avatar" [style.background]="author.color" style="width: 22px; height: 22px; font-size: 9px">
+                      @if (codir.assigneeById(aid); as author) {
+                        <span class="app-avatar" [style.background]="codir.assigneeColor(author.id)" style="width: 22px; height: 22px; font-size: 9px">
                           {{ codir.initials(author.name) }}
                         </span>
                         <span>{{ author.name }}</span>

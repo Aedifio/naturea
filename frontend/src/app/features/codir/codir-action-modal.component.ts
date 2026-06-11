@@ -26,7 +26,7 @@ export class CodirActionModalComponent {
   readonly priority = signal<'low' | 'medium' | 'high'>('medium');
 
   readonly themes = this.codir.themes;
-  readonly members = this.codir.members;
+  readonly assignees = this.codir.assignees;
 
   constructor() {
     effect(() => {

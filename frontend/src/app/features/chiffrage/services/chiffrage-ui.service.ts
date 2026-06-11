@@ -134,16 +134,28 @@ export class ChiffrageUiService {
     }
 
     const usine = this.currentUsine();
+    const factoryId = this.data.resolveFactoryId(usine);
+    if (!factoryId) {
+      this.toast.show('⚠️ Usine introuvable — réessayez dans un instant');
+      return { ok: false, error: 'factory_missing' };
+    }
+
+    const creatorId = this.data.getCurrentCreatorId();
+    const creatorName = this.data.getActiveCreatorName();
+
     const projet: ChiffrageProjet = {
       id: Date.now(),
       date: new Date().toISOString(),
       nom,
       ref,
+      factoryId,
+      agencyId: this.data.getActiveAgencyId(),
       usine,
       usineLabel: this.data.getUsineRef(usine).nom,
       total: recap.totalGeneral,
       agence: this.data.getActiveAgence(),
-      user_name: null,
+      createdBy: creatorId,
+      createdByName: creatorName,
       values: structuredClone(this.values()),
       charpente_ext: structuredClone(this.charpenteExt()),
       lines: recap.lines.map((l) => ({ label: l.label, detail: l.detail, amount: l.amount })),

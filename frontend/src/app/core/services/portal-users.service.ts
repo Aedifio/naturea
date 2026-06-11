@@ -1,5 +1,16 @@
 import { Injectable, inject } from '@angular/core';
+import { PermissionLevel } from '../models/user.model';
 import { SupabaseService } from '../supabase/supabase.service';
+
+export interface CodirTeamMember {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+  codirPermission: PermissionLevel;
+  agencyNom: string | null;
+  factoryNom: string | null;
+}
 
 export interface PortalUserRow {
   id: string;
@@ -43,6 +54,28 @@ export class PortalUsersService {
     const { data, error } = await this.supabase.rpc('list_portal_users_admin');
     if (error) throw error;
     return (data ?? []) as PortalUserAdminRow[];
+  }
+
+  async listCodirTeam(): Promise<CodirTeamMember[]> {
+    const { data, error } = await this.supabase.rpc('list_codir_team');
+    if (error) throw error;
+    return ((data ?? []) as Array<{
+      id: string;
+      name: string;
+      email: string | null;
+      role: string;
+      codir_permission: string;
+      agency_nom: string | null;
+      factory_nom: string | null;
+    }>).map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      role: row.role,
+      codirPermission: row.codir_permission as PermissionLevel,
+      agencyNom: row.agency_nom,
+      factoryNom: row.factory_nom,
+    }));
   }
 
   async create(input: PortalUserCreate): Promise<PortalUserAdminRow> {

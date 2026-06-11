@@ -1,7 +1,7 @@
 <div class="page-head">
   <div class="page-kicker">Historique des devis · mise à jour des tarifs réseau</div>
   <h1 class="page-title">Devis <em>sources & imports</em></h1>
-  <p class="page-sub">Charge des PDF de devis usine pour comparer aux tarifs de référence et appliquer les variations ligne par ligne. La base des 60 devis sources reste accessible plus bas.</p>
+  <p class="page-sub">Charge des PDF de devis usine pour comparer aux tarifs de référence et appliquer les variations ligne par ligne.</p>
 </div>
 
 @if (!importSvc.pdfJsReady()) {
@@ -126,47 +126,6 @@
         }
       </div>
     }
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-h">
-    <div class="card-h-l"><div class="ico">📋</div><h3>Devis sources de la base de référence</h3></div>
-    <div class="card-meta">60 devis</div>
-  </div>
-  <div class="card-b">
-    <table class="hist-table">
-      <thead>
-        <tr>
-          <th>Usine</th>
-          <th>N° devis</th>
-          <th>Date</th>
-          <th class="num">Surface MOB</th>
-          <th class="num">Prix MOB €/m²</th>
-          <th class="num">Total HT</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (d of devisHist; track d.n + d.date) {
-          <tr [class.row-sicob-2026]="isSicob2026(d.date, d.usine)">
-            <td><span class="hist-pill {{ d.usine }}">{{ usineNom(d.usine) }}</span></td>
-            <td>
-              <strong>{{ d.n }}</strong>
-              <div class="hist-client">{{ d.client }}</div>
-            </td>
-            <td>{{ fmtDateFR(d.date) }}</td>
-            <td class="num">{{ fmtNum(d.mob_m2, 1) }} m²</td>
-            <td class="num" [class.cell-sicob-2026]="isSicob2026(d.date, d.usine)">
-              {{ fmtNum(d.mob_pu, 2) }} €
-              @if (isSicob2026(d.date, d.usine)) {
-                <span class="badge-year">2026</span>
-              }
-            </td>
-            <td class="num"><strong>{{ fmtEurR(d.total) }}</strong></td>
-          </tr>
-        }
-      </tbody>
-    </table>
   </div>
 </div>
 

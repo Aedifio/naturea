@@ -6,7 +6,6 @@ import { AuthService } from '../../core/auth/auth.service';
 import { permissionLabel } from '../../core/models/kpi.model';
 import { APPS_META } from '../../core/models/permissions.model';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
-import { DEVIS_HIST } from './constants/chiffrage-devis-hist.constants';
 import { ChiffrageToastComponent } from './components/chiffrage-toast.component';
 import { ChiffrageDataService } from './services/chiffrage-data.service';
 
@@ -24,7 +23,7 @@ export class ChiffrageShellComponent {
 
   readonly headStats = computed(() => this.data.headStats());
   readonly mesProjetsBadge = computed(() => this.data.projets().length);
-  readonly historiqueBadge = computed(() => DEVIS_HIST.length);
+  readonly historiqueBadge = computed(() => this.data.tarifsHistoryCount());
 
   readonly bannerLabel = computed(() => {
     this.auth.currentUser();

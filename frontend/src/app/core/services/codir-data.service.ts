@@ -1,13 +1,14 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { PortalUsersService } from './portal-users.service';
 import { SupabaseService } from '../supabase/supabase.service';
 
-export interface CodirMember {
+export const CODIR_OWNER_UNASSIGNED = 'À attribuer';
+
+export interface CodirAssignee {
   id: string;
-  code?: string;
   name: string;
   role: string;
-  email?: string;
-  color: string;
+  email: string | null;
 }
 
 export interface CodirAction {
@@ -17,7 +18,6 @@ export interface CodirAction {
   description?: string;
   ownerId?: string;
   coOwnerIds?: string[];
-  ownerLabel?: string;
   startDate?: string;
   deadline?: string;
   deadlineNote?: string;
@@ -32,7 +32,6 @@ export interface CodirAction {
 }
 
 export interface CodirData {
-  members: CodirMember[];
   actions: CodirAction[];
   themes: string[];
 }
@@ -58,7 +57,9 @@ export const CODIR_MEMBER_COLORS = [
 @Injectable({ providedIn: 'root' })
 export class CodirDataService {
   private readonly supabase = inject(SupabaseService);
+  private readonly portalUsers = inject(PortalUsersService);
   private readonly _data = signal<CodirData | null>(null);
+  private readonly _assignees = signal<CodirAssignee[]>([]);
   private readonly _version = signal(0);
 
   readonly data = computed(() => {
@@ -66,26 +67,30 @@ export class CodirDataService {
     return this._data();
   });
 
+  readonly assignees = computed(() => this._assignees());
+  /** @deprecated Use assignees — kept for gradual template migration. */
+  readonly members = this.assignees;
+
   async load(): Promise<void> {
-    const [membersRes, themesRes, actionsRes] = await Promise.all([
-      this.supabase.from('codir_members').select('*').order('name'),
+    const [assignees, themesRes, actionsRes] = await Promise.all([
+      this.portalUsers.listCodirTeam(),
       this.supabase.from('codir_themes').select('label').order('label'),
       this.supabase.from('codir_actions').select('*').order('created_at'),
     ]);
 
-    if (membersRes.error || themesRes.error || actionsRes.error) {
-      console.error('[Codir] load failed', membersRes.error ?? themesRes.error ?? actionsRes.error);
+    if (themesRes.error || actionsRes.error) {
+      console.error('[Codir] load failed', themesRes.error ?? actionsRes.error);
       return;
     }
 
-    const members: CodirMember[] = (membersRes.data ?? []).map((m) => ({
-      id: m.id,
-      code: m.code ?? undefined,
-      name: m.name,
-      role: m.role,
-      email: m.email ?? undefined,
-      color: m.color,
-    }));
+    this._assignees.set(
+      assignees.map((u) => ({
+        id: u.id,
+        name: u.name,
+        role: u.role,
+        email: u.email,
+      })),
+    );
 
     const themes = (themesRes.data ?? []).map((t) => t.label as string);
 
@@ -95,8 +100,7 @@ export class CodirDataService {
       title: a.title,
       description: a.description ?? '',
       ownerId: a.owner_id ?? undefined,
-      coOwnerIds: a.co_owner_ids ?? [],
-      ownerLabel: a.owner_label ?? '',
+      coOwnerIds: this.sanitizeCoOwnerIds(a.owner_id, a.co_owner_ids ?? []),
       startDate: a.start_date ?? undefined,
       deadline: a.deadline ?? undefined,
       deadlineNote: a.deadline_note ?? '',
@@ -110,12 +114,11 @@ export class CodirDataService {
       subtasks: a.subtasks ?? [],
     }));
 
-    this._data.set({ members, actions, themes });
+    this._data.set({ actions, themes });
     this._version.update((v) => v + 1);
   }
 
   readonly actions = computed(() => this.data()?.actions ?? []);
-  readonly members = computed(() => this.data()?.members ?? []);
   readonly themes = computed(() => this.data()?.themes ?? []);
 
   readonly activeActions = computed(() => this.actions().filter((a) => !a.archived));
@@ -163,14 +166,37 @@ export class CodirDataService {
     return STATUS_LABELS[status] ?? { label: status, cls: 'app-status-todo' };
   }
 
-  memberById(id?: string): CodirMember | undefined {
+  assigneeById(id?: string): CodirAssignee | undefined {
     if (!id) return undefined;
-    return this.members().find((m) => m.id === id);
+    return this.assignees().find((m) => m.id === id);
   }
 
-  actionOwners(action: CodirAction): CodirMember[] {
+  /** @deprecated Use assigneeById */
+  memberById(id?: string): CodirAssignee | undefined {
+    return this.assigneeById(id);
+  }
+
+  actionOwners(action: CodirAction): CodirAssignee[] {
     const ids = [action.ownerId, ...(action.coOwnerIds ?? [])].filter(Boolean) as string[];
-    return ids.map((id) => this.memberById(id)).filter(Boolean) as CodirMember[];
+    return ids.map((id) => this.assigneeById(id)).filter(Boolean) as CodirAssignee[];
+  }
+
+  hasOwner(action: CodirAction): boolean {
+    return this.actionOwners(action).length > 0;
+  }
+
+  ownerNames(action: CodirAction): string {
+    const owners = this.actionOwners(action);
+    if (owners.length) return owners.map((o) => o.name).join(', ');
+    return CODIR_OWNER_UNASSIGNED;
+  }
+
+  assigneeColor(id: string): string {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = (hash + id.charCodeAt(i)) % CODIR_MEMBER_COLORS.length;
+    }
+    return CODIR_MEMBER_COLORS[hash];
   }
 
   initials(name: string): string {
@@ -201,7 +227,6 @@ export class CodirDataService {
     return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
 
-  /** Day + short month + year (matches codir-app.html formatDate). */
   formatDate(iso?: string): string {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -220,51 +245,6 @@ export class CodirDataService {
 
   todayLabel(): string {
     return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
-  memberStats(memberId: string): { open: number; overdue: number } {
-    const open = this.activeActions().filter(
-      (a) => a.status !== 'done' && (a.ownerId === memberId || (a.coOwnerIds ?? []).includes(memberId)),
-    );
-    const overdue = open.filter(
-      (a) => this.daysUntil(a.deadline) !== null && this.daysUntil(a.deadline)! < 0,
-    );
-    return { open: open.length, overdue: overdue.length };
-  }
-
-  defaultMemberColor(): string {
-    return CODIR_MEMBER_COLORS[this.members().length % CODIR_MEMBER_COLORS.length];
-  }
-
-  saveMember(input: { id?: string; name: string; role: string; email?: string; color: string; code?: string }): void {
-    const current = this.data();
-    if (!current) return;
-    const payload: CodirMember = {
-      id: input.id ?? `m_${Date.now().toString(36)}`,
-      name: input.name.trim(),
-      role: input.role.trim(),
-      email: input.email?.trim() || undefined,
-      color: input.color,
-      code: input.code,
-    };
-    const members = input.id
-      ? current.members.map((m) => (m.id === input.id ? { ...m, ...payload } : m))
-      : [...current.members, payload];
-    this.persist({ ...current, members });
-  }
-
-  deleteMember(id: string): void {
-    const current = this.data();
-    if (!current) return;
-    this.persist({
-      ...current,
-      members: current.members.filter((m) => m.id !== id),
-      actions: current.actions.map((a) => ({
-        ...a,
-        ownerId: a.ownerId === id ? undefined : a.ownerId,
-        coOwnerIds: (a.coOwnerIds ?? []).filter((c) => c !== id),
-      })),
-    });
   }
 
   createAction(input: {
@@ -287,7 +267,6 @@ export class CodirDataService {
       description: input.description || '',
       ownerId: input.ownerId,
       coOwnerIds: [],
-      ownerLabel: '',
       startDate: input.startDate || now.slice(0, 10),
       deadline: input.deadline || '',
       deadlineNote: '',
@@ -367,23 +346,43 @@ export class CodirDataService {
     this.patchAction(id, { archived: false, archivedAt: undefined }, 'Tâche désarchivée');
   }
 
-  toggleCoOwner(actionId: string, memberId: string): void {
+  setOwner(actionId: string, ownerId?: string, historyText?: string): void {
+    const action = this.actionById(actionId);
+    if (!action) return;
+    const coOwnerIds = ownerId
+      ? this.sanitizeCoOwnerIds(ownerId, action.coOwnerIds ?? [])
+      : (action.coOwnerIds ?? []);
+    const assignee = ownerId ? this.assigneeById(ownerId) : undefined;
+    this.patchAction(
+      actionId,
+      { ownerId, coOwnerIds },
+      historyText ?? `Responsable → ${assignee?.name ?? 'À attribuer'}`,
+    );
+  }
+
+  toggleCoOwner(actionId: string, assigneeId: string): void {
     const action = this.actionById(actionId);
     if (!action) return;
     const co = action.coOwnerIds ?? [];
-    const has = co.includes(memberId);
-    const member = this.memberById(memberId);
+    const has = co.includes(assigneeId);
+    if (!has && assigneeId === action.ownerId) return;
+    const assignee = this.assigneeById(assigneeId);
     this.patchAction(
       actionId,
-      { coOwnerIds: has ? co.filter((c) => c !== memberId) : [...co, memberId] },
-      `Co-responsable ${has ? 'retiré' : 'ajouté'}${member ? ' : ' + member.name : ''}`,
+      { coOwnerIds: has ? co.filter((c) => c !== assigneeId) : [...co, assigneeId] },
+      `Co-responsable ${has ? 'retiré' : 'ajouté'}${assignee ? ' : ' + assignee.name : ''}`,
     );
+  }
+
+  private sanitizeCoOwnerIds(ownerId: string | null | undefined, coOwnerIds: string[]): string[] {
+    if (!ownerId) return coOwnerIds;
+    return coOwnerIds.filter((id) => id !== ownerId);
   }
 
   addComment(actionId: string, text: string, authorId?: string): void {
     const action = this.actionById(actionId);
     if (!action) return;
-    const member = authorId ? this.memberById(authorId) : undefined;
+    const assignee = authorId ? this.assigneeById(authorId) : undefined;
     const comment = {
       id: `cmt_${Date.now().toString(36)}`,
       text,
@@ -393,7 +392,7 @@ export class CodirDataService {
     this.patchAction(
       actionId,
       { comments: [...(action.comments ?? []), comment] },
-      `Commentaire ajouté${member ? ' par ' + member.name : ''}`,
+      `Commentaire ajouté${assignee ? ' par ' + assignee.name : ''}`,
     );
   }
 
@@ -430,15 +429,13 @@ export class CodirDataService {
     try {
       const XLSX = await import('xlsx');
       const rows = data.actions.map((a) => {
-        const owners = this.actionOwners(a);
-        const ownerNames = owners.map((m) => m.name).join(', ');
         const dU = this.daysUntil(a.deadline);
         const lastComment = (a.comments ?? []).slice(-1)[0];
         return {
           Thème: a.theme,
           'Date démarrage': a.startDate || '',
           Tâche: a.title,
-          'Responsable(s)': ownerNames || a.ownerLabel || '',
+          'Responsable(s)': this.ownerNames(a),
           Échéance: a.deadline || a.deadlineNote || '',
           Statut: this.statusMeta(a.status).label,
           Priorité: CODIR_PRIORITY_LABELS[a.priority ?? 'medium'] ?? a.priority ?? '',
@@ -470,17 +467,6 @@ export class CodirDataService {
   }
 
   private async persistToDb(data: CodirData): Promise<void> {
-    const memberRows = data.members.map((m) => ({
-      id: m.id,
-      code: m.code ?? '',
-      name: m.name,
-      role: m.role,
-      email: m.email ?? '',
-      color: m.color,
-    }));
-    const { error: mErr } = await this.supabase.from('codir_members').upsert(memberRows);
-    if (mErr) console.error('[Codir] members persist failed', mErr);
-
     for (const label of data.themes) {
       const { error } = await this.supabase.from('codir_themes').upsert({ label });
       if (error) console.error('[Codir] theme persist failed', label, error);
@@ -493,7 +479,6 @@ export class CodirDataService {
       description: a.description ?? '',
       owner_id: a.ownerId ?? null,
       co_owner_ids: a.coOwnerIds ?? [],
-      owner_label: a.ownerLabel ?? '',
       start_date: a.startDate || null,
       deadline: a.deadline || null,
       deadline_note: a.deadlineNote ?? '',

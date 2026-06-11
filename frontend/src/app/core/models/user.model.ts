@@ -11,6 +11,8 @@ export type AppCode =
 export type PermissionLevel = 'R' | 'RW' | 'ADMIN' | null;
 
 export interface PortalUser {
+  /** Supabase `portal_users.id` (UUID). */
+  portalUserId: string;
   id: number;
   email: string;
   /** Legacy seed field — not used at runtime with Supabase Auth. */

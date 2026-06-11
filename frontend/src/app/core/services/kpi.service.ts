@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { findAgency, KpiItem } from '../models/kpi.model';
+import { AgencyService } from './agency.service';
 import { CodirDataService } from './codir-data.service';
 import { RecrutementDataService } from '../../features/recrutement/services/recrutement-data.service';
 import { OssatureDataService } from '../../features/ossature/services/ossature-data.service';
@@ -15,6 +16,7 @@ export class KpiService {
   private readonly auditTechnique = inject(AuditTechniqueDataService);
   private readonly auditCommerce = inject(AuditCommerceDataService);
   private readonly chiffrage = inject(ChiffrageDataService);
+  private readonly agency = inject(AgencyService);
 
   calcCodirKPI(): KpiItem[] | null {
     const actions = this.codir.actions();
@@ -251,11 +253,14 @@ export class KpiService {
 
   calcFranchiseChiffrage(name: string) {
     const projets = this.chiffrage.projets();
-    const t = normAgency(name);
-    const mine = projets.filter((p) => {
-      const n = normAgency(p.agence);
-      return n && (n === t || n.includes(t) || t.includes(n));
-    });
+    const agency = findAgency(this.agency.getAll(), name, (a) => a.name);
+    const mine = agency
+      ? projets.filter((p) => p.agencyId === agency.id)
+      : projets.filter((p) => {
+          const n = normAgency(p.agence);
+          const t = normAgency(name);
+          return n && (n === t || n.includes(t) || t.includes(n));
+        });
     const ym = new Date().toISOString().slice(0, 7);
     const moisCount = mine.filter((p) => {
       if (!p.date) return false;

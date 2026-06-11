@@ -140,11 +140,20 @@ export interface ChiffrageProjet {
   date: string;
   nom: string;
   ref: string;
+  /** Canonical `factory.id`. */
+  factoryId: number;
+  /** Canonical `agencies.id` when the devis belongs to a franchise. */
+  agencyId: number | null;
+  /** Factory key — derived from `factory` for UI/routing. */
   usine: UsineKey;
   usineLabel: string;
-  total: number;
+  /** Agency display name — derived from `agencies`. */
   agence: string | null;
-  user_name?: string | null;
+  total: number;
+  /** `portal_users.id` of the user who saved this devis. */
+  createdBy: string | null;
+  /** Creator display name — derived from joined `portal_users`. */
+  createdByName: string | null;
   values: Record<string, number>;
   charpente_ext: CharpenteExtValues;
   lines: Array<{ label: string; detail: string; amount: number }>;
@@ -152,16 +161,6 @@ export interface ChiffrageProjet {
 
 /** Alias requested in service spec */
 export type SavedProjet = ChiffrageProjet;
-
-export interface DevisHistEntry {
-  usine: UsineKey;
-  n: string;
-  date: string;
-  total: number;
-  mob_m2: number;
-  mob_pu: number;
-  client: string;
-}
 
 export interface ImportHistoryPoste {
   label_pdf: string;
@@ -179,6 +178,9 @@ export interface ImportHistoryEntry {
   id: number;
   date_import: string;
   filename: string;
+  /** Canonical `factory.id`. */
+  factoryId: number;
+  /** Factory key — derived from `factory` for UI. */
   usine: UsineKey;
   devis_num: string | null;
   devis_date: string | null;

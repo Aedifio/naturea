@@ -69,7 +69,7 @@ export class CodirAgendaModalComponent {
 
     const dur: Record<string, number> = {};
     const recip: Record<string, boolean> = {};
-    for (const m of this.codir.members()) {
+    for (const m of this.codir.assignees()) {
       recip[m.id] = !!m.email;
     }
     for (const id of this.selectedIds()) {
@@ -110,7 +110,7 @@ export class CodirAgendaModalComponent {
   }
 
   toggleRecipient(memberId: string): void {
-    const member = this.codir.memberById(memberId);
+    const member = this.codir.assigneeById(memberId);
     if (!member?.email) return;
     this.recipients.update((r) => ({ ...r, [memberId]: !r[memberId] }));
   }

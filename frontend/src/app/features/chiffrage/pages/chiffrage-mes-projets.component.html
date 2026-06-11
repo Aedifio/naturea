@@ -26,6 +26,7 @@
             <th>Nom du projet / client</th>
             <th>Référence</th>
             <th>Usine</th>
+            <th>Créé par</th>
             <th class="num">Total HT</th>
             <th>Actions</th>
           </tr>
@@ -46,6 +47,13 @@
                 }
               </td>
               <td><span class="hist-pill {{ p.usine }}">{{ p.usineLabel || p.usine }}</span></td>
+              <td>
+                @if (p.createdByName) {
+                  <span class="cell-creator">{{ p.createdByName }}</span>
+                } @else {
+                  <span class="cell-empty">—</span>
+                }
+              </td>
               <td class="num"><strong>{{ fmtEurR(p.total) }}</strong></td>
               <td>
                 <button type="button" class="btn btn-ghost btn-sm" (click)="reopen(p.id)" title="Réouvrir ce projet dans l'estimateur">↗ Ouvrir</button>

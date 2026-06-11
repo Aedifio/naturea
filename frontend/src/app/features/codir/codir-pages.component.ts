@@ -1,7 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CodirAction, CodirMember, CodirDataService } from '../../core/services/codir-data.service';
-import { CodirMemberModalComponent } from './codir-member-modal.component';
+import { permissionLabel } from '../../core/models/kpi.model';
+import { CodirAction, CodirDataService, CODIR_MEMBER_COLORS } from '../../core/services/codir-data.service';
+import { CodirTeamMember, PortalUsersService } from '../../core/services/portal-users.service';
 import { CodirActionModalComponent } from './codir-action-modal.component';
 import { CodirActionDetailModalComponent } from './codir-action-detail-modal.component';
 import { CodirAgendaModalComponent } from './codir-agenda-modal.component';
@@ -58,7 +59,11 @@ export class CodirActionsComponent {
     const owner = this.ownerFilter();
     return this.codir.activeActions().filter((a) => {
       if (theme !== 'all' && a.theme !== theme) return false;
-      if (owner !== 'all' && a.ownerId !== owner && !(a.coOwnerIds ?? []).includes(owner)) return false;
+      if (owner === '__unassigned__') {
+        if (a.ownerId || (a.coOwnerIds ?? []).length) return false;
+      } else if (owner !== 'all' && a.ownerId !== owner && !(a.coOwnerIds ?? []).includes(owner)) {
+        return false;
+      }
       if (status === 'overdue') {
         if (a.status === 'done') return false;
         const d = this.codir.daysUntil(a.deadline);
@@ -262,29 +267,51 @@ export class CodirArchivesComponent {
 @Component({
   selector: 'app-codir-team',
   standalone: true,
-  imports: [CodirMemberModalComponent, CodirIconComponent],
+  imports: [],
   templateUrl: './codir-team.component.html',
   styleUrl: './codir-pages.shared.scss',
 })
-export class CodirTeamComponent {
-  readonly codir = inject(CodirDataService);
-  readonly members = this.codir.members;
+export class CodirTeamComponent implements OnInit {
+  private readonly codir = inject(CodirDataService);
+  private readonly portalUsers = inject(PortalUsersService);
 
-  readonly modalOpen = signal(false);
-  readonly editingMember = signal<CodirMember | null>(null);
+  readonly members = signal<CodirTeamMember[]>([]);
+  readonly loading = signal(true);
+  readonly loadError = signal<string | null>(null);
+  readonly permissionLabel = permissionLabel;
 
-  openNewMember(): void {
-    this.editingMember.set(null);
-    this.modalOpen.set(true);
+  ngOnInit(): void {
+    void this.loadTeam();
   }
 
-  openEditMember(member: CodirMember): void {
-    this.editingMember.set(member);
-    this.modalOpen.set(true);
+  async loadTeam(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      this.members.set(await this.portalUsers.listCodirTeam());
+    } catch (err) {
+      console.error('[Codir] load team failed', err);
+      this.loadError.set('Impossible de charger l\'équipe.');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
-  closeModal(): void {
-    this.modalOpen.set(false);
-    this.editingMember.set(null);
+  initials(name: string): string {
+    return this.codir.initials(name);
+  }
+
+  memberColor(id: string): string {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = (hash + id.charCodeAt(i)) % CODIR_MEMBER_COLORS.length;
+    }
+    return CODIR_MEMBER_COLORS[hash];
+  }
+
+  memberContext(member: CodirTeamMember): string | null {
+    if (member.agencyNom) return member.agencyNom;
+    if (member.factoryNom) return member.factoryNom;
+    return null;
   }
 }

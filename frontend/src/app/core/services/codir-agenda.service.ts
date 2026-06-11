@@ -65,9 +65,9 @@ export class CodirAgendaService {
       for (const a of items) {
         const dur = params.durationsByTheme[a.id] ?? 10;
         totalDuration += dur;
-        const owners = this.codir.actionOwners(a).map((m) => m.name).join(', ');
+        const owners = this.codir.ownerNames(a);
         lines.push(`  ${counter}. ${a.title}  [${dur} min]`);
-        if (params.includeOwners && owners) lines.push(`     Responsable : ${owners}`);
+        if (params.includeOwners) lines.push(`     Responsable : ${owners}`);
         if (params.includeStatus) {
           lines.push(
             `     Statut : ${this.codir.statusMeta(a.status).label}${a.deadline ? ' · échéance ' + this.codir.formatDate(a.deadline) : ''}`,
@@ -99,7 +99,7 @@ export class CodirAgendaService {
       byTheme[a.theme].push(a);
     }
 
-    const recipients = data.members.filter((m) => params.recipientsState[m.id]);
+    const recipients = this.codir.assignees().filter((m) => params.recipientsState[m.id]);
     let totalDuration = 0;
     for (const a of selected) totalDuration += params.durationsByTheme[a.id] ?? 10;
 
@@ -117,10 +117,10 @@ export class CodirAgendaService {
         const items = byTheme[theme]
           .map((a) => {
             const dur = params.durationsByTheme[a.id] ?? 10;
-            const owners = this.codir.actionOwners(a).map((m) => m.name).join(', ');
+            const owners = this.codir.ownerNames(a);
             const lastComment = (a.comments ?? []).slice(-1)[0];
             const metaParts: string[] = [];
-            if (params.includeOwners && owners) metaParts.push(`<strong>Responsable :</strong> ${esc(owners)}`);
+            if (params.includeOwners) metaParts.push(`<strong>Responsable :</strong> ${esc(owners)}`);
             if (params.includeStatus) {
               metaParts.push(`<strong>Statut :</strong> ${esc(this.codir.statusMeta(a.status).label)}`);
               if (a.deadline) metaParts.push(`<strong>Échéance :</strong> ${esc(this.codir.formatDate(a.deadline))}`);
@@ -185,7 +185,8 @@ ${themesHtml}
   openMailClient(selectedIds: string[], params: AgendaParams, filename: string): void {
     const data = this.codir.data();
     if (!data) return;
-    const recipientEmails = data.members
+    const recipientEmails = this.codir
+      .assignees()
       .filter((m) => params.recipientsState[m.id] && m.email)
       .map((m) => m.email)
       .join(',');

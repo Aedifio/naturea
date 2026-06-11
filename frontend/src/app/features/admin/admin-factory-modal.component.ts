@@ -32,6 +32,7 @@ export class AdminFactoryModalComponent {
     nom: ['', Validators.required],
     couleur: ['#2B4A1A', [Validators.required, Validators.pattern(HEX_COLOR_PATTERN)]],
     description: [''],
+    address: [''],
     contact_email: [''],
     actif: [true],
   });
@@ -49,6 +50,7 @@ export class AdminFactoryModalComponent {
           nom: '',
           couleur: '#2B4A1A',
           description: '',
+          address: '',
           contact_email: '',
           actif: true,
         });
@@ -59,6 +61,7 @@ export class AdminFactoryModalComponent {
           nom: f.nom,
           couleur: f.couleur,
           description: f.description ?? '',
+          address: f.address ?? '',
           contact_email: f.contact_email ?? '',
           actif: f.actif,
         });
@@ -82,6 +85,7 @@ export class AdminFactoryModalComponent {
         nom: raw.nom.trim(),
         couleur: raw.couleur.trim(),
         description: raw.description.trim(),
+        address: raw.address.trim(),
         contact_email: raw.contact_email.trim(),
         actif: raw.actif,
       });
@@ -90,6 +94,7 @@ export class AdminFactoryModalComponent {
         nom: raw.nom.trim(),
         couleur: raw.couleur.trim(),
         description: raw.description.trim(),
+        address: raw.address.trim(),
         contact_email: raw.contact_email.trim(),
         actif: raw.actif,
       });

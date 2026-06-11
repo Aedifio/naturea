@@ -16,6 +16,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { syncSentryUser } from '../sentry/sentry-user';
 
 interface PortalUserRow {
+  id: string;
   legacy_id: number | null;
   name: string;
   role: string;
@@ -169,6 +170,11 @@ export class AuthService {
     return this.isAgencyScopedFranchisee();
   }
 
+  /** Canonical `portal_users.id` for the signed-in user. */
+  portalUserId(): string | null {
+    return this.userSignal()?.portalUserId ?? null;
+  }
+
   /** Refresh portal profile after admin edits the current user. */
   async reloadProfile(): Promise<void> {
     await this.loadProfileFromSession();
@@ -197,7 +203,7 @@ export class AuthService {
 
     const { data: row, error } = await this.supabase
       .from('portal_users')
-      .select('legacy_id, name, role, actif, factory_id, agency_id, agencies(name)')
+      .select('id, legacy_id, name, role, actif, factory_id, agency_id, agencies(name)')
       .eq('auth_user_id', authUser.id)
       .maybeSingle();
 
@@ -214,6 +220,7 @@ export class AuthService {
     const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
     const agencyName = agency?.name?.trim();
     return {
+      portalUserId: row.id,
       id: row.legacy_id ?? 0,
       email,
       name: row.name,

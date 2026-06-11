@@ -28,3 +28,60 @@ code {
   gap: 6px;
   font-size: 13px;
 }
+
+.team-status {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.team-status-err {
+  color: var(--red, #c0392b);
+}
+
+.app-team-card-context {
+  font-size: 11px;
+  color: var(--subtle);
+  margin: 2px 0 0;
+  line-height: 1.35;
+}
+
+.app-team-card-perm {
+  margin-top: 8px;
+}
+
+.app-owner-unassigned {
+  font-size: 11px;
+  color: var(--subtle);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.codir-perm-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--border);
+
+  &[data-level='R'] {
+    background: #eef4fb;
+    color: #2c6b8b;
+    border-color: #c5d9e8;
+  }
+
+  &[data-level='RW'] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--border);
+  }
+
+  &[data-level='ADMIN'] {
+    background: #f3eef8;
+    color: #6b4a8b;
+    border-color: #d8cce8;
+  }
+}
