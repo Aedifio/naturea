@@ -177,6 +177,9 @@ export interface ImportHistoryPoste {
 export interface ImportHistoryEntry {
   id: number;
   date_import: string;
+  /** `portal_files.id` — source of truth for the uploaded PDF. */
+  portalFileId: string | null;
+  /** Display name from `portal_files.filename`. */
   filename: string;
   /** Supabase Storage path in the `chiffrage` bucket. */
   storagePath?: string | null;

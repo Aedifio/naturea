@@ -56,16 +56,8 @@ export class ChiffrageDataService {
       this.supabase.from('chiffrage_overrides').select('data').eq('id', 1).maybeSingle(),
       this.supabase.from('chiffrage_custom_postes').select('data').eq('id', 1).maybeSingle(),
       this.supabase.from('chiffrage_form_overrides').select('data').eq('id', 1).maybeSingle(),
-      this.supabase
-        .from('chiffrage_projets')
-        .select(
-          '*, factory:factory_id(id, key, nom), agency:agency_id(id, name), creator:created_by(id, name, role)',
-        )
-        .order('projet_date', { ascending: false }),
-      this.supabase
-        .from('chiffrage_tarifs_imports')
-        .select('*, factory:factory_id(id, key, nom)')
-        .order('date_import', { ascending: false }),
+      this.fetchProjets(),
+      this.fetchTarifsImports(),
     ]);
 
     this.overrides.set((ovRes.data?.data as OverridesStore) ?? {});
@@ -85,18 +77,7 @@ export class ChiffrageDataService {
 
     const imports = histRes.data ?? [];
     if (imports.length) {
-      const [{ data: postes }, { data: fileRows }] = await Promise.all([
-        this.supabase.from('chiffrage_tarifs_postes').select('*'),
-        this.supabase
-          .from('portal_files')
-          .select('entity_id, path')
-          .eq('bucket', 'chiffrage')
-          .eq('entity_type', 'tarif_import')
-          .eq('app_slot', 'CHIFFRAGE'),
-      ]);
-      const storagePathByImport = new Map(
-        (fileRows ?? []).map((f) => [String(f.entity_id), String(f.path)]),
-      );
+      const { data: postes } = await this.supabase.from('chiffrage_tarifs_postes').select('*');
       const postesByImport = new Map<string, ImportHistoryEntry['postes']>();
       for (const row of postes ?? []) {
         const list = postesByImport.get(row.import_id) ?? [];
@@ -118,7 +99,6 @@ export class ChiffrageDataService {
           const row = h as Record<string, unknown>;
           const entry = this.mapTarifImportRow(row);
           entry.postes = postesByImport.get(String(row['id'])) ?? [];
-          entry.storagePath = storagePathByImport.get(String(row['id'])) ?? null;
           return entry;
         }),
       );
@@ -583,7 +563,7 @@ export class ChiffrageDataService {
     await this.supabase.from('chiffrage_tarifs_imports').upsert({
       id: String(entry.id),
       date_import: entry.date_import,
-      filename: entry.filename,
+      portal_file_id: entry.portalFileId,
       factory_id: factoryId,
       devis_num: entry.devis_num,
       devis_date: entry.devis_date,
@@ -712,23 +692,72 @@ export class ChiffrageDataService {
     return this.injector.get(AuthService).currentUser()?.name ?? null;
   }
 
+  private fetchTarifsImports() {
+    const auth = this.injector.get(AuthService);
+    const agencyScoped = auth.isAgencyScopedFranchisee();
+    const agencyId = auth.linkedAgencyId();
+
+    const select = agencyScoped && agencyId != null
+      ? '*, factory:factory_id(id, key, nom), file:portal_file_id!inner(id, path, filename, uploader:uploaded_by!inner(agency_id))'
+      : '*, factory:factory_id(id, key, nom), file:portal_file_id(id, path, filename, uploader:uploaded_by(agency_id))';
+
+    let query = this.supabase
+      .from('chiffrage_tarifs_imports')
+      .select(select)
+      .order('date_import', { ascending: false });
+
+    if (agencyScoped && agencyId != null) {
+      query = query.eq('file.uploader.agency_id', agencyId);
+    }
+
+    return query;
+  }
+
+  private fetchProjets() {
+    let query = this.supabase
+      .from('chiffrage_projets')
+      .select(
+        '*, factory:factory_id(id, key, nom), agency:agency_id(id, name), creator:created_by(id, name, role)',
+      )
+      .order('projet_date', { ascending: false });
+
+    const auth = this.injector.get(AuthService);
+    if (auth.isAgencyScopedFranchisee()) {
+      const agencyId = auth.linkedAgencyId();
+      if (agencyId != null) {
+        query = query.eq('agency_id', agencyId);
+      }
+    }
+
+    return query;
+  }
+
   private persistOverrides(): void {
     void this.supabase.from('chiffrage_overrides').upsert({ id: 1, data: this.overrides() });
   }
 
   private mapTarifImportRow(h: Record<string, unknown>): ImportHistoryEntry {
     const factory = this.parseJoinedRow<{ id: number; key: string; nom: string }>(h['factory']);
+    const file = this.parseJoinedRow<{
+      id: string;
+      path: string;
+      filename: string;
+      uploader?: { agency_id: number | null } | { agency_id: number | null }[];
+    }>(h['file']);
     const legacyUsine = h['usine'] as UsineKey | undefined;
     const factoryFromKey = legacyUsine ? this.factory.getByKey(legacyUsine) : null;
     const resolvedFactory = factory ?? factoryFromKey;
     const factoryId = Number(h['factory_id'] ?? resolvedFactory?.id ?? 0);
     const usine = (resolvedFactory?.key ?? legacyUsine ?? 'boisboreal') as UsineKey;
     const idRaw = h['id'];
+    const portalFileId = file?.id ?? (h['portal_file_id'] as string | null) ?? null;
 
     return {
       id: typeof idRaw === 'number' ? idRaw : Number(idRaw),
       date_import: String(h['date_import'] ?? new Date().toISOString()),
-      filename: String(h['filename'] ?? ''),
+      portalFileId,
+      filename: file?.filename ?? '',
+      storagePath: file?.path ?? null,
       factoryId,
       usine,
       devis_num: (h['devis_num'] as string | null) ?? null,

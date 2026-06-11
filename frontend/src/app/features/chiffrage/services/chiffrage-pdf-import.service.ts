@@ -169,8 +169,9 @@ export class ChiffragePdfImportService {
     const safeName = current.fileEntry.name.replace(/[^\w.\-]+/g, '_');
     const storagePath = `devis/${importId}/${safeName}`;
 
+    let uploadedFile;
     try {
-      await this.files.upload('chiffrage', storagePath, current.fileEntry.file, {
+      uploadedFile = await this.files.upload('chiffrage', storagePath, current.fileEntry.file, {
         appSlot: 'CHIFFRAGE',
         entityType: 'tarif_import',
         entityId: String(importId),
@@ -185,8 +186,9 @@ export class ChiffragePdfImportService {
     const histEntry: ImportHistoryEntry = {
       id: importId,
       date_import: new Date().toISOString(),
-      filename: current.fileEntry.name,
-      storagePath,
+      portalFileId: uploadedFile.portalFileId,
+      filename: uploadedFile.filename,
+      storagePath: uploadedFile.path,
       factoryId,
       usine: usineKey,
       devis_num: current.meta.devis_num ?? null,

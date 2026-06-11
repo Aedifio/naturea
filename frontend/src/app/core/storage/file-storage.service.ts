@@ -25,6 +25,7 @@ export interface UploadedFileRef {
   filename: string;
   mimeType: string;
   sizeBytes: number;
+  portalFileId: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,22 +51,27 @@ export class FileStorageService {
     const { data: signed, error: signErr } = await this.supabase.storage(bucket).createSignedUrl(path, 3600);
     if (signErr || !signed?.signedUrl) throw signErr ?? new Error('Signed URL unavailable');
 
-    await this.supabase.from('portal_files').upsert(
-      {
-        bucket,
-        path,
-        storage_key: meta.storageKey ?? null,
-        app_slot: meta.appSlot,
-        entity_type: meta.entityType,
-        entity_id: meta.entityId,
-        filename,
-        mime_type: mimeType,
-        size_bytes: file.size,
-        kind: meta.kind ?? null,
-        uploaded_by: this.injector.get(AuthService).portalUserId(),
-      },
-      { onConflict: 'path' },
-    );
+    const { data: fileRow, error: dbErr } = await this.supabase
+      .from('portal_files')
+      .upsert(
+        {
+          bucket,
+          path,
+          storage_key: meta.storageKey ?? null,
+          app_slot: meta.appSlot,
+          entity_type: meta.entityType,
+          entity_id: meta.entityId,
+          filename,
+          mime_type: mimeType,
+          size_bytes: file.size,
+          kind: meta.kind ?? null,
+          uploaded_by: this.injector.get(AuthService).portalUserId(),
+        },
+        { onConflict: 'path' },
+      )
+      .select('id')
+      .single();
+    if (dbErr || !fileRow?.id) throw dbErr ?? new Error('portal_files row missing after upload');
 
     return {
       bucket,
@@ -74,6 +80,7 @@ export class FileStorageService {
       filename,
       mimeType,
       sizeBytes: file.size,
+      portalFileId: fileRow.id,
     };
   }
 
