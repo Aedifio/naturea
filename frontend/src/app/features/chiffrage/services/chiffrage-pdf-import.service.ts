@@ -18,7 +18,12 @@ import {
 import { ChiffrageDataService } from './chiffrage-data.service';
 import { ChiffrageToastService } from './chiffrage-toast.service';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
+/** pdf.js v4+ resolves workerSrc via dynamic import — must be a full URL, not `assets/...`. */
+function configurePdfJsWorker(): void {
+  if (typeof document === 'undefined') return;
+  const base = document.querySelector('base')?.href ?? `${window.location.origin}/`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.mjs', base).href;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChiffragePdfImportService {
@@ -34,6 +39,7 @@ export class ChiffragePdfImportService {
   readonly importHistory = signal<ImportHistoryEntry[]>([]);
 
   constructor() {
+    configurePdfJsWorker();
     this.refreshHistory();
     try {
       if (typeof pdfjsLib.getDocument !== 'function') {
