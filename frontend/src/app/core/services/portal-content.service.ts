@@ -1,10 +1,13 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../auth/auth.service';
+import { portalActuCatLabel } from '../constants/portal-actu-cats.constants';
+import { portalEventTagLabel } from '../constants/portal-event-tags.constants';
+import { portalNewsletterTypeLabel } from '../constants/portal-newsletter-types.constants';
 import { SupabaseService } from '../supabase/supabase.service';
 
 export interface Actu {
   id: number;
   cat: string;
-  lbl: string;
   date: string;
   title: string;
   body: string;
@@ -17,7 +20,6 @@ export interface PortalEvent {
   title: string;
   detail: string;
   tag: string;
-  tlbl: string;
   _ts?: number;
 }
 
@@ -32,24 +34,20 @@ const MOIS = ['Jan', 'Fév', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil', 'Août', 'S
 
 interface ActuRow {
   id: number;
-  legacy_id: number | null;
   cat: string;
-  lbl: string;
-  date_label: string;
+  published_date: string;
   title: string;
   body: string;
+  created_by: string | null;
 }
 
 interface EventRow {
   id: number;
-  legacy_id: number | null;
-  event_day: string;
-  event_month: string;
   title: string;
   detail: string;
   tag: string;
-  tag_label: string;
-  event_date: string | null;
+  event_date: string;
+  created_by: string | null;
 }
 
 interface NewsletterRow {
@@ -57,12 +55,14 @@ interface NewsletterRow {
   type: 'pdf' | 'text' | null;
   content: string | null;
   name: string | null;
-  date_label: string | null;
+  published_date: string | null;
+  created_by: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class PortalContentService {
   private readonly supabase = inject(SupabaseService);
+  private readonly injector = inject(Injector);
   private readonly _actus = signal<Actu[]>([]);
   private readonly _events = signal<PortalEvent[]>([]);
   private readonly _newsletter = signal<Newsletter | null>(null);
@@ -75,7 +75,7 @@ export class PortalContentService {
 
   async load(): Promise<void> {
     const [actusRes, eventsRes, nlRes] = await Promise.all([
-      this.supabase.from('portal_actus').select('*').order('legacy_id', { ascending: false }),
+      this.supabase.from('portal_actus').select('*').order('published_date', { ascending: false }),
       this.supabase.from('portal_events').select('*').order('event_date', { ascending: true, nullsFirst: false }),
       this.supabase.from('portal_newsletter').select('*').eq('id', 1).maybeSingle(),
     ]);
@@ -89,71 +89,57 @@ export class PortalContentService {
     if (nlRes.error) console.error('[PortalContent] newsletter load failed', nlRes.error);
     else {
       const row = nlRes.data as NewsletterRow | null;
-      this._newsletter.set(row?.type && row.content ? {
-        type: row.type,
-        content: row.content,
-        name: row.name ?? '',
-        date: row.date_label ?? '',
-      } : null);
+      this._newsletter.set(row?.type && row.content ? this.rowToNewsletter(row) : null);
     }
 
     this._ready.set(true);
   }
 
-  async addActu(input: { cat: string; lbl: string; date: string; title: string; body: string }): Promise<void> {
-    const legacyId = this._actus().length
-      ? Math.max(...this._actus().map((a) => a.id)) + 1
-      : 1;
+  async addActu(input: { cat: string; dateIso: string; title: string; body: string }): Promise<void> {
     const { error } = await this.supabase.from('portal_actus').insert({
-      legacy_id: legacyId,
       cat: input.cat,
-      lbl: input.lbl,
-      date_label: input.date,
+      published_date: input.dateIso.slice(0, 10),
       title: input.title,
       body: input.body,
+      created_by: this.getCurrentCreatorId(),
     });
     if (error) throw error;
     await this.load();
   }
 
   async deleteActu(id: number): Promise<void> {
-    const { error } = await this.supabase.from('portal_actus').delete().eq('legacy_id', id);
+    const { error } = await this.supabase.from('portal_actus').delete().eq('id', id);
     if (error) throw error;
     await this.load();
   }
 
-  async addEvent(input: { dateIso: string; tag: string; tlbl: string; title: string; detail: string }): Promise<void> {
-    const events = this._events();
-    const d = new Date(input.dateIso);
-    const legacyId = events.length ? Math.max(...events.map((e) => e.id)) + 1 : 1;
+  async addEvent(input: { dateIso: string; tag: string; title: string; detail: string }): Promise<void> {
     const { error } = await this.supabase.from('portal_events').insert({
-      legacy_id: legacyId,
-      event_day: String(d.getDate()).padStart(2, '0'),
-      event_month: MOIS[d.getMonth()],
       title: input.title,
       detail: input.detail,
       tag: input.tag,
-      tag_label: input.tlbl,
       event_date: input.dateIso.slice(0, 10),
+      created_by: this.getCurrentCreatorId(),
     });
     if (error) throw error;
     await this.load();
   }
 
   async deleteEvent(id: number): Promise<void> {
-    const { error } = await this.supabase.from('portal_events').delete().eq('legacy_id', id);
+    const { error } = await this.supabase.from('portal_events').delete().eq('id', id);
     if (error) throw error;
     await this.load();
   }
 
-  async saveNewsletter(nl: Newsletter | null): Promise<void> {
-    if (nl) {
+  async saveNewsletter(input: { type: 'pdf' | 'text'; content: string; name: string; dateIso: string } | null): Promise<void> {
+    if (input) {
       const { error } = await this.supabase.from('portal_newsletter').upsert({
         id: 1,
-        type: nl.type,
-        content: nl.content,
-        name: nl.name,
-        date_label: nl.date,
+        type: input.type,
+        content: input.content,
+        name: input.name,
+        published_date: input.dateIso.slice(0, 10),
+        created_by: this.getCurrentCreatorId(),
       });
       if (error) throw error;
     } else {
@@ -164,31 +150,60 @@ export class PortalContentService {
   }
 
   formatActuDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return this.parseIsoDate(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  actuCatLabel(cat: string): string {
+    return portalActuCatLabel(cat);
+  }
+
+  eventTagLabel(tag: string): string {
+    return portalEventTagLabel(tag);
+  }
+
+  newsletterTypeLabel(type: string): string {
+    return portalNewsletterTypeLabel(type);
   }
 
   private rowToActu(row: ActuRow): Actu {
     return {
-      id: row.legacy_id ?? row.id,
+      id: row.id,
       cat: row.cat,
-      lbl: row.lbl,
-      date: row.date_label,
+      date: this.formatActuDate(row.published_date),
       title: row.title,
       body: row.body,
     };
   }
 
-  private rowToEvent(row: EventRow): PortalEvent {
-    const ts = row.event_date ? new Date(row.event_date).getTime() : undefined;
+  private rowToNewsletter(row: NewsletterRow): Newsletter {
     return {
-      id: row.legacy_id ?? row.id,
-      day: row.event_day,
-      mon: row.event_month,
+      type: row.type!,
+      content: row.content!,
+      name: row.name ?? '',
+      date: row.published_date ? this.formatActuDate(row.published_date) : '',
+    };
+  }
+
+  private rowToEvent(row: EventRow): PortalEvent {
+    const d = this.parseIsoDate(row.event_date);
+    return {
+      id: row.id,
+      day: String(d.getDate()).padStart(2, '0'),
+      mon: MOIS[d.getMonth()],
       title: row.title,
       detail: row.detail,
       tag: row.tag,
-      tlbl: row.tag_label,
-      _ts: ts,
+      _ts: d.getTime(),
     };
+  }
+
+  private getCurrentCreatorId(): string | null {
+    return this.injector.get(AuthService).portalUserId();
+  }
+
+  /** Parse YYYY-MM-DD without UTC day shift. */
+  private parseIsoDate(isoDate: string): Date {
+    const [y, m, day] = isoDate.slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, day);
   }
 }

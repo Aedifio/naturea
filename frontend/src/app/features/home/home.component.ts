@@ -136,7 +136,7 @@ export class HomeComponent {
         type: 'pdf',
         content: String(reader.result),
         name: file.name.replace(/\.pdf$/i, ''),
-        date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+        dateIso: new Date().toISOString().slice(0, 10),
       });
       input.value = '';
     };

@@ -76,7 +76,7 @@
               <button type="button" class="actu-del" (click)="deleteActu(a.id)" title="Supprimer">×</button>
             }
             <div class="actu-h">
-              <span class="actu-cat c-{{ a.cat }}">{{ a.lbl }}</span>
+              <span class="actu-cat c-{{ a.cat }}">{{ content.actuCatLabel(a.cat) }}</span>
               <span class="actu-date">{{ a.date }}</span>
             </div>
             <div class="actu-title">{{ a.title }}</div>
@@ -121,7 +121,7 @@
               <div class="event-mon">{{ e.mon }}</div>
             </div>
             <div class="event-info">
-              <span class="event-tag t-{{ e.tag }}">{{ e.tlbl }}</span>
+              <span class="event-tag t-{{ e.tag }}">{{ content.eventTagLabel(e.tag) }}</span>
               <div class="event-title">{{ e.title }}</div>
               <div class="event-detail">{{ e.detail }}</div>
             </div>
@@ -153,7 +153,7 @@
               <div class="nl-meta-icon">{{ nl.type === 'pdf' ? '📄' : '📝' }}</div>
               <div class="nl-meta-info">
                 <strong>{{ nl.name || 'Newsletter' }}</strong>
-                <span>Publiée le {{ nl.date }}{{ nl.type === 'pdf' ? ' — PDF' : ' — Texte' }}</span>
+                <span>Publiée le {{ nl.date }} — {{ content.newsletterTypeLabel(nl.type) }}</span>
               </div>
             </div>
             @if (isAnimateur()) {

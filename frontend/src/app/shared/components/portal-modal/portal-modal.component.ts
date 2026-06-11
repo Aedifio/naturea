@@ -1,23 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
 import { input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { PORTAL_ACTU_CATS } from '../../../core/constants/portal-actu-cats.constants';
+import { PORTAL_EVENT_TAGS } from '../../../core/constants/portal-event-tags.constants';
 import { PortalContentService } from '../../../core/services/portal-content.service';
 
 export type PortalModalType = 'actu' | 'event' | 'newsletter-text';
-
-const ACTU_CATS = [
-  { value: 'reseau', lbl: 'Réseau' },
-  { value: 'comm', lbl: 'Communication' },
-  { value: 'rh', lbl: 'RH & Formation' },
-  { value: 'ops', lbl: 'Opérations' },
-];
-
-const EVENT_TAGS = [
-  { value: 'formation', lbl: 'Formation' },
-  { value: 'reunion', lbl: 'Réunion' },
-  { value: 'visite', lbl: 'Visite franchisé' },
-  { value: 'event', lbl: 'Événement' },
-];
 
 @Component({
   selector: 'app-portal-modal',
@@ -39,7 +27,7 @@ const EVENT_TAGS = [
                   <label for="m-cat">Catégorie</label>
                   <select id="m-cat" formControlName="cat">
                     @for (c of actuCats; track c.value) {
-                      <option [value]="c.value">{{ c.lbl }}</option>
+                      <option [value]="c.value">{{ c.label }}</option>
                     }
                   </select>
                 </div>
@@ -74,7 +62,7 @@ const EVENT_TAGS = [
                   <label for="m-etag">Type</label>
                   <select id="m-etag" formControlName="tag">
                     @for (t of eventTags; track t.value) {
-                      <option [value]="t.value">{{ t.lbl }}</option>
+                      <option [value]="t.value">{{ t.label }}</option>
                     }
                   </select>
                 </div>
@@ -262,8 +250,8 @@ export class PortalModalComponent {
   readonly open = input(false);
   readonly close = output<void>();
 
-  readonly actuCats = ACTU_CATS;
-  readonly eventTags = EVENT_TAGS;
+  readonly actuCats = PORTAL_ACTU_CATS;
+  readonly eventTags = PORTAL_EVENT_TAGS;
 
   readonly modalTitle = computed(() => {
     switch (this.type()) {
@@ -304,11 +292,9 @@ export class PortalModalComponent {
   async saveActu(): Promise<void> {
     if (this.actuForm.invalid) return;
     const v = this.actuForm.getRawValue();
-    const cat = ACTU_CATS.find((c) => c.value === v.cat)!;
     await this.content.addActu({
       cat: v.cat!,
-      lbl: cat.lbl,
-      date: this.content.formatActuDate(v.date!),
+      dateIso: v.date!,
       title: v.title!.trim(),
       body: v.body!.trim(),
     });
@@ -324,11 +310,9 @@ export class PortalModalComponent {
   async saveEvent(): Promise<void> {
     if (this.eventForm.invalid) return;
     const v = this.eventForm.getRawValue();
-    const tag = EVENT_TAGS.find((t) => t.value === v.tag)!;
     await this.content.addEvent({
       dateIso: v.date!,
       tag: v.tag!,
-      tlbl: tag.lbl,
       title: v.title!.trim(),
       detail: v.detail!.trim(),
     });
@@ -348,7 +332,7 @@ export class PortalModalComponent {
       type: 'text',
       name: v.name!.trim(),
       content: v.body!.trim(),
-      date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      dateIso: new Date().toISOString().slice(0, 10),
     });
     this.nlForm.reset({ name: '', body: '' });
     this.close.emit();
