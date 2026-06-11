@@ -178,6 +178,8 @@ export interface ImportHistoryEntry {
   id: number;
   date_import: string;
   filename: string;
+  /** Supabase Storage path in the `chiffrage` bucket. */
+  storagePath?: string | null;
   /** Canonical `factory.id`. */
   factoryId: number;
   /** Factory key — derived from `factory` for UI. */

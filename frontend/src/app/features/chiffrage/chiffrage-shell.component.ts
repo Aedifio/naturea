@@ -34,13 +34,13 @@ export class ChiffrageShellComponent {
   });
 
   constructor() {
-    this.data.hydrateFromStorage();
+    this.data.reload();
 
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.data.hydrateFromStorage());
+      .subscribe(() => this.data.reload());
   }
 }

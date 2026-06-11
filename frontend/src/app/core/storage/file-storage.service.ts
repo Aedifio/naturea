@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector } from '@angular/core';
+import { AuthService } from '../auth/auth.service';
 import { SupabaseService } from '../supabase/supabase.service';
 
 export type StorageBucket =
@@ -29,6 +30,7 @@ export interface UploadedFileRef {
 @Injectable({ providedIn: 'root' })
 export class FileStorageService {
   private readonly supabase = inject(SupabaseService);
+  private readonly injector = inject(Injector);
 
   async upload(
     bucket: StorageBucket,
@@ -48,8 +50,6 @@ export class FileStorageService {
     const { data: signed, error: signErr } = await this.supabase.storage(bucket).createSignedUrl(path, 3600);
     if (signErr || !signed?.signedUrl) throw signErr ?? new Error('Signed URL unavailable');
 
-    const { data: userData } = await this.supabase.auth.getUser();
-
     await this.supabase.from('portal_files').upsert(
       {
         bucket,
@@ -62,7 +62,7 @@ export class FileStorageService {
         mime_type: mimeType,
         size_bytes: file.size,
         kind: meta.kind ?? null,
-        uploaded_by: userData.user?.id ?? null,
+        uploaded_by: this.injector.get(AuthService).portalUserId(),
       },
       { onConflict: 'path' },
     );
@@ -89,6 +89,22 @@ export class FileStorageService {
   async delete(bucket: StorageBucket, path: string): Promise<void> {
     await this.supabase.storage(bucket).remove([path]);
     await this.supabase.from('portal_files').delete().eq('path', path);
+  }
+
+  /** Removes all storage objects and `portal_files` rows for an entity. */
+  async deleteEntityFiles(
+    bucket: StorageBucket,
+    entityType: string,
+    entityId: string,
+  ): Promise<void> {
+    const { data, error } = await this.supabase
+      .from('portal_files')
+      .select('path')
+      .eq('bucket', bucket)
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId);
+    if (error) throw error;
+    await Promise.all((data ?? []).map((row) => this.delete(bucket, row.path)));
   }
 
   async dataUrlToBlob(dataUrl: string): Promise<Blob> {

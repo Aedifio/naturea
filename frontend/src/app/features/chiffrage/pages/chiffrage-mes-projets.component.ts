@@ -26,7 +26,7 @@ export class ChiffrageMesProjetsComponent {
   fmtTimeFR = fmtTimeFR;
 
   constructor() {
-    this.data.hydrateFromStorage();
+    this.data.reload();
   }
 
   reopen(id: number): void {

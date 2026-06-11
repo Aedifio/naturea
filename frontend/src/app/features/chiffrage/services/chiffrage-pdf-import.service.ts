@@ -141,7 +141,7 @@ export class ChiffragePdfImportService {
     this.setPosteMapping(index, code);
   }
 
-  applyImport(): void {
+  async applyImport(): Promise<void> {
     const current = this.currentImport();
     if (!current?.usine) {
       this.toast.show("⚠️ Sélectionne d'abord une usine");
@@ -165,10 +165,28 @@ export class ChiffragePdfImportService {
       return;
     }
 
+    const importId = Date.now();
+    const safeName = current.fileEntry.name.replace(/[^\w.\-]+/g, '_');
+    const storagePath = `devis/${importId}/${safeName}`;
+
+    try {
+      await this.files.upload('chiffrage', storagePath, current.fileEntry.file, {
+        appSlot: 'CHIFFRAGE',
+        entityType: 'tarif_import',
+        entityId: String(importId),
+        kind: 'devis_pdf',
+      });
+    } catch (err) {
+      console.error('[ChiffragePdfImport] PDF upload failed', err);
+      this.toast.show("⚠️ Impossible d'enregistrer le PDF sur le serveur — import annulé");
+      return;
+    }
+
     const histEntry: ImportHistoryEntry = {
-      id: Date.now(),
+      id: importId,
       date_import: new Date().toISOString(),
       filename: current.fileEntry.name,
+      storagePath,
       factoryId,
       usine: usineKey,
       devis_num: current.meta.devis_num ?? null,
@@ -188,14 +206,13 @@ export class ChiffragePdfImportService {
       })),
     };
 
-    const hist = [histEntry, ...this.data.getTarifsHistory()];
-    this.data.saveTarifsHistory(hist);
+    await this.data.persistTarifImport(histEntry);
     this.refreshHistory();
 
     this.toast.show(
       appliqueCount > 0
-        ? `✓ ${appliqueCount} tarif${appliqueCount > 1 ? 's' : ''} appliqué${appliqueCount > 1 ? 's' : ''} · import historisé`
-        : '📋 Import historisé (aucun tarif appliqué)',
+        ? `✓ ${appliqueCount} tarif${appliqueCount > 1 ? 's' : ''} appliqué${appliqueCount > 1 ? 's' : ''} · devis enregistré`
+        : '📋 Devis enregistré (aucun tarif appliqué)',
     );
 
     const idx = this.queue().indexOf(current.fileEntry);
@@ -203,8 +220,8 @@ export class ChiffragePdfImportService {
     else this.currentImport.set(null);
   }
 
-  deleteHistoryEntry(id: number): void {
-    this.data.deleteTarifImport(id);
+  async deleteHistoryEntry(id: number): Promise<void> {
+    await this.data.deleteTarifImport(id);
     this.refreshHistory();
   }
 
@@ -236,18 +253,6 @@ export class ChiffragePdfImportService {
       const usine = detectUsineFromText(text);
       const meta = extractMetadata(text);
       const postes = parsePostes(text);
-      const importId = `imp-${Date.now()}`;
-      try {
-        const path = `imports/${importId}/${fileEntry.file.name.replace(/\s+/g, '_')}`;
-        await this.files.upload('chiffrage', path, fileEntry.file, {
-          appSlot: 'CHIFFRAGE',
-          entityType: 'import',
-          entityId: importId,
-          kind: 'pdf',
-        });
-      } catch (uploadErr) {
-        console.warn('[ChiffragePdfImport] storage upload failed', uploadErr);
-      }
       this.updateQueueEntry(fileEntry, {
         status: 'ok',
         parsed: { usine, meta, postes, text },

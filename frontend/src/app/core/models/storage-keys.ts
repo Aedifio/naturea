@@ -10,7 +10,6 @@ export enum StorageKey {
   OssatureOrders = 'ossature_orders',
   AuditTechnique = 'naturea_pc_v1',
   AuditCommerce = 'fnet:data:v1',
-  ChiffrageProjets = 'chiffrage:mes_projets:v1',
   ChiffrageTarifsHistory = 'chiffrage:tarifs_history:v1',
   ChiffrageOverrides = 'chiffrage_overrides_v1',
   ChiffrageFormOverrides = 'chiffrage_form_overrides_v1',

@@ -61,7 +61,7 @@ export class ChiffrageImportPreviewComponent {
   }
 
   apply(): void {
-    this.importSvc.applyImport();
+    void this.importSvc.applyImport();
   }
 
   onUsineChange(value: string): void {

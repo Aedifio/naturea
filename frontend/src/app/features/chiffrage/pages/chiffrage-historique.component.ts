@@ -86,7 +86,7 @@ export class ChiffrageHistoriqueComponent {
     ) {
       return;
     }
-    this.importSvc.deleteHistoryEntry(h.id);
+    void this.importSvc.deleteHistoryEntry(h.id);
   }
 
   viewHistoryDetail(h: ImportHistoryEntry): void {

@@ -1,7 +1,6 @@
 import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
-import { StorageKey } from '../../../core/models/storage-keys';
-import { LocalStorageAdapter } from '../../../core/storage/local-storage.adapter';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { FactoryService } from '../../../core/services/factory.service';
 import { AgencyService } from '../../../core/services/agency.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
@@ -31,7 +30,7 @@ import { EMPTY_CHARPENTE_EXT } from '../chiffrage.models';
 export class ChiffrageDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly factory = inject(FactoryService);
-  private readonly storage = inject(LocalStorageAdapter);
+  private readonly files = inject(FileStorageService);
   private readonly injector = inject(Injector);
 
   readonly overrides = signal<OverridesStore>({});
@@ -67,28 +66,27 @@ export class ChiffrageDataService {
     this.customPostes.set((cpRes.data?.data as CustomPostesStore) ?? {});
     this.formOverrides.set((foRes.data?.data as FormOverridesStore) ?? {});
 
-    const dbProjets = this.mapProjetsFromRows(projRes.data ?? []);
-    const localProjets = this.readLocalProjets();
-    let merged = this.mergeProjets(dbProjets, localProjets);
-
     if (projRes.error) {
-      console.warn('[Chiffrage] projets load failed, using localStorage', projRes.error);
-      merged = localProjets.length ? localProjets : dbProjets;
+      console.warn('[Chiffrage] projets load failed', projRes.error);
+      this.projets.set([]);
     } else {
-      const dbIds = new Set(dbProjets.map((p) => p.id));
-      const toMigrate = localProjets.filter((p) => !dbIds.has(p.id));
-      if (toMigrate.length) {
-        await Promise.all(toMigrate.map((p) => this.persistProjetToDb(p)));
-        this.storage.remove(StorageKey.ChiffrageProjets);
-      }
+      this.projets.set(this.mapProjetsFromRows(projRes.data ?? []));
     }
-
-    this.projets.set(merged);
-    this.syncProjetsToLocalStorage();
 
     const imports = histRes.data ?? [];
     if (imports.length) {
-      const { data: postes } = await this.supabase.from('chiffrage_tarifs_postes').select('*');
+      const [{ data: postes }, { data: fileRows }] = await Promise.all([
+        this.supabase.from('chiffrage_tarifs_postes').select('*'),
+        this.supabase
+          .from('portal_files')
+          .select('entity_id, path')
+          .eq('bucket', 'chiffrage')
+          .eq('entity_type', 'tarif_import')
+          .eq('app_slot', 'CHIFFRAGE'),
+      ]);
+      const storagePathByImport = new Map(
+        (fileRows ?? []).map((f) => [String(f.entity_id), String(f.path)]),
+      );
       const postesByImport = new Map<string, ImportHistoryEntry['postes']>();
       for (const row of postes ?? []) {
         const list = postesByImport.get(row.import_id) ?? [];
@@ -110,6 +108,7 @@ export class ChiffrageDataService {
           const row = h as Record<string, unknown>;
           const entry = this.mapTarifImportRow(row);
           entry.postes = postesByImport.get(String(row['id'])) ?? [];
+          entry.storagePath = storagePathByImport.get(String(row['id'])) ?? null;
           return entry;
         }),
       );
@@ -118,13 +117,9 @@ export class ChiffrageDataService {
     }
   }
 
-  /** Re-read persisted state (matches chiffrage-app.html loadMesProjets on each tab open). */
-  hydrateFromStorage(): void {
+  /** Reload chiffrage data from Supabase (e.g. when opening Mes projets). */
+  reload(): void {
     void this.load();
-  }
-
-  readProjetsFromStorage(): ChiffrageProjet[] {
-    return this.projets();
   }
 
   readonly headerStats = computed<HeaderStats>(() => {
@@ -551,14 +546,12 @@ export class ChiffrageDataService {
   saveProjet(projet: ChiffrageProjet): void {
     const list = [projet, ...this.projets().filter((p) => p.id !== projet.id)];
     this.projets.set(list);
-    this.syncProjetsToLocalStorage();
     void this.persistProjetToDb(projet);
   }
 
   deleteProjet(id: number): void {
     const list = this.projets().filter((p) => p.id !== id);
     this.projets.set(list);
-    this.syncProjetsToLocalStorage();
     void this.supabase.from('chiffrage_projets').delete().eq('id', id);
   }
 
@@ -566,46 +559,53 @@ export class ChiffrageDataService {
     return this._tarifsHistory();
   }
 
-  saveTarifsHistory(list: ImportHistoryEntry[]): void {
-    this._tarifsHistory.set(list);
-    void this.persistTarifsHistory(list);
-  }
-
-  private async persistTarifsHistory(list: ImportHistoryEntry[]): Promise<void> {
-    for (const entry of list) {
-      const factoryId = entry.factoryId || this.resolveFactoryId(entry.usine);
-      if (!factoryId) {
-        console.warn('[Chiffrage] skip tarif import persist: unknown factory', entry.usine);
-        continue;
-      }
-
-      await this.supabase.from('chiffrage_tarifs_imports').upsert({
-        id: String(entry.id),
-        date_import: entry.date_import,
-        filename: entry.filename,
-        factory_id: factoryId,
-        devis_num: entry.devis_num,
-        devis_date: entry.devis_date,
-        client: entry.client,
-        total_ht: entry.total_ht,
-      });
-      if (entry.postes?.length) {
-        await this.supabase.from('chiffrage_tarifs_postes').delete().eq('import_id', String(entry.id));
-        await this.supabase.from('chiffrage_tarifs_postes').insert(
-          entry.postes.map((p) => ({
-            import_id: String(entry.id),
-            label_pdf: p.label_pdf,
-            applique: p.applique ?? false,
-            delta_pct: p.delta_pct,
-          })),
-        );
-      }
+  async persistTarifImport(entry: ImportHistoryEntry): Promise<void> {
+    const factoryId = entry.factoryId || this.resolveFactoryId(entry.usine);
+    if (!factoryId) {
+      console.warn('[Chiffrage] skip tarif import persist: unknown factory', entry.usine);
+      return;
     }
+
+    await this.supabase.from('chiffrage_tarifs_imports').upsert({
+      id: String(entry.id),
+      date_import: entry.date_import,
+      filename: entry.filename,
+      factory_id: factoryId,
+      devis_num: entry.devis_num,
+      devis_date: entry.devis_date,
+      client: entry.client,
+      total_ht: entry.total_ht,
+    });
+    if (entry.postes?.length) {
+      await this.supabase.from('chiffrage_tarifs_postes').delete().eq('import_id', String(entry.id));
+      await this.supabase.from('chiffrage_tarifs_postes').insert(
+        entry.postes.map((p) => ({
+          import_id: String(entry.id),
+          label_pdf: p.label_pdf,
+          unite: p.unite,
+          qte: p.qte,
+          pu: p.pu,
+          total: p.total,
+          mapped: p.mapped,
+          ancien_pu: p.ancien_pu,
+          delta_pct: p.delta_pct,
+          applique: p.applique ?? false,
+        })),
+      );
+    }
+
+    this._tarifsHistory.update((list) => [entry, ...list.filter((h) => h.id !== entry.id)]);
   }
 
-  deleteTarifImport(id: number): void {
-    const list = this.getTarifsHistory().filter((h) => h.id !== id);
-    this.saveTarifsHistory(list);
+  async deleteTarifImport(id: number): Promise<void> {
+    try {
+      await this.files.deleteEntityFiles('chiffrage', 'tarif_import', String(id));
+    } catch (err) {
+      console.warn('[Chiffrage] storage delete failed', err);
+    }
+    await this.supabase.from('chiffrage_tarifs_postes').delete().eq('import_id', String(id));
+    await this.supabase.from('chiffrage_tarifs_imports').delete().eq('id', String(id));
+    this._tarifsHistory.update((list) => list.filter((h) => h.id !== id));
   }
 
   /** @deprecated use exportBundle */
@@ -702,12 +702,6 @@ export class ChiffrageDataService {
     void this.supabase.from('chiffrage_overrides').upsert({ id: 1, data: this.overrides() });
   }
 
-  private readLocalProjets(): ChiffrageProjet[] {
-    const raw = this.storage.get<ChiffrageProjet[]>(StorageKey.ChiffrageProjets);
-    if (!Array.isArray(raw)) return [];
-    return raw.map((p) => this.normalizeProjet(p));
-  }
-
   private mapTarifImportRow(h: Record<string, unknown>): ImportHistoryEntry {
     const factory = this.parseJoinedRow<{ id: number; key: string; nom: string }>(h['factory']);
     const legacyUsine = h['usine'] as UsineKey | undefined;
@@ -795,19 +789,6 @@ export class ChiffrageDataService {
       charpente_ext: p.charpente_ext ?? { ...EMPTY_CHARPENTE_EXT },
       lines: p.lines ?? [],
     };
-  }
-
-  private mergeProjets(db: ChiffrageProjet[], local: ChiffrageProjet[]): ChiffrageProjet[] {
-    const byId = new Map<number, ChiffrageProjet>();
-    for (const p of db) byId.set(p.id, p);
-    for (const p of local) {
-      if (!byId.has(p.id)) byId.set(p.id, p);
-    }
-    return [...byId.values()].sort((a, b) => b.date.localeCompare(a.date));
-  }
-
-  private syncProjetsToLocalStorage(): void {
-    this.storage.set(StorageKey.ChiffrageProjets, this.projets());
   }
 
   private async persistProjetToDb(projet: ChiffrageProjet): Promise<void> {
