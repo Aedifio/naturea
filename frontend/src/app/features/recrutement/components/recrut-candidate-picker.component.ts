@@ -13,7 +13,7 @@ import { RecrutementModeService } from '../services/recrutement-mode.service';
           <h4 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);margin-bottom:14px">
             Voir l'espace de quel candidat ?
           </h4>
-          @for (c of data.candidates(); track c.id) {
+          @for (c of data.activeCandidates(); track c.id) {
             <button type="button" class="mini-row" (click)="mode.pickCandidate(c.id)">
               <span class="av" style="width:36px;height:36px;font-size:13px">{{ data.initials(c.prenom, c.nom) }}</span>
               <span>

@@ -1,5 +1,6 @@
 export const FACTORY_MANAGER_ROLE = "Responsable d'usine";
 export const FRANCHISEE_ROLE = 'Franchisé';
+export const CANDIDATE_FRANCHISE_ROLE = 'Candidat franchise';
 
 /** Portal super-admin (DB role `Animateur`, UI « Administrateur »). */
 export const ADMINISTRATOR_ROLE = 'Animateur';
@@ -14,6 +15,10 @@ export function isFactoryManagerRole(role: string | null | undefined): boolean {
 
 export function isFranchiseeRole(role: string | null | undefined): boolean {
   return normalizePortalRole(role) === normalizePortalRole(FRANCHISEE_ROLE);
+}
+
+export function isCandidateFranchiseRole(role: string | null | undefined): boolean {
+  return normalizePortalRole(role) === normalizePortalRole(CANDIDATE_FRANCHISE_ROLE);
 }
 
 export function isAdministratorRole(role: string | null | undefined): boolean {

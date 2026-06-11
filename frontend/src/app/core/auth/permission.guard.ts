@@ -12,6 +12,6 @@ export function permissionGuard(appCode: AppCode): CanActivateFn {
     await auth.whenReady();
     await permissions.whenReady();
     if (auth.canReadApp(appCode)) return true;
-    return router.createUrlTree(['/home']);
+    return router.createUrlTree([auth.defaultRouteAfterLogin()]);
   };
 }

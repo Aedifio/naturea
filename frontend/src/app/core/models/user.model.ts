@@ -26,6 +26,8 @@ export interface PortalUser {
   actif: boolean;
   /** When set (and user is not Animateur), Ossature usine/archives are scoped to this factory. */
   factoryId: number | null;
+  /** Linked recrutement candidature when role is Candidat franchise. */
+  recrutementCandidatId: string | null;
 }
 
 export interface ActiveUser {

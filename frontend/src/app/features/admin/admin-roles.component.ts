@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
+import { CANDIDATE_FRANCHISE_ROLE, FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
 import { FormsModule } from '@angular/forms';
 import { APPS_META } from '../../core/models/permissions.model';
 import { permissionLabel } from '../../core/models/kpi.model';
@@ -95,6 +95,7 @@ export class AdminRolesComponent implements OnInit {
     if (role === 'Codir') return 'r-codir';
     if (role === 'Franchisé') return 'r-franchise';
     if (role === FACTORY_MANAGER_ROLE) return 'r-usine';
+    if (role === CANDIDATE_FRANCHISE_ROLE) return 'r-candidat';
     return 'r-other';
   }
 

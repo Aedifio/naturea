@@ -22,7 +22,9 @@ export interface Candidate {
   prenom: string;
   nom: string;
   email: string;
-  password: string;
+  password?: string;
+  hasPortalAccount?: boolean;
+  portalUserId?: string | null;
   tel?: string;
   ville?: string;
   cp?: string;
@@ -31,7 +33,9 @@ export interface Candidate {
   source?: string;
   statut: string;
   stars: number;
-  date: string;
+  dateCandidature: string;
+  archived?: boolean;
+  archivedAt?: string;
   notes?: string;
   documents: Record<string, StoredDocument>;
   disc: DiscResult | null;

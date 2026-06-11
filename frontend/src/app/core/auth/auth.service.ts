@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FACTORY_MANAGER_ROLE, FRANCHISEE_ROLE, isAdministratorRole } from '../constants/portal-roles.constants';
+import { FACTORY_MANAGER_ROLE, FRANCHISEE_ROLE, isAdministratorRole, isCandidateFranchiseRole } from '../constants/portal-roles.constants';
 import { StorageKey } from '../models/storage-keys';
 import { PortalPermissionsService } from '../services/portal-permissions.service';
 import { AppDataBootstrapService } from '../services/app-data-bootstrap.service';
@@ -165,6 +165,23 @@ export class AuthService {
     return this.userSignal()?.role === FRANCHISEE_ROLE && this.linkedAgencyId() != null;
   }
 
+  /** Candidat franchise — recrutement app only, scoped to own candidature. */
+  isRecrutementCandidate(): boolean {
+    return isCandidateFranchiseRole(this.userSignal()?.role);
+  }
+
+  linkedRecrutementCandidatId(): string | null {
+    return this.userSignal()?.recrutementCandidatId ?? null;
+  }
+
+  /** Default post-login route based on role permissions. */
+  defaultRouteAfterLogin(): string {
+    if (this.isRecrutementCandidate()) {
+      return '/apps/recrutement/espace';
+    }
+    return '/home';
+  }
+
   /** @deprecated Prefer isAgencyScopedFranchisee — kept for Ossature call sites. */
   isOssatureAgencyScoped(): boolean {
     return this.isAgencyScopedFranchisee();
@@ -209,14 +226,24 @@ export class AuthService {
 
     if (error || !row || !row.actif) return false;
 
-    const user = this.mapPortalUser(row as PortalUserRow, authUser.email);
+    let recrutementCandidatId: string | null = null;
+    if (isCandidateFranchiseRole(row.role)) {
+      const { data: candidatRow } = await this.supabase
+        .from('recrutement_candidats')
+        .select('id')
+        .eq('portal_user_id', row.id)
+        .maybeSingle();
+      recrutementCandidatId = candidatRow?.id ?? null;
+    }
+
+    const user = this.mapPortalUser(row as PortalUserRow, authUser.email, recrutementCandidatId);
     this.userSignal.set(user);
     syncSentryUser(user);
     this.syncActiveUser(user);
     return true;
   }
 
-  private mapPortalUser(row: PortalUserRow, email: string): PortalUser {
+  private mapPortalUser(row: PortalUserRow, email: string, recrutementCandidatId: string | null = null): PortalUser {
     const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
     const agencyName = agency?.name?.trim();
     return {
@@ -229,6 +256,7 @@ export class AuthService {
       franchise: agencyName || '(siège)',
       actif: row.actif,
       factoryId: row.factory_id ?? null,
+      recrutementCandidatId,
     };
   }
 

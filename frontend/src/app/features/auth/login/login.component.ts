@@ -40,7 +40,7 @@ export class LoginComponent {
         return;
       }
 
-      window.location.assign('/home');
+      window.location.assign(this.auth.defaultRouteAfterLogin());
     } finally {
       this.loading.set(false);
     }

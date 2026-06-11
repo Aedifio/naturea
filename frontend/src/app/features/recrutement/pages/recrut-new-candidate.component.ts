@@ -133,7 +133,7 @@ export class RecrutNewCandidateComponent {
       alert('Mot de passe min. 6 caractères.');
       return;
     }
-    if (this.data.emailTaken(email)) {
+    if (await this.data.emailTaken(email)) {
       alert('Cet email est déjà utilisé.');
       return;
     }
@@ -153,7 +153,7 @@ export class RecrutNewCandidateComponent {
       statut: this.form.statut,
       stars: this.stars(),
       notes: this.form.notes,
-      date: this.data.now(),
+      dateCandidature: this.data.nowIso(),
       documents: {},
       disc: null,
       questionnaire: null,

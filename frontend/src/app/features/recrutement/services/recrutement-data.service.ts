@@ -20,7 +20,8 @@ interface CandidatRow {
   id: string;
   prenom: string;
   nom: string;
-  email: string;
+  email: string | null;
+  portal_user_id: string | null;
   tel: string | null;
   ville: string | null;
   cp: string | null;
@@ -29,7 +30,9 @@ interface CandidatRow {
   source: string | null;
   statut: string;
   stars: number | null;
-  date_label: string | null;
+  date_candidature: string | null;
+  archived: boolean | null;
+  archived_at: string | null;
   notes: string | null;
   documents: Record<string, StoredDocument>;
   disc: DiscResult | null;
@@ -44,8 +47,12 @@ export class RecrutementDataService {
 
   readonly candidates = computed(() => this._candidates());
 
+  readonly activeCandidates = computed(() => this._candidates().filter((c) => !c.archived));
+
+  readonly archivedCandidates = computed(() => this._candidates().filter((c) => c.archived));
+
   readonly dashboardStats = computed(() => {
-    const list = this._candidates();
+    const list = this.activeCandidates();
     return {
       total: list.length,
       nouveaux: list.filter((c) => c.statut === 'Nouveau').length,
@@ -55,10 +62,7 @@ export class RecrutementDataService {
   });
 
   async load(): Promise<void> {
-    const { data, error } = await this.supabase
-      .from('recrutement_candidats')
-      .select('*')
-      .order('date_label', { ascending: false });
+    const { data, error } = await this.supabase.rpc('list_recrutement_candidats');
     if (error) {
       console.error('[Recrutement] load failed', error);
       return;
@@ -78,12 +82,53 @@ export class RecrutementDataService {
   }
 
   async updateCandidate(id: string, patch: Partial<Candidate>): Promise<void> {
-    const list = this._candidates().map((c) => (c.id === id ? { ...c, ...patch } : c));
-    await this.save(list);
+    const current = this.getById(id);
+    if (!current) return;
+
+    const normalizedEmail = patch.email?.trim().toLowerCase();
+    const emailChanged =
+      !!normalizedEmail && normalizedEmail !== current.email.trim().toLowerCase();
+    if (emailChanged) {
+      await this.syncCandidateEmail(id, normalizedEmail);
+    }
+
+    const updated = { ...current, ...patch };
+    if (normalizedEmail) {
+      updated.email = normalizedEmail;
+    }
+
+    const row = this.candidateToRow(updated);
+    if (emailChanged) {
+      delete row['email'];
+    }
+    const { error } = await this.supabase.from('recrutement_candidats').update(row).eq('id', id);
+    if (error) throw error;
+    this._candidates.update((list) => list.map((c) => (c.id === id ? updated : c)));
+  }
+
+  private async syncCandidateEmail(id: string, email: string): Promise<void> {
+    const { error } = await this.supabase.rpc('update_recrutement_candidat_email', {
+      p_candidat_id: id,
+      p_email: email,
+    });
+    if (error) throw error;
   }
 
   async addCandidate(candidate: Candidate): Promise<void> {
+    const password = candidate.password;
     const { error } = await this.supabase.from('recrutement_candidats').insert(this.candidateToRow(candidate));
+    if (error) throw error;
+    if (password) {
+      await this.setPassword(candidate.id, password);
+    }
+    await this.load();
+  }
+
+  async setPassword(candidateId: string, password: string): Promise<void> {
+    const { error } = await this.supabase.rpc('set_recrutement_candidat_password', {
+      p_candidat_id: candidateId,
+      p_password: password,
+    });
     if (error) throw error;
     await this.load();
   }
@@ -137,6 +182,20 @@ export class RecrutementDataService {
     await this.updateCandidate(candidateId, { questionnaire });
   }
 
+  async archiveCandidate(id: string): Promise<void> {
+    await this.updateCandidate(id, {
+      archived: true,
+      archivedAt: new Date().toISOString(),
+    });
+  }
+
+  async unarchiveCandidate(id: string): Promise<void> {
+    await this.updateCandidate(id, {
+      archived: false,
+      archivedAt: undefined,
+    });
+  }
+
   bump(): void {
     void this.load();
   }
@@ -169,18 +228,33 @@ export class RecrutementDataService {
   }
 
   uid(): string {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    return crypto.randomUUID();
   }
 
   now(): string {
     return new Date().toLocaleDateString('fr-FR');
   }
 
-  emailTaken(email: string, excludeId?: string): boolean {
+  nowIso(): string {
+    return new Date().toISOString();
+  }
+
+  formatCandidatureDate(iso?: string): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  async emailTaken(email: string, excludeId?: string): Promise<boolean> {
     const normalized = email.trim().toLowerCase();
-    return this._candidates().some(
-      (c) => c.email.toLowerCase() === normalized && c.id !== excludeId,
-    );
+    if (!normalized) return false;
+    const { data, error } = await this.supabase.rpc('recrutement_email_in_use', {
+      p_email: normalized,
+      p_exclude_candidat_id: excludeId ?? null,
+    });
+    if (error) throw error;
+    return !!data;
   }
 
   private rowToCandidate(row: CandidatRow): Candidate {
@@ -188,8 +262,9 @@ export class RecrutementDataService {
       id: row.id,
       prenom: row.prenom,
       nom: row.nom,
-      email: row.email,
-      password: '',
+      email: row.email ?? '',
+      portalUserId: row.portal_user_id ?? null,
+      hasPortalAccount: !!row.portal_user_id,
       tel: row.tel ?? '',
       ville: row.ville ?? '',
       cp: row.cp ?? '',
@@ -198,7 +273,9 @@ export class RecrutementDataService {
       source: row.source ?? '',
       statut: row.statut,
       stars: row.stars ?? 0,
-      date: row.date_label ?? '',
+      dateCandidature: row.date_candidature ?? '',
+      archived: row.archived ?? false,
+      archivedAt: row.archived_at ?? undefined,
       notes: row.notes ?? '',
       documents: row.documents ?? {},
       disc: row.disc,
@@ -211,7 +288,7 @@ export class RecrutementDataService {
       id: c.id,
       prenom: c.prenom,
       nom: c.nom,
-      email: c.email,
+      email: c.hasPortalAccount ? null : c.email?.trim().toLowerCase() || null,
       tel: c.tel || null,
       ville: c.ville || null,
       cp: c.cp || null,
@@ -220,7 +297,9 @@ export class RecrutementDataService {
       source: c.source || null,
       statut: c.statut,
       stars: c.stars,
-      date_label: c.date || null,
+      date_candidature: c.dateCandidature || null,
+      archived: c.archived ?? false,
+      archived_at: c.archivedAt ?? null,
       notes: c.notes || null,
       documents: c.documents ?? {},
       disc: c.disc,

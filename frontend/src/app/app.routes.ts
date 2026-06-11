@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, portalAccessGuard } from './core/auth/auth.guard';
 import { permissionGuard } from './core/auth/permission.guard';
 import { LoginLayoutComponent } from './layouts/login-layout/login-layout.component';
 import { PortalLayoutComponent } from './layouts/portal-layout/portal-layout.component';
@@ -25,6 +25,7 @@ export const routes: Routes = [
       {
         path: '',
         component: PortalLayoutComponent,
+        canActivate: [portalAccessGuard],
         children: [
           { path: '', redirectTo: 'home', pathMatch: 'full' },
           { path: 'home', component: HomeComponent },

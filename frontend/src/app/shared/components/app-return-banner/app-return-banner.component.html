@@ -1,4 +1,11 @@
 <div class="app-return-bar">
-  <a routerLink="/home" class="return-btn">← Retour au portail</a>
-  <span class="return-label">{{ displayLabel() }}</span>
+  @if (!isRecrutementCandidate()) {
+    <a routerLink="/home" class="return-btn">← Retour au portail</a>
+  }
+  <span class="return-label" [class.grow]="isRecrutementCandidate()">{{ displayLabel() }}</span>
+  @if (isRecrutementCandidate()) {
+    <div class="return-bar-right">
+      <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
+    </div>
+  }
 </div>

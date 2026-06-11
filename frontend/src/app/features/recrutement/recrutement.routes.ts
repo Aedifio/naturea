@@ -6,16 +6,17 @@ import { RecrutNewCandidateComponent } from './pages/recrut-new-candidate.compon
 import { RecrutPortalDocsComponent } from './pages/recrut-portal-docs.component';
 import { RecrutPortalHomeComponent } from './pages/recrut-portal-home.component';
 import { RecrutementShellComponent } from './recrutement-shell.component';
+import { recrutementHomeGuard, recrutementStaffGuard } from './recrutement-staff.guard';
 
 export const RECRUTEMENT_ROUTES: Routes = [
   {
     path: '',
     component: RecrutementShellComponent,
     children: [
-      { path: '', component: RecrutDashboardComponent },
-      { path: 'crm', component: RecrutCrmComponent },
-      { path: 'nouveau', component: RecrutNewCandidateComponent },
-      { path: 'candidat/:id', component: RecrutCandidateDetailComponent },
+      { path: '', component: RecrutDashboardComponent, canActivate: [recrutementHomeGuard] },
+      { path: 'crm', component: RecrutCrmComponent, canActivate: [recrutementStaffGuard] },
+      { path: 'nouveau', component: RecrutNewCandidateComponent, canActivate: [recrutementStaffGuard] },
+      { path: 'candidat/:id', component: RecrutCandidateDetailComponent, canActivate: [recrutementStaffGuard] },
       { path: 'espace', component: RecrutPortalHomeComponent },
       { path: 'espace/dossier', component: RecrutPortalDocsComponent },
     ],

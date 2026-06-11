@@ -85,5 +85,5 @@ import { RecrutementDataService } from '../services/recrutement-data.service';
 export class RecrutDashboardComponent {
   readonly data = inject(RecrutementDataService);
   readonly stats = this.data.dashboardStats;
-  readonly recent = computed(() => [...this.data.candidates()].reverse().slice(0, 8));
+  readonly recent = computed(() => [...this.data.activeCandidates()].reverse().slice(0, 8));
 }

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
-import { FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
+import { CANDIDATE_FRANCHISE_ROLE, FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   PortalUserAdminRow,
@@ -126,6 +126,7 @@ export class AdminComponent implements OnInit {
     if (role === 'Codir') return 'r-codir';
     if (role === 'Franchisé') return 'r-franchise';
     if (role === FACTORY_MANAGER_ROLE) return 'r-usine';
+    if (role === CANDIDATE_FRANCHISE_ROLE) return 'r-candidat';
     return 'r-other';
   }
 

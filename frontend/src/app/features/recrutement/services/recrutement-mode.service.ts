@@ -51,8 +51,8 @@ export class RecrutementModeService {
   }
 
   switchToCandidate(): void {
-    if (!this.data.candidates().length) {
-      this.toast.show('Aucun candidat dans la base');
+    if (!this.data.activeCandidates().length) {
+      this.toast.show('Aucun candidat actif dans la base');
       return;
     }
     this.pickerOpen.set(true);

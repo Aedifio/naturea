@@ -1,5 +1,6 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { NATUREA_LOGO } from '../../shared/constants/branding';
 import { RecrutCandidatePickerComponent } from './components/recrut-candidate-picker.component';
@@ -25,6 +26,7 @@ import { RecrutementModeService } from './services/recrutement-mode.service';
 })
 export class RecrutementShellComponent implements OnInit {
   readonly mode = inject(RecrutementModeService);
+  private readonly auth = inject(AuthService);
   readonly logo = NATUREA_LOGO;
 
   readonly session = this.mode.session;
@@ -44,6 +46,11 @@ export class RecrutementShellComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    const candidatId = this.auth.linkedRecrutementCandidatId();
+    if (this.auth.isRecrutementCandidate() && candidatId) {
+      this.mode.setCandidateMode(candidatId, false);
+      return;
+    }
     this.mode.setAdminMode();
   }
 }

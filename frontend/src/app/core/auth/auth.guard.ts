@@ -10,10 +10,21 @@ export const authGuard: CanActivateFn = async () => {
   return router.createUrlTree(['/login']);
 };
 
+/** Portal shell (home, réseau, admin) — not for Candidat franchise. */
+export const portalAccessGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await auth.whenReady();
+  if (auth.isRecrutementCandidate()) {
+    return router.createUrlTree(['/apps/recrutement/espace']);
+  }
+  return true;
+};
+
 export const guestGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   await auth.whenReady();
   if (!auth.isAuthenticated()) return true;
-  return router.createUrlTree(['/home']);
+  return router.createUrlTree([auth.defaultRouteAfterLogin()]);
 };

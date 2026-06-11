@@ -31,6 +31,7 @@
   text-decoration: none;
   transition: background 0.2s;
   white-space: nowrap;
+  cursor: pointer;
 
   &:hover {
     background: rgba(255, 255, 255, 0.22);
@@ -45,4 +46,31 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &.grow {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.return-bar-right {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.nav-logout {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.82);
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
 }

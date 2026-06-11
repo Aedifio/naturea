@@ -201,8 +201,8 @@ tr:hover td{background:var(--sand);cursor:pointer}
 .chip{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;background:var(--sand2);color:var(--text)}
 
 /* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:13px 20px;border-radius:10px;font-size:13.5px;z-index:999;box-shadow:var(--sh2);animation:fu .3s;display:none;border-left:4px solid var(--gold2)}
-@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.toast{position:fixed;top:calc(var(--return-banner-h, 50px) + 24px);right:24px;background:var(--ink);color:#fff;padding:13px 20px;border-radius:10px;font-size:13.5px;z-index:999;box-shadow:var(--sh2);animation:toast-in .3s;display:none;border-left:4px solid var(--gold2)}
+@keyframes toast-in{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
 
 /* FILE VIEWER OVERLAY */
 .fv-overlay{display:none;position:fixed;inset:0;background:rgba(53,82,34,.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:16px}

@@ -39,7 +39,7 @@ export class KpiService {
   }
 
   calcRecrutKPI(): KpiItem[] | null {
-    const db = this.recrutement.candidates();
+    const db = this.recrutement.activeCandidates();
     if (!db.length) return null;
     return [
       { label: 'Total candidats', value: db.length },

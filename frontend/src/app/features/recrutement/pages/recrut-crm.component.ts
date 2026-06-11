@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CANDIDATE_SOURCES, CANDIDATE_STATUSES } from '../recrutement.models';
 import { RecrutBadgeComponent } from '../components/recrut-badge.component';
 import { RecrutPctBarComponent } from '../components/recrut-pct-bar.component';
@@ -45,6 +45,15 @@ import { RecrutementDataService } from '../services/recrutement-data.service';
             <option [value]="src">{{ src }}</option>
           }
         </select>
+        <select
+          [value]="archiveFilter()"
+          (change)="onArchive($event)"
+          style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Archivo',sans-serif;font-size:13px;background:#fff"
+        >
+          <option value="active">Actifs</option>
+          <option value="archived">Archivés</option>
+          <option value="all">Tous</option>
+        </select>
       </div>
 
       <div class="card">
@@ -77,7 +86,11 @@ import { RecrutementDataService } from '../services/recrutement-data.service';
                     <div style="display:flex;align-items:center;gap:10px">
                       <div class="av" style="width:34px;height:34px;font-size:13px">{{ data.initials(c.prenom, c.nom) }}</div>
                       <div>
-                        <strong>{{ c.prenom }} {{ c.nom }}</strong><br />
+                        <strong>{{ c.prenom }} {{ c.nom }}</strong>
+                        @if (c.archived) {
+                          <span style="font-size:10px;background:#e5e7eb;color:#6b7280;padding:2px 7px;border-radius:10px;margin-left:6px">archivé</span>
+                        }
+                        <br />
                         <span style="font-size:11.5px;color:var(--muted)">{{ c.ville || '' }}</span>
                       </div>
                     </div>
@@ -97,7 +110,8 @@ import { RecrutementDataService } from '../services/recrutement-data.service';
     </div>
   `,
 })
-export class RecrutCrmComponent {
+export class RecrutCrmComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
   readonly data = inject(RecrutementDataService);
   readonly statuses = CANDIDATE_STATUSES;
   readonly sources = [...CANDIDATE_SOURCES];
@@ -105,17 +119,28 @@ export class RecrutCrmComponent {
   readonly search = signal('');
   readonly statusFilter = signal('');
   readonly sourceFilter = signal('');
+  readonly archiveFilter = signal<'active' | 'archived' | 'all'>('active');
+
+  ngOnInit(): void {
+    const view = this.route.snapshot.queryParamMap.get('view');
+    if (view === 'archived') this.archiveFilter.set('archived');
+  }
 
   readonly filtered = computed(() => {
     const q = this.search().toLowerCase().trim();
     const st = this.statusFilter();
     const src = this.sourceFilter();
+    const archive = this.archiveFilter();
     return [...this.data.candidates()]
       .reverse()
       .filter((c) => {
         const haystack = `${c.prenom} ${c.nom} ${c.email || ''} ${c.ville || ''}`.toLowerCase();
         const match = !q || haystack.includes(q);
-        return match && (!st || c.statut === st) && (!src || c.source === src);
+        const archiveMatch =
+          archive === 'all' ||
+          (archive === 'active' && !c.archived) ||
+          (archive === 'archived' && !!c.archived);
+        return match && archiveMatch && (!st || c.statut === st) && (!src || c.source === src);
       });
   });
 
@@ -129,5 +154,12 @@ export class RecrutCrmComponent {
 
   onSource(event: Event): void {
     this.sourceFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  onArchive(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    if (value === 'active' || value === 'archived' || value === 'all') {
+      this.archiveFilter.set(value);
+    }
   }
 }
