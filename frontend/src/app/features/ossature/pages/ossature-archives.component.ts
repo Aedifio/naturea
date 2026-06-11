@@ -3,7 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FactoryService } from '../../../core/services/factory.service';
 import { AgencyService } from '../../../core/services/agency.service';
-import { OssatureDataService } from '../services/ossature-data.service';
+import { formatSurfaceM2, OssatureDataService } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 import { OssatureModeService } from '../services/ossature-mode.service';
 
@@ -63,10 +63,10 @@ import { OssatureModeService } from '../services/ossature-mode.service';
               @for (o of filtered(); track o.id) {
                 <tr style="opacity: 0.85" (click)="modals.openDetail(o.id)">
                   <td class="td-id">{{ o.id }}</td>
-                  <td style="font-weight: 600">{{ o.franchise }}</td>
+                  <td style="font-weight: 600">{{ data.agencyLabel(o) }}</td>
                   <td class="td-ref">{{ o.reference }}</td>
-                  <td style="color: var(--muted)">{{ o.surface || '—' }}</td>
-                  <td style="color: var(--muted)">{{ o.site }}</td>
+                  <td style="color: var(--muted)">{{ formatSurfaceM2(o.surface) }}</td>
+                  <td style="color: var(--muted)">{{ data.factorySiteLabel(o) }}</td>
                   <td style="color: var(--muted)">{{ o.archived_date || '—' }}</td>
                   <td style="color: var(--muted); font-weight: 600">
                     {{ o.livraison_definitive ? (o.livraison_definitive | date: 'dd/MM/yyyy') : '—' }}
@@ -87,12 +87,14 @@ export class OssatureArchivesComponent {
   private readonly factory = inject(FactoryService);
   private readonly agencies = inject(AgencyService);
 
+  readonly formatSurfaceM2 = formatSurfaceM2;
+
   readonly franchises = computed(() => {
     this.agencies.agencies();
     return this.agencies.getNames();
   });
   readonly sites = computed(() =>
-    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
+    this.factory.mergeOssatureSites(...this.data.orders().map((o) => this.data.factorySiteLabel(o))),
   );
 
   readonly search = signal('');
@@ -100,12 +102,12 @@ export class OssatureArchivesComponent {
   readonly filterSite = signal('');
 
   readonly archived = computed(() => {
-    const scopedSite = this.mode.allowedOssatureSite();
-    const scopedAgency = this.mode.allowedAgencyName();
+    const scopedFactoryId = this.mode.allowedFactoryId();
+    const scopedAgencyId = this.mode.allowedAgencyId();
     return this.data.archivedOrders().filter(
       (o) =>
-        (!scopedSite || o.site === scopedSite) &&
-        (!scopedAgency || this.agencies.orderMatchesFranchise(o.franchise, scopedAgency)),
+        (!scopedFactoryId || o.factoryId === scopedFactoryId) &&
+        (!scopedAgencyId || o.agencyId === scopedAgencyId),
     );
   });
 
@@ -113,9 +115,9 @@ export class OssatureArchivesComponent {
     const q = this.search().toLowerCase();
     return this.archived().filter(
       (o) =>
-        (!this.filterFranchise() || this.agencies.orderMatchesFranchise(o.franchise, this.filterFranchise())) &&
-        (!this.filterSite() || o.site === this.filterSite()) &&
-        (!q || o.reference.toLowerCase().includes(q) || o.franchise.toLowerCase().includes(q)),
+        this.data.matchesAgencyFilter(o, this.filterFranchise()) &&
+        this.data.matchesFactorySiteFilter(o, this.filterSite()) &&
+        (!q || o.reference.toLowerCase().includes(q) || this.data.agencyLabel(o).toLowerCase().includes(q)),
     );
   });
 

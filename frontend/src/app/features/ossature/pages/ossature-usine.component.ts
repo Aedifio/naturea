@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { FactoryService } from '../../../core/services/factory.service';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
-import { OssatureDataService, parseSurface } from '../services/ossature-data.service';
+import { formatDeliveryDate, formatSurfaceM2, orderYear, OssatureDataService, surfaceM2 } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 import { OssatureModeService } from '../services/ossature-mode.service';
 
@@ -67,13 +67,13 @@ import { OssatureModeService } from '../services/ossature-mode.service';
           <div class="order-card" (click)="modals.openDetail(o.id)">
             <div class="card-main">
               <div class="card-ref">{{ o.reference }}</div>
-              <div class="card-sub">{{ o.franchise }} · {{ o.id }}</div>
+              <div class="card-sub">{{ data.agencyLabel(o) }} · {{ o.id }}</div>
             </div>
-            <div class="card-meta">{{ o.surface }}</div>
+            <div class="card-meta">{{ formatSurfaceM2(o.surface) }}</div>
             <div class="card-meta" [style.color]="o.docs.length ? 'var(--blue)' : 'var(--faint)'">
               {{ o.docs.length ? '📄 ' + o.docs.length + ' doc(s)' : '📄 Aucun doc' }}
             </div>
-            <div class="card-meta">📅 {{ o.livraison || '—' }}</div>
+            <div class="card-meta">📅 {{ formatDeliveryDate(o.deliveryDate) }}</div>
             <app-ossature-badge [statut]="o.statut" />
             <app-ossature-order-tags [order]="o" />
           </div>
@@ -89,10 +89,13 @@ export class OssatureUsineComponent {
   readonly mode = inject(OssatureModeService);
   private readonly factory = inject(FactoryService);
 
+  readonly formatSurfaceM2 = formatSurfaceM2;
+  readonly formatDeliveryDate = formatDeliveryDate;
+
   readonly sites = computed(() => {
     const scoped = this.mode.allowedOssatureSite();
     if (scoped) return [scoped];
-    return this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site));
+    return this.factory.mergeOssatureSites(...this.data.orders().map((o) => this.data.factorySiteLabel(o)));
   });
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
@@ -104,9 +107,9 @@ export class OssatureUsineComponent {
       .orders()
       .filter(
         (o) =>
-          o.site === this.mode.currentSiteUsine() &&
+          this.data.factorySiteLabel(o) === this.mode.currentSiteUsine() &&
           !o.archived &&
-          (o.annee || this.currentYear) === this.selectedYear(),
+          orderYear(o.created) === this.selectedYear(),
       ),
   );
 
@@ -115,17 +118,19 @@ export class OssatureUsineComponent {
     const year = this.selectedYear();
     const yearStart = `${year}-01-01`;
     const yearEnd = `${year}-12-31`;
-    const allSiteYearOrders = this.data.orders().filter((o) => o.site === site && (o.annee || this.currentYear) === year);
+    const allSiteYearOrders = this.data.orders().filter(
+      (o) => this.data.factorySiteLabel(o) === site && orderYear(o.created) === year,
+    );
     const livraeesYear = this.data.orders().filter(
       (o) =>
-        o.site === site &&
+        this.data.factorySiteLabel(o) === site &&
         o.statut === 'Expédition validée' &&
         o.livraison_definitive &&
         o.livraison_definitive >= yearStart &&
         o.livraison_definitive <= yearEnd,
     );
-    const m2Total = allSiteYearOrders.reduce((acc, o) => acc + parseSurface(o.surface), 0);
-    const m2Livrees = livraeesYear.reduce((acc, o) => acc + parseSurface(o.surface), 0);
+    const m2Total = allSiteYearOrders.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
+    const m2Livrees = livraeesYear.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
     return {
       allCount: allSiteYearOrders.length,
       m2Total: m2Total.toFixed(0),

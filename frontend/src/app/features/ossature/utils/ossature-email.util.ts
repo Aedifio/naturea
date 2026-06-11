@@ -3,12 +3,21 @@ import {
   EXPEDITEUR,
 } from '../constants/ossature.constants';
 import { OssatureOrder } from '../ossature.models';
+import { formatDeliveryDate, formatSurfaceM2 } from './ossature-format.util';
 
-export type SiteEmailResolver = (site: string) => string;
-export type FranchiseEmailResolver = (franchise: string) => string;
+export type FactoryEmailResolver = (factoryId: number) => string;
+export type AgencyEmailResolver = (agencyId: number) => string;
 
-function siteEmail(site: string, resolve?: SiteEmailResolver): string {
-  return resolve?.(site) ?? '';
+function agencyLabel(order: OssatureOrder): string {
+  return order.agencyName ?? '';
+}
+
+function factorySiteLabel(order: OssatureOrder): string {
+  return order.factorySite ?? '';
+}
+
+function factoryEmail(factoryId: number, resolve?: FactoryEmailResolver): string {
+  return resolve?.(factoryId) ?? '';
 }
 
 function daysSince(dateStr?: string): number {
@@ -22,8 +31,8 @@ function daysSince(dateStr?: string): number {
   }
 }
 
-export function sendEmailUsine(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
-  const to = siteEmail(order.site, resolveSiteEmail);
+export function sendEmailUsine(order: OssatureOrder, resolveFactoryEmail?: FactoryEmailResolver): void {
+  const to = factoryEmail(order.factoryId, resolveFactoryEmail);
   if (!to) return;
   const sujet = encodeURIComponent(`[NATUREA] Nouvelle demande de devis — ${order.reference}`);
   const corps = encodeURIComponent(
@@ -32,13 +41,13 @@ export function sendEmailUsine(order: OssatureOrder, resolveSiteEmail?: SiteEmai
 Une nouvelle demande de devis a été déposée sur OssatureTrack.
 
 — DÉTAILS DE LA COMMANDE —
-Franchisé : ${order.franchise}
+Franchisé : ${agencyLabel(order)}
 Référence : ${order.reference}
-Surface murs : ${order.surface || '—'}
-Surface plancher : ${order.plancher || '—'}
-Date de livraison souhaitée : ${order.livraison || '—'}
-Date dépôt permis : ${order.permis || '—'}
-Site de production : ${order.site}
+Surface murs : ${formatSurfaceM2(order.surface)}
+Surface plancher : ${formatSurfaceM2(order.plancher)}
+Date de livraison souhaitée : ${formatDeliveryDate(order.deliveryDate)}
+Date dépôt permis : ${formatDeliveryDate(order.permis)}
+Site de production : ${factorySiteLabel(order)}
 
 — PIÈCES JOINTES —
 ${order.docs?.length ? order.docs.join('\n') : 'Aucun document'}
@@ -52,16 +61,16 @@ ${EXPEDITEUR}`,
   window.location.href = `mailto:${to}?cc=${EXPEDITEUR}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendAlertDelai(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
+export function sendAlertDelai(order: OssatureOrder, resolveFactoryEmail?: FactoryEmailResolver): void {
   const sujet = encodeURIComponent(`[ALERTE NATUREA] Devis en retard — ${order.reference}`);
   const corps = encodeURIComponent(
     `Bonjour,
 
 La commande suivante attend un devis depuis plus de 15 jours.
 
-Franchisé : ${order.franchise}
+Franchisé : ${agencyLabel(order)}
 Référence : ${order.reference}
-Site : ${order.site}
+Site : ${factorySiteLabel(order)}
 Date de demande : ${order.created}
 Jours écoulés : ${daysSince(order.created)}
 
@@ -72,12 +81,12 @@ Merci de traiter cette demande en urgence.
 Cordialement,
 OssatureTrack — Réseau Naturéa`,
   );
-  const cc = siteEmail(order.site, resolveSiteEmail);
+  const cc = factoryEmail(order.factoryId, resolveFactoryEmail);
   window.location.href = `mailto:${EXPEDITEUR}${cc ? `?cc=${cc}` : '?'}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendEmailCommandeConfirmee(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
-  const usineEmail = siteEmail(order.site, resolveSiteEmail);
+export function sendEmailCommandeConfirmee(order: OssatureOrder, resolveFactoryEmail?: FactoryEmailResolver): void {
+  const usineEmail = factoryEmail(order.factoryId, resolveFactoryEmail);
   const sujet = encodeURIComponent(`[NATUREA] Commande confirmée — ${order.reference}`);
   const corps = encodeURIComponent(
     `Bonjour,
@@ -85,12 +94,12 @@ export function sendEmailCommandeConfirmee(order: OssatureOrder, resolveSiteEmai
 Le devis a été signé par le franchisé. La commande est confirmée.
 
 — DÉTAILS —
-Franchisé : ${order.franchise}
+Franchisé : ${agencyLabel(order)}
 Référence : ${order.reference}
-Surface murs : ${order.surface || '—'}
-Surface plancher : ${order.plancher || '—'}
-Date de livraison souhaitée : ${order.livraison || '—'}
-Site de production : ${order.site}
+Surface murs : ${formatSurfaceM2(order.surface)}
+Surface plancher : ${formatSurfaceM2(order.plancher)}
+Date de livraison souhaitée : ${formatDeliveryDate(order.deliveryDate)}
+Site de production : ${factorySiteLabel(order)}
 Signé le : ${order.signature_date || '—'} à ${order.signature_heure || '—'}
 
 — PIÈCES JOINTES VALIDATION —
@@ -105,10 +114,10 @@ ${EXPEDITEUR}`,
   window.location.href = `mailto:${EXPEDITEUR}${usineEmail ? `?cc=${usineEmail}` : '?'}&subject=${sujet}&body=${corps}`;
 }
 
-export function sendDevisRetourEmail(order: OssatureOrder, resolveFranchiseEmail?: FranchiseEmailResolver): void {
-  const franchiseEmail = resolveFranchiseEmail?.(order.franchise) ?? '';
+export function sendDevisRetourEmail(order: OssatureOrder, resolveAgencyEmail?: AgencyEmailResolver): void {
+  const franchiseEmail = resolveAgencyEmail?.(order.agencyId) ?? '';
   if (!franchiseEmail) return;
-  const subject = encodeURIComponent(`Devis disponible — ${order.reference} (${order.franchise})`);
+  const subject = encodeURIComponent(`Devis disponible — ${order.reference} (${agencyLabel(order)})`);
   const body = encodeURIComponent(
     `Bonjour,
 
@@ -116,14 +125,14 @@ Vous trouverez ci-joint le devis retour pour votre commande :
 
 • Référence : ${order.reference}
 • Commande : ${order.id}
-• Site de production : ${order.site}
+• Site de production : ${factorySiteLabel(order)}
 
 Merci de signer le devis dans les meilleurs délais.
 
 🔗 Accéder à la commande : ${APP_URL}
 
 Cordialement,
-${order.site} — Réseau Naturéa`,
+${factorySiteLabel(order)} — Réseau Naturéa`,
   );
   window.location.href = `mailto:${franchiseEmail}?cc=${EXPEDITEUR}&subject=${subject}&body=${body}`;
 }
@@ -135,9 +144,9 @@ export function sendAlertSignature(order: OssatureOrder): void {
 
 Le devis de la commande suivante attend une signature depuis plus de 7 jours.
 
-Franchisé : ${order.franchise}
+Franchisé : ${agencyLabel(order)}
 Référence : ${order.reference}
-Site : ${order.site}
+Site : ${factorySiteLabel(order)}
 Devis déposé le : ${order.devis_retour_date || '—'}
 Jours écoulés : ${daysSince(order.devis_retour_date)}
 
@@ -151,11 +160,11 @@ OssatureTrack — Réseau Naturéa`,
   window.location.href = `mailto:${EXPEDITEUR}?subject=${sujet}&body=${corps}`;
 }
 
-export function sendSignatureConfirmEmail(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
-  const usineEmail = siteEmail(order.site, resolveSiteEmail);
+export function sendSignatureConfirmEmail(order: OssatureOrder, resolveFactoryEmail?: FactoryEmailResolver): void {
+  const usineEmail = factoryEmail(order.factoryId, resolveFactoryEmail);
   if (!usineEmail) return;
   const subject = encodeURIComponent(
-    `Devis signé — Commande confirmée — ${order.reference} (${order.franchise})`,
+    `Devis signé — Commande confirmée — ${order.reference} (${agencyLabel(order)})`,
   );
   const body = encodeURIComponent(
     `Bonjour,
@@ -164,8 +173,8 @@ Le franchisé a signé le devis. La commande est maintenant confirmée.
 
 • Référence : ${order.reference}
 • Commande : ${order.id}
-• Franchisé : ${order.franchise}
-• Site de production : ${order.site}
+• Franchisé : ${agencyLabel(order)}
+• Site de production : ${factorySiteLabel(order)}
 • Date de signature : ${order.signature_date} à ${order.signature_heure || '—'}
 
 Vous pouvez maintenant préparer le plan de fabrication.
@@ -173,16 +182,16 @@ Vous pouvez maintenant préparer le plan de fabrication.
 🔗 Accéder à la commande : ${APP_URL}
 
 Cordialement,
-${order.franchise} — Réseau Naturéa`,
+${agencyLabel(order)} — Réseau Naturéa`,
   );
   window.location.href = `mailto:${usineEmail}?cc=${EXPEDITEUR}&subject=${subject}&body=${body}`;
 }
 
-export function sendPlanValidationEmail(order: OssatureOrder, resolveSiteEmail?: SiteEmailResolver): void {
-  const usineEmail = siteEmail(order.site, resolveSiteEmail);
+export function sendPlanValidationEmail(order: OssatureOrder, resolveFactoryEmail?: FactoryEmailResolver): void {
+  const usineEmail = factoryEmail(order.factoryId, resolveFactoryEmail);
   if (!usineEmail) return;
   const subject = encodeURIComponent(
-    `Plans de fabrication validés — ${order.reference} (${order.franchise})`,
+    `Plans de fabrication validés — ${order.reference} (${agencyLabel(order)})`,
   );
   const body = encodeURIComponent(
     `Bonjour,
@@ -191,13 +200,13 @@ Les plans de fabrication ont été validés et signés par le franchisé.
 
 • Référence : ${order.reference}
 • Commande : ${order.id}
-• Franchisé : ${order.franchise}
+• Franchisé : ${agencyLabel(order)}
 • Date de validation : ${order.plan_val_date} à ${order.plan_val_heure || '—'}
 
 🔗 Accéder à la commande : ${APP_URL}
 
 Cordialement,
-${order.franchise} — Réseau Naturéa`,
+${agencyLabel(order)} — Réseau Naturéa`,
   );
   window.location.href = `mailto:${usineEmail}?cc=${EXPEDITEUR}&subject=${subject}&body=${body}`;
 }
@@ -205,7 +214,7 @@ ${order.franchise} — Réseau Naturéa`,
 export function sendAlertsRetard(
   orders: OssatureOrder[],
   onDone: (count: number) => void,
-  resolveSiteEmail?: SiteEmailResolver,
+  resolveFactoryEmail?: FactoryEmailResolver,
 ): void {
   let idx = 0;
   const sendNext = (): void => {
@@ -213,7 +222,7 @@ export function sendAlertsRetard(
       onDone(orders.length);
       return;
     }
-    sendAlertDelai(orders[idx++], resolveSiteEmail);
+    sendAlertDelai(orders[idx++], resolveFactoryEmail);
     setTimeout(sendNext, 1500);
   };
   sendNext();

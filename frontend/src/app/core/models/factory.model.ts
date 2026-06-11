@@ -31,17 +31,6 @@ export interface FactoryUpdate {
   actif: boolean;
 }
 
-/** Seed shape — no timestamps; SQL migration sets updated_at from legacy REFS dates. */
-export interface FactorySeed {
-  key: string;
-  nom: string;
-  couleur: string;
-  description: string;
-  contact_email: string;
-  /** One-time bootstrap value for SQL `updated_at` (from REFS derniere_maj). */
-  legacy_updated_at: string;
-}
-
 /** Ossature site label (uppercase) → factory key (lowercase). */
 export const OSSATURE_SITE_TO_FACTORY_KEY: Record<string, string> = {
   IMAJ: 'imaj',

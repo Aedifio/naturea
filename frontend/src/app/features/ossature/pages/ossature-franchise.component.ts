@@ -1,10 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AgencyService } from '../../../core/services/agency.service';
 import { STATUTS, STATUT_STYLE } from '../constants/ossature.constants';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
-import { OssatureDataService, parseSurface } from '../services/ossature-data.service';
+import { OssatureOrder } from '../ossature.models';
+import { formatDeliveryDate, formatSurfaceM2, orderYear, OssatureDataService, surfaceM2 } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 import { OssatureModeService } from '../services/ossature-mode.service';
 
@@ -59,10 +59,10 @@ import { OssatureModeService } from '../services/ossature-mode.service';
           <div class="order-card" (click)="modals.openDetail(o.id)">
             <div class="card-main">
               <div class="card-ref">{{ o.reference }}</div>
-              <div class="card-sub">{{ o.id }} · {{ o.site }}</div>
+              <div class="card-sub">{{ o.id }} · {{ data.factorySiteLabel(o) }}</div>
             </div>
-            <div class="card-meta">{{ o.surface }}</div>
-            <div class="card-meta">📅 {{ o.livraison || '—' }}</div>
+            <div class="card-meta">{{ formatSurfaceM2(o.surface) }}</div>
+            <div class="card-meta">📅 {{ formatDeliveryDate(o.deliveryDate) }}</div>
             <app-ossature-badge [statut]="o.statut" />
             <app-ossature-order-tags [order]="o" />
           </div>
@@ -76,14 +76,15 @@ export class OssatureFranchiseComponent {
   readonly data = inject(OssatureDataService);
   readonly modals = inject(OssatureModalService);
   readonly mode = inject(OssatureModeService);
-  private readonly agencies = inject(AgencyService);
 
+  readonly formatSurfaceM2 = formatSurfaceM2;
+  readonly formatDeliveryDate = formatDeliveryDate;
   readonly statuts = STATUTS;
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
 
   readonly years = computed(() =>
-    [...new Set(this.data.orders().filter((o) => this.matchesFranchise(o.franchise)).map((o) => o.annee || this.currentYear))].sort(
+    [...new Set(this.data.orders().filter((o) => this.matchesFranchise(o)).map((o) => orderYear(o.created)))].sort(
       (a, b) => b - a,
     ),
   );
@@ -93,17 +94,17 @@ export class OssatureFranchiseComponent {
       .orders()
       .filter(
         (o) =>
-          this.matchesFranchise(o.franchise) &&
+          this.matchesFranchise(o) &&
           !o.archived &&
-          (o.annee || this.currentYear) === this.selectedYear(),
+          orderYear(o.created) === this.selectedYear(),
       ),
   );
 
   readonly m2Stats = computed(() => {
     const list = this.mine();
-    const m2Total = list.reduce((acc, o) => acc + parseSurface(o.surface), 0);
+    const m2Total = list.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
     const livrees = list.filter((o) => o.statut === 'Expédition validée');
-    const m2Livrees = livrees.reduce((acc, o) => acc + parseSurface(o.surface), 0);
+    const m2Livrees = livrees.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
     return { nbCmd: list.length, m2Total: m2Total.toFixed(0), nbLivrees: livrees.length, m2Livrees: m2Livrees.toFixed(0) };
   });
 
@@ -119,7 +120,7 @@ export class OssatureFranchiseComponent {
     return this.mine().filter((o) => o.statut === s).length;
   }
 
-  private matchesFranchise(orderFranchise: string): boolean {
-    return this.agencies.orderMatchesFranchise(orderFranchise, this.mode.selectedFranchise());
+  private matchesFranchise(order: OssatureOrder): boolean {
+    return this.data.matchesAgencyFilter(order, this.mode.selectedFranchise());
   }
 }

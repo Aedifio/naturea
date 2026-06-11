@@ -7,9 +7,11 @@ import { STATUTS, STATUT_STYLE } from '../constants/ossature.constants';
 import { OssatureBadgeComponent } from '../components/ossature-badge.component';
 import { OssatureOrderTagsComponent } from '../components/ossature-order-tags.component';
 import {
+  formatDeliveryDate,
+  formatSurfaceM2,
   isLivraisonDefDelayed,
   OssatureDataService,
-  parseSurface,
+  surfaceM2,
 } from '../services/ossature-data.service';
 import { OssatureModalService } from '../services/ossature-modal.service';
 
@@ -104,15 +106,15 @@ import { OssatureModalService } from '../services/ossature-modal.service';
               @for (o of filtered(); track o.id) {
                 <tr [style.background]="isLivraisonDefDelayed(o) ? '#fef2f2' : null" (click)="openDetail(o.id)">
                   <td class="td-id">{{ o.id }}</td>
-                  <td style="font-weight: 600">{{ o.franchise }}</td>
+                  <td style="font-weight: 600">{{ data.agencyLabel(o) }}</td>
                   <td class="td-ref">{{ o.reference }}</td>
-                  <td style="color: var(--muted)">{{ o.surface || '—' }}</td>
-                  <td style="color: var(--muted); white-space: nowrap">{{ o.site }}</td>
+                  <td style="color: var(--muted)">{{ formatSurfaceM2(o.surface) }}</td>
+                  <td style="color: var(--muted); white-space: nowrap">{{ data.factorySiteLabel(o) }}</td>
                   <td style="white-space: nowrap">
                     @if (isLivraisonDefDelayed(o)) {
                       <span style="color: #dc2626; font-weight: 700">⚠️ {{ o.livraison_definitive | date: 'dd/MM/yyyy' }}</span>
                     } @else {
-                      {{ o.livraison || '—' }}
+                      {{ formatDeliveryDate(o.deliveryDate) }}
                     }
                   </td>
                   <td>
@@ -130,7 +132,7 @@ import { OssatureModalService } from '../services/ossature-modal.service';
   styles: `.year-select { border: 1.5px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 13px; font-family: inherit; background: #fff; font-weight: 600; color: var(--text); }`,
 })
 export class OssatureCoordComponent {
-  private readonly data = inject(OssatureDataService);
+  readonly data = inject(OssatureDataService);
   private readonly modals = inject(OssatureModalService);
   private readonly factory = inject(FactoryService);
   private readonly agencies = inject(AgencyService);
@@ -143,7 +145,7 @@ export class OssatureCoordComponent {
     return this.agencies.getNames();
   });
   readonly sites = computed(() =>
-    this.factory.mergeOssatureSites(...this.data.orders().map((o) => o.site)),
+    this.factory.mergeOssatureSites(...this.data.orders().map((o) => this.data.factorySiteLabel(o))),
   );
   readonly currentYear = new Date().getFullYear();
   readonly selectedYear = signal(this.currentYear);
@@ -158,29 +160,31 @@ export class OssatureCoordComponent {
   readonly filtered = computed(() =>
     this.active().filter(
       (o) =>
-        (!this.filterFranchise() || this.agencies.orderMatchesFranchise(o.franchise, this.filterFranchise())) &&
-        (!this.filterSite() || o.site === this.filterSite()) &&
+        this.data.matchesAgencyFilter(o, this.filterFranchise()) &&
+        this.data.matchesFactorySiteFilter(o, this.filterSite()) &&
         (!this.filterStatut() || o.statut === this.filterStatut()),
     ),
   );
 
   readonly m2Stats = computed(() => {
     const list = this.active();
-    const m2Total = list.reduce((acc, o) => acc + parseSurface(o.surface), 0);
+    const m2Total = list.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
     const livrees = list.filter((o) => o.statut === 'Expédition validée');
-    const m2Livrees = livrees.reduce((acc, o) => acc + parseSurface(o.surface), 0);
+    const m2Livrees = livrees.reduce((acc, o) => acc + surfaceM2(o.surface), 0);
     return { nbCmd: list.length, m2Total: m2Total.toFixed(0), nbLivrees: livrees.length, m2Livrees: m2Livrees.toFixed(0) };
   });
 
   readonly siteChips = computed(() =>
     this.sites().map((site) => {
-      const siteOrders = this.active().filter((o) => o.site === site);
+      const siteOrders = this.active().filter((o) => this.data.factorySiteLabel(o) === site);
       const hasDelay = siteOrders.some((o) => isLivraisonDefDelayed(o));
       return { site, count: siteOrders.length, hasDelay };
     }),
   );
 
   readonly isLivraisonDefDelayed = isLivraisonDefDelayed;
+  readonly formatSurfaceM2 = formatSurfaceM2;
+  readonly formatDeliveryDate = formatDeliveryDate;
 
   statutStyle(s: string) {
     return STATUT_STYLE[s] ?? { dot: '#6b7280' };

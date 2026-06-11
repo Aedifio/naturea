@@ -26,21 +26,21 @@ import { OssatureToastService } from '../services/ossature-toast.service';
               <input class="form-input" [(ngModel)]="reference" placeholder="ex: VILLA-MODERNA-2025" autocomplete="off" data-lpignore="true" data-form-type="other" />
             </div>
             <div class="form-group">
-              <label class="form-label">Surface de murs *</label>
-              <input class="form-input" [(ngModel)]="surface" placeholder="ex: 142 m²" autocomplete="off" data-lpignore="true" data-form-type="other" />
+              <label class="form-label">Surface de murs (m²) *</label>
+              <input class="form-input" type="number" min="0" step="0.1" [(ngModel)]="surface" placeholder="ex: 142" autocomplete="off" data-lpignore="true" data-form-type="other" />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Surface plancher</label>
-              <input class="form-input" [(ngModel)]="plancher" placeholder="ex: 98 m²" autocomplete="off" data-lpignore="true" data-form-type="other" />
+              <label class="form-label">Surface plancher (m²)</label>
+              <input class="form-input" type="number" min="0" step="0.1" [(ngModel)]="plancher" placeholder="ex: 98" autocomplete="off" data-lpignore="true" data-form-type="other" />
             </div>
             <div class="form-group"></div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Date de livraison souhaitée *</label>
-              <input class="form-input" type="date" [(ngModel)]="livraison" [min]="minLivraison" autocomplete="off" data-lpignore="true" data-form-type="other" />
+              <input class="form-input" type="date" [(ngModel)]="deliveryDate" [min]="minDeliveryDate" autocomplete="off" data-lpignore="true" data-form-type="other" />
             </div>
             <div class="form-group">
               <label class="form-label">Date dépôt permis de construire</label>
@@ -184,13 +184,13 @@ export class OssatureNewOrderModalComponent {
   readonly showFranchiseField = computed(() => this.modals.newOrderContext() === 'coord');
 
   reference = '';
-  surface = '';
-  plancher = '';
-  livraison = '';
+  surface: number | null = null;
+  plancher: number | null = null;
+  deliveryDate = '';
   permis = '';
   franchise = '';
   site = '';
-  readonly minLivraison = this.computeMinLivraison();
+  readonly minDeliveryDate = this.computeMinDeliveryDate();
 
   readonly docsJoints = signal<Record<string, string>>({});
   readonly showWarn = signal(false);
@@ -203,17 +203,17 @@ export class OssatureNewOrderModalComponent {
 
   private resetForm(): void {
     this.reference = '';
-    this.surface = '';
-    this.plancher = '';
+    this.surface = null;
+    this.plancher = null;
     this.permis = '';
     this.site = this.factory.getOssatureSites()[0] ?? '';
-    this.livraison = this.minLivraison;
+    this.deliveryDate = this.minDeliveryDate;
     this.franchise = this.mode.selectedFranchise() || this.agencies.getNames()[0] || '';
     this.docsJoints.set({});
     this.showWarn.set(false);
   }
 
-  private computeMinLivraison(): string {
+  private computeMinDeliveryDate(): string {
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + 70);
     return minDate.toISOString().slice(0, 10);
@@ -256,21 +256,30 @@ export class OssatureNewOrderModalComponent {
       this.showWarn.set(true);
       return;
     }
-    if (!this.reference.trim() || !this.surface.trim() || !this.livraison) {
+    const surface = Number(this.surface);
+    if (!this.reference.trim() || !Number.isFinite(surface) || surface <= 0 || !this.deliveryDate) {
       alert('Veuillez remplir les champs obligatoires (*)');
       return;
     }
-    const franchise =
+    const plancherRaw = this.plancher == null ? null : Number(this.plancher);
+    const plancher = plancherRaw != null && Number.isFinite(plancherRaw) && plancherRaw > 0 ? plancherRaw : null;
+    const franchiseName =
       this.modals.newOrderContext() === 'franchise' ? this.mode.selectedFranchise() : this.franchise;
+    const agencyId = this.agencies.resolveAgencyId(franchiseName);
+    const factory = this.factory.getFactoryByOssatureSite(this.site);
+    if (!agencyId || !factory) {
+      alert('Franchisé ou usine invalide');
+      return;
+    }
     const docs = DOCS_REQUIS.map((d) => this.docsJoints()[d.id]).filter(Boolean);
     const order = this.data.createOrder({
-      franchise,
+      agencyId,
+      factoryId: factory.id,
       reference: this.reference.trim(),
-      surface: this.surface.trim(),
-      plancher: this.plancher.trim(),
-      site: this.site,
-      livraison: this.livraison,
-      permis: this.permis,
+      surface,
+      plancher,
+      deliveryDate: this.deliveryDate,
+      permis: this.permis || null,
       docs,
     });
     this.modals.closeNewOrder();

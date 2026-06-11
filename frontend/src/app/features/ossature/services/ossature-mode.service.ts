@@ -48,6 +48,20 @@ export class OssatureModeService {
     return this.agencies.getById(agencyId)?.name ?? null;
   });
 
+  /** Agency id for an agency-scoped user; null when full access. */
+  readonly allowedAgencyId = computed(() => {
+    const agencyId = this.auth.linkedAgencyId();
+    if (!agencyId || this.auth.isAnimateur()) return null;
+    return agencyId;
+  });
+
+  /** Factory id for a factory-scoped user; null when full access. */
+  readonly allowedFactoryId = computed(() => {
+    const factoryId = this.auth.linkedFactoryId();
+    if (!factoryId || this.auth.isAnimateur()) return null;
+    return factoryId;
+  });
+
   readonly visibleNavViews = computed((): OssatureView[] => {
     if (this.isFactoryScoped()) return ['usine', 'archives'];
     if (this.isAgencyScoped()) return ['franchise', 'archives'];
@@ -128,9 +142,9 @@ export class OssatureModeService {
   }
 
   /** Whether an order belongs to the current user's agency scope (always true when not agency-scoped). */
-  orderMatchesAgencyScope(orderFranchise: string): boolean {
-    const agency = this.allowedAgencyName();
-    if (!agency) return true;
-    return this.agencies.orderMatchesFranchise(orderFranchise, agency);
+  orderMatchesAgencyScope(order: { agencyId: number }): boolean {
+    const agencyId = this.allowedAgencyId();
+    if (!agencyId) return true;
+    return order.agencyId === agencyId;
   }
 }

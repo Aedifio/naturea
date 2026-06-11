@@ -54,8 +54,8 @@ export class KpiService {
     if (!orders.length) return null;
     const active = orders.filter((o) => o.statut !== 'Annulée');
     const livrees = active.filter((o) => o.statut === 'Expédition validée');
-    const m2Total = active.reduce((a, o) => a + this.parseM2(o.surface), 0);
-    const m2Liv = livrees.reduce((a, o) => a + this.parseM2(o.surface), 0);
+    const m2Total = active.reduce((a, o) => a + (o.surface ?? 0), 0);
+    const m2Liv = livrees.reduce((a, o) => a + (o.surface ?? 0), 0);
     return [
       { label: 'Cdes actives', value: active.length },
       { label: 'Livrées', value: livrees.length, tone: 'green' },
@@ -235,11 +235,8 @@ export class KpiService {
 
   calcFranchiseOssature(name: string) {
     const orders = this.ossature.orders();
-    const t = normAgency(name);
-    const mine = orders.filter((o) => {
-      const n = normAgency(o.franchise);
-      return n && (n === t || n.includes(t) || t.includes(n));
-    });
+    const agency = findAgency(this.agency.getAll(), name, (a) => a.name);
+    const mine = agency ? orders.filter((o) => o.agencyId === agency.id) : [];
     const by = (s: string) => mine.filter((o) => o.statut === s).length;
     return {
       found: mine.length > 0,

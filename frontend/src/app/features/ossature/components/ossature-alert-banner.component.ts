@@ -131,7 +131,7 @@ export class OssatureAlertBannerComponent {
     sendAlertsRetard(list, (count) => {
       this.toast.show(`✅ ${count} alerte(s) envoyée(s)`);
       this.dismiss();
-    }, (site) => this.factory.getEmailForOssatureSite(site));
+    }, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
   }
 
   alertSig(): void {

@@ -8,6 +8,8 @@ import {
   devisDelaiDepasse,
   isLivraisonDefDelayed,
   maxLivraisonDate,
+  formatDeliveryDate,
+  formatSurfaceM2,
   OssatureDataService,
   planFabDelaiDepasse,
 } from '../services/ossature-data.service';
@@ -28,6 +30,8 @@ export class OssatureDetailModalComponent {
   readonly modals = inject(OssatureModalService);
   readonly mode = inject(OssatureModeService);
 
+  readonly formatSurfaceM2 = formatSurfaceM2;
+  readonly formatDeliveryDate = formatDeliveryDate;
   readonly statuts = STATUTS;
   readonly docsSignature = DOCS_SIGNATURE;
 
@@ -196,7 +200,7 @@ export class OssatureDetailModalComponent {
   }
 
   alertDelai(o: OssatureOrder): void {
-    sendAlertDelai(o, (site) => this.factory.getEmailForOssatureSite(site));
+    sendAlertDelai(o, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
   }
 
   saveLivDef(): void {

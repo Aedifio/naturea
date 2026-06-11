@@ -7,18 +7,23 @@ export interface PlanValDoc {
 
 export interface OssatureOrder {
   id: string;
-  franchise: string;
+  agencyId: number;
+  factoryId: number;
+  /** Resolved from `agencies` join — display only. */
+  agencyName?: string;
+  /** Ossature site label (IMAJ, SAVARE, …) — resolved from `factory` join. */
+  factorySite?: string;
   reference: string;
-  surface: string;
-  plancher?: string;
-  site: string;
+  /** Wall surface in m². */
+  surface: number;
+  /** Floor surface in m². */
+  plancher?: number | null;
   statut: OssatureStatut | string;
-  livraison: string;
-  permis?: string;
+  deliveryDate: string;
+  permis?: string | null;
   docs: string[];
   docs_date?: string;
   created: string;
-  annee: number;
   archived?: boolean;
   archived_date?: string;
   devis_retour?: string;
@@ -46,7 +51,7 @@ export interface OssatureOrder {
 
 export type NewOrderInput = Pick<
   OssatureOrder,
-  'franchise' | 'reference' | 'surface' | 'plancher' | 'site' | 'livraison' | 'permis' | 'docs'
+  'agencyId' | 'factoryId' | 'reference' | 'surface' | 'plancher' | 'deliveryDate' | 'permis' | 'docs'
 >;
 
 export type SignatureMode = 'devis' | 'plan_val';

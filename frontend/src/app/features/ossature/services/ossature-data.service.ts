@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { factoryKeyToOssatureSite } from '../../../core/models/factory.model';
 import { AgencyService } from '../../../core/services/agency.service';
 import { FactoryService } from '../../../core/services/factory.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
@@ -13,11 +14,9 @@ import {
 } from '../utils/ossature-email.util';
 import { OssatureToastService } from './ossature-toast.service';
 
-export function parseSurface(str?: string): number {
-  if (!str) return 0;
-  const n = parseFloat(String(str).replace(',', '.').replace(/[^0-9.]/g, ''));
-  return Number.isNaN(n) ? 0 : n;
-}
+import { orderYear } from '../utils/ossature-format.util';
+
+export { formatDeliveryDate, formatSurfaceM2, orderYear, surfaceM2 } from '../utils/ossature-format.util';
 
 export function daysSince(dateStr?: string): number {
   if (!dateStr) return 0;
@@ -62,8 +61,8 @@ export function planFabDelaiDepasse(order: OssatureOrder): boolean {
 }
 
 export function arLivraisonDepasse(order: OssatureOrder): boolean {
-  if (!order?.livraison) return false;
-  return new Date(order.livraison) < new Date();
+  if (!order?.deliveryDate) return false;
+  return new Date(order.deliveryDate) < new Date();
 }
 
 export function isLivraisonDefDelayed(order: OssatureOrder): boolean {
@@ -95,146 +94,6 @@ function nowFrDate(): string {
   return new Date().toLocaleDateString('fr-FR');
 }
 
-export const OSSATURE_SEED: OssatureOrder[] = [
-  {
-    id: 'CMD-001',
-    franchise: 'TARN MAISON OSSATURE BOIS',
-    reference: 'VILLA-MODERNA-2026',
-    surface: '142 m²',
-    plancher: '98 m²',
-    site: 'IMAJ',
-    statut: 'Devis demandé',
-    livraison: '2026-09-15',
-    permis: '2026-04-01',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    docs_date: '2026-05-20',
-    created: '2026-05-15',
-    annee: 2026,
-  },
-  {
-    id: 'CMD-002',
-    franchise: 'GP-MEOB',
-    reference: 'MAISON-CONTEMPORAINE-A',
-    surface: '118 m²',
-    plancher: '86 m²',
-    site: 'SAVARE',
-    statut: 'Devis envoyé',
-    livraison: '2026-10-01',
-    permis: '2026-03-15',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    docs_date: '2026-04-10',
-    created: '2026-04-05',
-    annee: 2026,
-    devis_retour: 'devis_retour_CMD-002.pdf',
-    devis_retour_date: '2026-04-20',
-    docs_recus_date: '2026-04-08',
-    docs_recus_heure: '14:30',
-  },
-  {
-    id: 'CMD-003',
-    franchise: 'BOISILIA CONSTRUCTION',
-    reference: 'RESIDENCE-BELLEVUE',
-    surface: '156 m²',
-    plancher: '112 m²',
-    site: 'IMAJ',
-    statut: 'Commande confirmée',
-    livraison: '2026-08-20',
-    permis: '2026-02-01',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    docs_date: '2026-03-01',
-    created: '2026-02-25',
-    annee: 2026,
-    devis_retour: 'devis_retour_CMD-003.pdf',
-    devis_retour_date: '2026-03-10',
-    docs_recus_date: '2026-03-02',
-    docs_recus_heure: '09:15',
-    signature: 'data:image/png;base64,iVBORw0KGgo=',
-    signature_date: '15/03/2026',
-    signature_heure: '11:20',
-    signature_docs: DOCS_SIGNATURE.map((d) => `${d.id}.pdf`),
-    ar_fichier: 'ar_CMD-003.pdf',
-    ar_date: '2026-03-16',
-    ar_heure: '10:00',
-    plan_fab: 'plan_fab_CMD-003.pdf',
-    plan_fab_date: '2026-03-20',
-  },
-  {
-    id: 'CMD-004',
-    franchise: 'ECOHOME 84',
-    reference: 'VILLA-PROVENCALE',
-    surface: '198 m²',
-    plancher: '145 m²',
-    site: 'SAVARE',
-    statut: 'Expédition validée',
-    livraison: '2026-06-01',
-    permis: '2025-11-01',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    docs_date: '2025-12-01',
-    created: '2025-11-25',
-    annee: 2025,
-    devis_retour: 'devis_retour_CMD-004.pdf',
-    devis_retour_date: '2025-12-10',
-    docs_recus_date: '2025-12-02',
-    docs_recus_heure: '16:45',
-    signature: 'data:image/png;base64,iVBORw0KGgo=',
-    signature_date: '20/12/2025',
-    signature_heure: '14:00',
-    signature_docs: DOCS_SIGNATURE.map((d) => `${d.id}.pdf`),
-    ar_fichier: 'ar_CMD-004.pdf',
-    ar_date: '2025-12-22',
-    ar_heure: '09:30',
-    plan_fab: 'plan_fab_CMD-004.pdf',
-    plan_fab_date: '2026-01-05',
-    plan_val_signature: 'data:image/png;base64,iVBORw0KGgo=',
-    plan_val_date: '15/01/2026',
-    plan_val_heure: '10:30',
-    plan_val_docs: [{ name: 'plan_val_annexe.pdf', date: '2026-01-10' }],
-    livraison_definitive: '2026-05-28',
-  },
-  {
-    id: 'CMD-005',
-    franchise: 'ACVR HOME',
-    reference: 'MAISON-FAMILIALE-B',
-    surface: '132 m²',
-    site: 'BOISBOREAL',
-    statut: 'Devis demandé',
-    livraison: '2026-11-01',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    docs_date: '2026-01-10',
-    created: '2025-12-20',
-    annee: 2025,
-  },
-  {
-    id: 'CMD-006',
-    franchise: 'NATI BRETAGNE NORD',
-    reference: 'OSS-BZH-2025-88',
-    surface: '175 m²',
-    plancher: '120 m²',
-    site: 'SAVARE',
-    statut: 'Expédition validée',
-    livraison: '2025-10-15',
-    docs: ['bdc_appuis.pdf', 'bdc_coffre.pdf', 'plan_pc.pdf', 'plan_mext.pdf', 'fiche_mob.pdf', 'devis_mext.pdf'],
-    created: '2025-06-01',
-    annee: 2025,
-    devis_retour: 'devis_retour_CMD-006.pdf',
-    devis_retour_date: '2025-06-15',
-    signature: 'data:image/png;base64,iVBORw0KGgo=',
-    signature_date: '01/07/2025',
-    signature_heure: '09:00',
-    signature_docs: DOCS_SIGNATURE.map((d) => `${d.id}.pdf`),
-    ar_fichier: 'ar_CMD-006.pdf',
-    ar_date: '2025-07-05',
-    plan_fab: 'plan_fab_CMD-006.pdf',
-    plan_fab_date: '2025-07-20',
-    plan_val_signature: 'data:image/png;base64,iVBORw0KGgo=',
-    plan_val_date: '05/08/2025',
-    plan_val_heure: '11:00',
-    livraison_definitive: '2025-10-10',
-    archived: true,
-    archived_date: '2025-11-01',
-  },
-];
-
 @Injectable({ providedIn: 'root' })
 export class OssatureDataService {
   private readonly supabase = inject(SupabaseService);
@@ -249,8 +108,31 @@ export class OssatureDataService {
     return this._orders();
   });
 
+  agencyLabel(order: OssatureOrder): string {
+    return order.agencyName ?? this.agencies.getById(order.agencyId)?.name ?? '—';
+  }
+
+  factorySiteLabel(order: OssatureOrder): string {
+    if (order.factorySite) return order.factorySite;
+    const linked = this.factory.getById(order.factoryId);
+    return linked ? factoryKeyToOssatureSite(linked.key) : '—';
+  }
+
+  matchesAgencyFilter(order: OssatureOrder, agencyName: string): boolean {
+    if (!agencyName) return true;
+    const id = this.agencies.resolveAgencyId(agencyName);
+    return id != null && order.agencyId === id;
+  }
+
+  matchesFactorySiteFilter(order: OssatureOrder, site: string): boolean {
+    return !site || this.factorySiteLabel(order) === site;
+  }
+
   async load(): Promise<void> {
-    const { data, error } = await this.supabase.from('ossature_orders').select('*').order('created', { ascending: false });
+    const { data, error } = await this.supabase
+      .from('ossature_orders')
+      .select('*, agency:agency_id(id, name, contact_email), factory:factory_id(id, key, nom, contact_email)')
+      .order('created', { ascending: false });
     if (error) {
       console.error('[Ossature] load failed', error);
       return;
@@ -303,10 +185,6 @@ export class OssatureDataService {
         updates.statut = 'Commande confirmée';
         changed = true;
       }
-      if (!o.annee) {
-        updates.annee = o.created ? parseInt(o.created.slice(0, 4), 10) : new Date().getFullYear();
-        changed = true;
-      }
       return Object.keys(updates).length > 0 ? { ...o, ...updates } : o;
     });
     return changed ? next : list;
@@ -314,7 +192,7 @@ export class OssatureDataService {
 
   activeOrders(year?: number): OssatureOrder[] {
     const y = year ?? new Date().getFullYear();
-    return this.orders().filter((o) => !o.archived && (o.annee || new Date().getFullYear()) === y);
+    return this.orders().filter((o) => !o.archived && orderYear(o.created) === y);
   }
 
   archivedOrders(): OssatureOrder[] {
@@ -322,7 +200,7 @@ export class OssatureDataService {
   }
 
   availableYears(): number[] {
-    return [...new Set(this.orders().map((o) => o.annee || new Date().getFullYear()))].sort((a, b) => b - a);
+    return [...new Set(this.orders().map((o) => orderYear(o.created)))].sort((a, b) => b - a);
   }
 
   updateOrder(id: string, patch: Partial<OssatureOrder>): OssatureOrder | undefined {
@@ -337,23 +215,26 @@ export class OssatureDataService {
   }
 
   createOrder(input: NewOrderInput): OssatureOrder {
+    const agency = this.agencies.getById(input.agencyId);
+    const factory = this.factory.getById(input.factoryId);
     const order: OssatureOrder = {
       id: this.generateId(),
-      franchise: input.franchise,
+      agencyId: input.agencyId,
+      factoryId: input.factoryId,
+      agencyName: agency?.name,
+      factorySite: factory ? factoryKeyToOssatureSite(factory.key) : undefined,
       reference: input.reference,
       surface: input.surface,
-      plancher: input.plancher,
-      site: input.site,
+      plancher: input.plancher ?? null,
       statut: 'Devis demandé',
-      livraison: input.livraison,
-      permis: input.permis,
+      deliveryDate: input.deliveryDate,
+      permis: input.permis ?? null,
       docs: input.docs,
       docs_date: todayIso(),
       created: todayIso(),
-      annee: new Date().getFullYear(),
     };
     void this.save([order, ...this.orders()]);
-    sendEmailUsine(order, (site) => this.factory.getEmailForOssatureSite(site));
+    sendEmailUsine(order, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
     return order;
   }
 
@@ -383,8 +264,8 @@ export class OssatureDataService {
     if (promptEmail) {
       const updated = this.getById(orderId);
       if (updated && confirm("Envoyer un email au franchisé pour l'informer que le devis est disponible ?")) {
-        sendDevisRetourEmail(updated, (f) => this.agencies.getEmailForFranchise(f));
-        this.toast.show(`📧 Email ouvert vers ${updated.franchise}`);
+        sendDevisRetourEmail(updated, (agencyId) => this.agencies.getById(agencyId)?.contact_email?.trim() ?? '');
+        this.toast.show(`📧 Email ouvert vers ${this.agencyLabel(updated)}`);
       }
     }
   }
@@ -438,7 +319,7 @@ export class OssatureDataService {
         signed &&
         confirm("Envoyer un email à l'usine et au coordinateur pour confirmer la signature du devis ?")
       ) {
-        sendSignatureConfirmEmail(signed, (site) => this.factory.getEmailForOssatureSite(site));
+        sendSignatureConfirmEmail(signed, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
         this.toast.show('📧 Email ouvert vers usine');
       }
     }
@@ -527,7 +408,7 @@ export class OssatureDataService {
     if (promptEmail && updated) {
       setTimeout(() => {
         if (confirm("Envoyer un email à l'usine pour confirmer la validation des plans ?")) {
-          sendPlanValidationEmail(updated, (site) => this.factory.getEmailForOssatureSite(site));
+          sendPlanValidationEmail(updated, (factoryId) => this.factory.getById(factoryId)?.contact_email?.trim() ?? '');
           this.toast.show('📧 Email ouvert vers usine');
         }
       }, 400);
@@ -602,8 +483,8 @@ export class OssatureDataService {
   }
 
   private static readonly ORDER_COLUMNS = new Set([
-    'id', 'franchise', 'reference', 'surface', 'plancher', 'site', 'statut',
-    'livraison', 'permis', 'docs', 'docs_date', 'created', 'annee',
+    'id', 'agencyId', 'factoryId', 'agencyName', 'factorySite', 'reference', 'surface', 'plancher', 'statut',
+    'deliveryDate', 'permis', 'docs', 'docs_date', 'created',
   ]);
 
   private orderToRow(order: OssatureOrder): Record<string, unknown> {
@@ -613,39 +494,46 @@ export class OssatureDataService {
     }
     return {
       id: order.id,
-      franchise: order.franchise,
+      agency_id: order.agencyId,
+      factory_id: order.factoryId,
       reference: order.reference,
       surface: order.surface,
       plancher: order.plancher ?? null,
-      site: order.site,
       statut: order.statut,
-      livraison: order.livraison,
+      delivery_date: order.deliveryDate,
       permis: order.permis ?? null,
       docs: order.docs ?? [],
       docs_date: order.docs_date ?? null,
       created: order.created,
-      annee: order.annee ?? new Date().getFullYear(),
       payload,
     };
   }
 
   private rowToOrder(row: Record<string, unknown>): OssatureOrder {
     const payload = (row['payload'] as Record<string, unknown>) ?? {};
+    const agency = row['agency'] as { id: number; name: string } | { id: number; name: string }[] | null;
+    const factory = row['factory'] as { id: number; key: string } | { id: number; key: string }[] | null;
+    const agencyRow = Array.isArray(agency) ? agency[0] : agency;
+    const factoryRow = Array.isArray(factory) ? factory[0] : factory;
     const base: Record<string, unknown> = {
       id: row['id'],
-      franchise: row['franchise'],
+      agencyId: row['agency_id'] ?? agencyRow?.id,
+      factoryId: row['factory_id'] ?? factoryRow?.id,
+      agencyName: agencyRow?.name,
+      factorySite: factoryRow ? factoryKeyToOssatureSite(factoryRow.key) : undefined,
       reference: row['reference'],
-      surface: row['surface'],
-      plancher: row['plancher'],
-      site: row['site'],
+      surface: Number(row['surface']),
+      plancher: row['plancher'] == null ? null : Number(row['plancher']),
       statut: row['statut'],
-      livraison: row['livraison'],
-      permis: row['permis'],
+      deliveryDate: String(row['delivery_date'] ?? ''),
+      permis: row['permis'] == null ? null : String(row['permis']),
       docs: row['docs'],
       docs_date: row['docs_date'],
       created: row['created'],
-      annee: row['annee'],
     };
-    return { ...payload, ...base } as unknown as OssatureOrder;
+    const merged = { ...payload, ...base } as Record<string, unknown>;
+    delete merged['livraison'];
+    delete merged['annee'];
+    return merged as unknown as OssatureOrder;
   }
 }

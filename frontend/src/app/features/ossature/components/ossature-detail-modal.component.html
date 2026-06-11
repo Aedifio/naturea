@@ -5,7 +5,7 @@
         <div>
           <div class="detail-id">{{ o.id }}</div>
           <div class="detail-title">{{ o.reference }}</div>
-          <div class="detail-sub">{{ o.franchise }}</div>
+          <div class="detail-sub">{{ data.agencyLabel(o) }}</div>
           @if (showSecStatut()) {
             <div style="margin-top: 6px; background: #fff7ed; color: #92400e; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 600; display: inline-block">
               ⏳ En attente de validation des plans
@@ -33,27 +33,27 @@
       <div class="info-grid">
         <div class="info-cell">
           <div class="info-cell-label">📐 Surface murs</div>
-          <div class="info-cell-val">{{ o.surface || '—' }}</div>
+          <div class="info-cell-val">{{ formatSurfaceM2(o.surface) }}</div>
         </div>
         <div class="info-cell">
           <div class="info-cell-label">🏠 Surface plancher</div>
-          <div class="info-cell-val">{{ o.plancher || '—' }}</div>
+          <div class="info-cell-val">{{ formatSurfaceM2(o.plancher) }}</div>
         </div>
         <div class="info-cell">
           <div class="info-cell-label">🏭 Site</div>
-          <div class="info-cell-val">{{ o.site }}</div>
+          <div class="info-cell-val">{{ data.factorySiteLabel(o) }}</div>
         </div>
         <div class="info-cell">
           <div class="info-cell-label">📍 Adresse usine</div>
-          <div class="info-cell-val">{{ siteAdresse(o.site) }}</div>
+          <div class="info-cell-val">{{ siteAdresse(data.factorySiteLabel(o)) }}</div>
         </div>
         <div class="info-cell">
           <div class="info-cell-label">📅 Livraison souhaitée</div>
-          <div class="info-cell-val">{{ o.livraison || '—' }}</div>
+          <div class="info-cell-val">{{ formatDeliveryDate(o.deliveryDate) }}</div>
         </div>
         <div class="info-cell">
           <div class="info-cell-label">🏛️ Dépôt permis</div>
-          <div class="info-cell-val">{{ o.permis || '—' }}</div>
+          <div class="info-cell-val">{{ formatDeliveryDate(o.permis) }}</div>
         </div>
       </div>
 

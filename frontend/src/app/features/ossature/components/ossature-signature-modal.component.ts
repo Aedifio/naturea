@@ -15,7 +15,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
             <div>
               <div class="modal-title">{{ title() }}</div>
               @if (order()) {
-                <div style="font-size: 13px; color: var(--muted); margin-top: 3px">{{ order()!.reference }} — {{ order()!.franchise }}</div>
+                <div style="font-size: 13px; color: var(--muted); margin-top: 3px">{{ order()!.reference }} — {{ data.agencyLabel(order()!) }}</div>
                 <div style="font-size: 12px; color: var(--faint); margin-top: 2px">{{ datePreview() }}</div>
               }
             </div>
@@ -131,7 +131,7 @@ import { OssatureToastService } from '../services/ossature-toast.service';
 })
 export class OssatureSignatureModalComponent {
   private readonly modals = inject(OssatureModalService);
-  private readonly data = inject(OssatureDataService);
+  readonly data = inject(OssatureDataService);
   private readonly toast = inject(OssatureToastService);
 
   readonly docsSignature = DOCS_SIGNATURE;
