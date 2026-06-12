@@ -87,7 +87,7 @@ export class HomeComponent {
   readonly heroStats = computed(() => {
     const u = this.user();
     if (!u) return [];
-    const accessible = APPS_META.filter((a) => this.auth.canAccess(a.code)).length;
+    const accessible = APPS_META.filter((a) => a.code !== 'PORTAIL' && this.auth.canAccess(a.code)).length;
     return [
       { value: accessible, label: 'Apps accessibles' },
       { value: u.franchise === '(siège)' ? '17' : '1', label: u.franchise === '(siège)' ? 'Franchises' : 'Franchise' },

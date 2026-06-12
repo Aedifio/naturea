@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { CANDIDATE_FRANCHISE_ROLE, FACTORY_MANAGER_ROLE } from '../../core/constants/portal-roles.constants';
 import { AuthService } from '../../core/auth/auth.service';
+import { PortalPermissionsService } from '../../core/services/portal-permissions.service';
 import {
   PortalUserAdminRow,
   PortalUserCreate,
@@ -21,6 +22,7 @@ import { AdminUserModalComponent, AdminUserModalMode } from './admin-user-modal.
 })
 export class AdminComponent implements OnInit {
   private readonly usersService = inject(PortalUsersService);
+  private readonly permissions = inject(PortalPermissionsService);
   private readonly auth = inject(AuthService);
   private readonly usersTableRef = viewChild<ElementRef<HTMLElement>>('usersTable');
 
@@ -38,6 +40,7 @@ export class AdminComponent implements OnInit {
     'Visualise, crée et modifie les comptes utilisateurs et leurs rôles.';
 
   ngOnInit(): void {
+    void this.permissions.loadPortalRoles();
     void this.loadUsers();
   }
 

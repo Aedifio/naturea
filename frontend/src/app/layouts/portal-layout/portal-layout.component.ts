@@ -19,7 +19,10 @@ export class PortalLayoutComponent {
 
   readonly user = this.auth.currentUser;
   readonly logo = NATUREA_LOGO;
-  readonly navApps = APPS_META.filter((a) => a.code !== 'ADMIN');
+  readonly navApps = APPS_META.filter((a) => a.code !== 'ADMIN' && !a.hideFromNav);
+  readonly portalHomeLink = computed(() =>
+    this.auth.canAccessPortail() ? '/home' : this.auth.firstAccessibleAppRoute(),
+  );
 
   readonly initials = computed(() => {
     const u = this.user();
@@ -34,6 +37,10 @@ export class PortalLayoutComponent {
 
   canShow(code: AppCode): boolean {
     return this.auth.canAccess(code);
+  }
+
+  canShowPortail(): boolean {
+    return this.auth.canAccessPortail();
   }
 
   permLabel(code: AppCode): string {

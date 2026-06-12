@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { PORTAL_APP_LANDING_ORDER, routeForAppCode } from '../constants/portal-landing.constants';
 import { FACTORY_MANAGER_ROLE, FRANCHISEE_ROLE, isAdministratorRole, isCandidateFranchiseRole } from '../constants/portal-roles.constants';
 import { StorageKey } from '../models/storage-keys';
 import { PortalPermissionsService } from '../services/portal-permissions.service';
@@ -19,7 +20,8 @@ interface PortalUserRow {
   id: string;
   legacy_id: number | null;
   name: string;
-  role: string;
+  role_id: string;
+  portal_roles: { name: string } | { name: string }[] | null;
   actif: boolean;
   factory_id: number | null;
   agency_id: number | null;
@@ -37,6 +39,9 @@ export class AuthService {
 
   private readonly userSignal = signal<PortalUser | null>(null);
   private readonly readySignal = signal(false);
+  private lastAccountCheckAt = 0;
+  private accountCheckInFlight: Promise<void> | null = null;
+  private static readonly ACCOUNT_CHECK_MIN_MS = 2000;
 
   readonly currentUser = this.userSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
@@ -48,7 +53,10 @@ export class AuthService {
       const { data } = await this.supabase.auth.getSession();
       if (data.session) {
         await this.storageAdapter.hydrate();
-        await this.loadProfileFromSession();
+        const loaded = await this.loadProfileFromSession();
+        if (!loaded) {
+          await this.supabase.auth.signOut();
+        }
         try {
           await this.permissions.load();
           await this.dataBootstrap.loadAll();
@@ -93,11 +101,16 @@ export class AuthService {
       return { ok: false, error: 'Session non établie.' };
     }
     await this.storageAdapter.hydrate();
-    const loaded = await this.loadProfileFromSession();
-    if (!loaded) {
+    const profileStatus = await this.resolveProfileStatus();
+    if (profileStatus === 'inactive') {
+      await this.supabase.auth.signOut();
+      return { ok: false, error: 'Votre compte a été désactivé.' };
+    }
+    if (profileStatus !== 'ok') {
       await this.supabase.auth.signOut();
       return { ok: false, error: 'Profil portail introuvable pour ce compte.' };
     }
+    await this.loadProfileFromSession();
     try {
       await this.permissions.load();
       await this.dataBootstrap.loadAll();
@@ -115,10 +128,40 @@ export class AuthService {
     void this.router.navigate(['/login']);
   }
 
+  /** Re-validates portal account; logs out if the user was deactivated while connected. */
+  async ensureAccountActive(): Promise<void> {
+    if (!this.userSignal()) return;
+
+    const now = Date.now();
+    if (now - this.lastAccountCheckAt < AuthService.ACCOUNT_CHECK_MIN_MS) {
+      return;
+    }
+
+    if (this.accountCheckInFlight) {
+      await this.accountCheckInFlight;
+      return;
+    }
+
+    this.accountCheckInFlight = this.runAccountCheck();
+    try {
+      await this.accountCheckInFlight;
+    } finally {
+      this.accountCheckInFlight = null;
+    }
+  }
+
+  async logoutDueToBlockedAccount(): Promise<void> {
+    this.userSignal.set(null);
+    syncSentryUser(null);
+    this.storageAdapter.clearCache();
+    await this.supabase.auth.signOut();
+    void this.router.navigate(['/login'], { queryParams: { reason: 'blocked' } });
+  }
+
   getPermission(appCode: AppCode): PermissionLevel {
     const user = this.userSignal();
     if (!user) return null;
-    return this.permissions.getPermission(user.role, appCode);
+    return this.permissions.getPermission(user.roleId, appCode);
   }
 
   canAccess(appCode: AppCode): boolean {
@@ -174,12 +217,28 @@ export class AuthService {
     return this.userSignal()?.recrutementCandidatId ?? null;
   }
 
+  canAccessPortail(): boolean {
+    return this.canAccess('PORTAIL');
+  }
+
+  /** First app route the user can open (agency-scoped when relevant). */
+  firstAccessibleAppRoute(): string {
+    const agencyId = this.isAgencyScopedFranchisee() ? this.linkedAgencyId() : null;
+    const isCandidate = this.isRecrutementCandidate();
+    for (const code of PORTAL_APP_LANDING_ORDER) {
+      if (!this.canReadApp(code)) continue;
+      return routeForAppCode(code, agencyId, isCandidate);
+    }
+
+    return '/login';
+  }
+
   /** Default post-login route based on role permissions. */
   defaultRouteAfterLogin(): string {
-    if (this.isRecrutementCandidate()) {
-      return '/apps/recrutement/espace';
+    if (this.canAccessPortail()) {
+      return '/home';
     }
-    return '/home';
+    return this.firstAccessibleAppRoute();
   }
 
   /** @deprecated Prefer isAgencyScopedFranchisee — kept for Ossature call sites. */
@@ -213,22 +272,51 @@ export class AuthService {
     ]);
   }
 
+  private async runAccountCheck(): Promise<void> {
+    this.lastAccountCheckAt = Date.now();
+    const status = await this.resolveProfileStatus();
+    if (status === 'inactive') {
+      await this.logoutDueToBlockedAccount();
+      return;
+    }
+    if (status === 'missing') {
+      await this.logout();
+    }
+  }
+
+  private async resolveProfileStatus(): Promise<'ok' | 'inactive' | 'missing'> {
+    const { data: authData } = await this.supabase.auth.getUser();
+    const authUser = authData.user;
+    if (!authUser?.id || !authUser.email) return 'missing';
+
+    const { data: row, error } = await this.supabase.client
+      .from('portal_users')
+      .select('id, actif')
+      .eq('auth_user_id', authUser.id)
+      .maybeSingle();
+
+    if (error || !row) return 'missing';
+    if (!row.actif) return 'inactive';
+    return 'ok';
+  }
+
   private async loadProfileFromSession(): Promise<boolean> {
     const { data: authData } = await this.supabase.auth.getUser();
     const authUser = authData.user;
     if (!authUser?.id || !authUser.email) return false;
 
-    const { data: row, error } = await this.supabase
+    const { data: row, error } = await this.supabase.client
       .from('portal_users')
-      .select('id, legacy_id, name, role, actif, factory_id, agency_id, agencies(name)')
+      .select('id, legacy_id, name, role_id, actif, factory_id, agency_id, agencies(name), portal_roles(name)')
       .eq('auth_user_id', authUser.id)
       .maybeSingle();
 
     if (error || !row || !row.actif) return false;
 
+    const roleName = this.portalRoleName(row as PortalUserRow);
     let recrutementCandidatId: string | null = null;
-    if (isCandidateFranchiseRole(row.role)) {
-      const { data: candidatRow } = await this.supabase
+    if (isCandidateFranchiseRole(roleName)) {
+      const { data: candidatRow } = await this.supabase.client
         .from('recrutement_candidats')
         .select('id')
         .eq('portal_user_id', row.id)
@@ -243,15 +331,22 @@ export class AuthService {
     return true;
   }
 
+  private portalRoleName(row: PortalUserRow): string {
+    const role = Array.isArray(row.portal_roles) ? row.portal_roles[0] : row.portal_roles;
+    return role?.name ?? '';
+  }
+
   private mapPortalUser(row: PortalUserRow, email: string, recrutementCandidatId: string | null = null): PortalUser {
     const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
     const agencyName = agency?.name?.trim();
+    const roleName = this.portalRoleName(row);
     return {
       portalUserId: row.id,
       id: row.legacy_id ?? 0,
       email,
       name: row.name,
-      role: row.role as PortalUser['role'],
+      roleId: row.role_id,
+      role: roleName,
       agencyId: row.agency_id ?? null,
       franchise: agencyName || '(siège)',
       actif: row.actif,
@@ -263,6 +358,7 @@ export class AuthService {
   private syncActiveUser(user: PortalUser): void {
     const active: ActiveUser = {
       name: user.name,
+      roleId: user.roleId,
       role: user.role,
       franchise: user.franchise,
       email: user.email,

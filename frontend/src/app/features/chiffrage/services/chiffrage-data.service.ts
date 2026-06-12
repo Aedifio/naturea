@@ -717,7 +717,7 @@ export class ChiffrageDataService {
     let query = this.supabase
       .from('chiffrage_projets')
       .select(
-        '*, factory:factory_id(id, key, nom), agency:agency_id(id, name), creator:created_by(id, name, role)',
+        '*, factory:factory_id(id, key, nom), agency:agency_id(id, name), creator:created_by(id, name)',
       )
       .order('projet_date', { ascending: false });
 

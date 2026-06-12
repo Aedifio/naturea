@@ -1,11 +1,13 @@
 <nav class="portal-nav">
-  <a class="nav-brand" routerLink="/home">
+  <a class="nav-brand" [routerLink]="portalHomeLink()">
     <img [src]="logo.src" [alt]="logo.alt" class="nav-logo" />
   </a>
-  <span class="nsep"></span>
-  <a class="nav-link" routerLink="/home" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: false }">
-    🏠 Accueil
-  </a>
+  @if (canShowPortail()) {
+    <span class="nsep"></span>
+    <a class="nav-link" routerLink="/home" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: false }">
+      🏠 Accueil
+    </a>
+  }
   <span class="nsep"></span>
   <div class="nav-apps">
     @for (app of navApps; track app.code) {

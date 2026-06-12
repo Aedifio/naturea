@@ -18,6 +18,7 @@ export interface PortalUserRow {
   auth_user_id: string | null;
   email: string | null;
   name: string;
+  role_id: string;
   role: string;
   actif: boolean;
   agency_id: number | null;
@@ -34,7 +35,7 @@ export interface PortalUserAdminRow extends PortalUserRow {
 export interface PortalUserUpdate {
   email: string;
   name: string;
-  role: string;
+  role_id: string;
   actif: boolean;
   agency_id: number | null;
   factory_id: number | null;
@@ -83,7 +84,7 @@ export class PortalUsersService {
       p_email: input.email.trim(),
       p_password: input.password,
       p_name: input.name.trim(),
-      p_role: input.role,
+      p_role_id: input.role_id,
       p_actif: input.actif,
       p_agency_id: input.agency_id,
       p_factory_id: input.factory_id,
@@ -101,7 +102,7 @@ export class PortalUsersService {
       p_portal_user_id: id,
       p_email: patch.email.trim(),
       p_name: patch.name.trim(),
-      p_role: patch.role,
+      p_role_id: patch.role_id,
       p_actif: patch.actif,
       p_agency_id: patch.agency_id,
       p_factory_id: patch.factory_id,

@@ -11,7 +11,6 @@
         {{ isAdmin() ? 'ADMIN' : 'CANDIDAT' }}
       </div>
       <div class="sb-uname">{{ displayName() }}</div>
-      <div class="sb-uemail">{{ session()?.email || '—' }}</div>
     </div>
 
     @if (mode.showSwitchButton()) {

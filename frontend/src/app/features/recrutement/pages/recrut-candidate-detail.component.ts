@@ -238,6 +238,19 @@ export class RecrutCandidateDetailComponent implements OnInit {
       return;
     }
 
+    const c = this.candidate();
+    const becomingRefused = this.form.statut === 'Refusé' && c?.statut !== 'Refusé';
+    const leavingRefused = c?.statut === 'Refusé' && this.form.statut !== 'Refusé';
+    if (becomingRefused && c?.hasPortalAccount) {
+      if (
+        !confirm(
+          'Passer ce candidat en « Refusé » désactivera son accès au portail.\n\nContinuer ?',
+        )
+      ) {
+        return;
+      }
+    }
+
     this.saving.set(true);
     try {
       await this.data.updateCandidate(id, {
@@ -254,7 +267,13 @@ export class RecrutCandidateDetailComponent implements OnInit {
         stars: this.stars(),
         notes: this.form.notes,
       });
-      this.toast.show('✅ Modifications sauvegardées');
+      this.toast.show(
+        becomingRefused && c?.hasPortalAccount
+          ? '✅ Candidat refusé — accès portail désactivé'
+          : leavingRefused && c?.hasPortalAccount
+            ? '✅ Statut mis à jour — accès portail réactivé'
+            : '✅ Modifications sauvegardées',
+      );
     } catch {
       this.toast.show('❌ Erreur lors de la sauvegarde');
     } finally {

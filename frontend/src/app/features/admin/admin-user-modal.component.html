@@ -52,9 +52,9 @@
 
         <div class="modal-field">
           <label for="u-role">Rôle</label>
-          <select id="u-role" formControlName="role" (change)="onRoleChange($event)">
-            @for (r of roles(); track r) {
-              <option [value]="r">{{ r }}</option>
+          <select id="u-role" formControlName="role_id" (change)="onRoleChange($event)">
+            @for (r of roles(); track r.id) {
+              <option [value]="r.id">{{ r.name }}</option>
             }
           </select>
         </div>

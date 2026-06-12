@@ -38,9 +38,9 @@ export class AdminRolesComponent implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly saveError = signal<string | null>(null);
   readonly saveOk = signal(false);
-  readonly roleNames = signal<string[]>([]);
+  readonly roles = signal<{ id: string; name: string }[]>([]);
 
-  /** Editable copy: role → app → level */
+  /** Editable copy: role_id → app → level */
   readonly draft = signal<Record<string, Partial<Record<AppCode, PermChoice>>>>({});
 
   readonly subtitleHtml =
@@ -59,27 +59,25 @@ export class AdminRolesComponent implements OnInit {
       if (!rows.length) {
         throw new Error('Aucune permission retournée par la base de données.');
       }
-      const draft = this.buildDraft(rows);
-      this.draft.set(draft);
-      this.roleNames.set(Object.keys(draft).sort((a, b) => a.localeCompare(b, 'fr')));
+      this.applyDraft(rows);
     } catch (err) {
       console.error('[AdminRoles] load failed', err);
       this.draft.set({});
-      this.roleNames.set([]);
+      this.roles.set([]);
       this.loadError.set('Impossible de charger les permissions.');
     } finally {
       this.loading.set(false);
     }
   }
 
-  cellValue(role: string, app: AppCode): PermChoice {
-    return this.draft()[role]?.[app] ?? '';
+  cellValue(roleId: string, app: AppCode): PermChoice {
+    return this.draft()[roleId]?.[app] ?? '';
   }
 
-  setCell(role: string, app: AppCode, value: PermChoice): void {
+  setCell(roleId: string, app: AppCode, value: PermChoice): void {
     this.draft.update((d) => {
-      const next = { ...d, [role]: { ...d[role], [app]: value || undefined } };
-      if (!value) delete next[role][app];
+      const next = { ...d, [roleId]: { ...d[roleId], [app]: value || undefined } };
+      if (!value) delete next[roleId][app];
       return next;
     });
     this.saveOk.set(false);
@@ -90,12 +88,12 @@ export class AdminRolesComponent implements OnInit {
     return permissionLabel(value);
   }
 
-  roleClass(role: string): string {
-    if (role === 'Animateur') return 'r-anim';
-    if (role === 'Codir') return 'r-codir';
-    if (role === 'Franchisé') return 'r-franchise';
-    if (role === FACTORY_MANAGER_ROLE) return 'r-usine';
-    if (role === CANDIDATE_FRANCHISE_ROLE) return 'r-candidat';
+  roleClass(roleName: string): string {
+    if (roleName === 'Animateur') return 'r-anim';
+    if (roleName === 'Codir') return 'r-codir';
+    if (roleName === 'Franchisé') return 'r-franchise';
+    if (roleName === FACTORY_MANAGER_ROLE) return 'r-usine';
+    if (roleName === CANDIDATE_FRANCHISE_ROLE) return 'r-candidat';
     return 'r-other';
   }
 
@@ -104,13 +102,11 @@ export class AdminRolesComponent implements OnInit {
     this.saveError.set(null);
     this.saveOk.set(false);
     try {
-      for (const role of this.roleNames()) {
-        await this.permissions.saveRole(role, this.draftToPermissions(role), false);
+      for (const role of this.roles()) {
+        await this.permissions.saveRole(role.id, this.draftToPermissions(role.id), false);
       }
       const rows = await this.permissions.load();
-      const draft = this.buildDraft(rows);
-      this.draft.set(draft);
-      this.roleNames.set(Object.keys(draft).sort((a, b) => a.localeCompare(b, 'fr')));
+      this.applyDraft(rows);
       this.saveOk.set(true);
     } catch (err) {
       console.error('[AdminRoles] save failed', err);
@@ -120,17 +116,28 @@ export class AdminRolesComponent implements OnInit {
     }
   }
 
+  private applyDraft(rows: RolePermissionRow[]): void {
+    const draft = this.buildDraft(rows);
+    this.draft.set(draft);
+    this.roles.set(
+      Object.keys(draft)
+        .map((id) => ({ id, name: this.permissions.roleNameById(id) }))
+        .filter((r) => r.name)
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    );
+  }
+
   private buildDraft(rows: RolePermissionRow[]): Record<string, Partial<Record<AppCode, PermChoice>>> {
     const matrix = this.permissions.rowsToMatrix(rows);
     const draft: Record<string, Partial<Record<AppCode, PermChoice>>> = {};
-    for (const role of Object.keys(matrix).sort((a, b) => a.localeCompare(b, 'fr'))) {
-      draft[role] = { ...matrix[role] };
+    for (const roleId of Object.keys(matrix)) {
+      draft[roleId] = { ...matrix[roleId] };
     }
     return draft;
   }
 
-  private draftToPermissions(role: string): Partial<Record<AppCode, PermissionLevel>> {
-    const row = this.draft()[role] ?? {};
+  private draftToPermissions(roleId: string): Partial<Record<AppCode, PermissionLevel>> {
+    const row = this.draft()[roleId] ?? {};
     const out: Partial<Record<AppCode, PermissionLevel>> = {};
     for (const [app, level] of Object.entries(row)) {
       if (level) out[app as AppCode] = level as PermissionLevel;

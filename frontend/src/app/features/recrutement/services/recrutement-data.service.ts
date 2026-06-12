@@ -85,6 +85,11 @@ export class RecrutementDataService {
     const current = this.getById(id);
     if (!current) return;
 
+    const becomingRefused =
+      patch.statut === 'Refusé' && current.statut !== 'Refusé';
+    const leavingRefused =
+      current.statut === 'Refusé' && patch.statut !== undefined && patch.statut !== 'Refusé';
+
     const normalizedEmail = patch.email?.trim().toLowerCase();
     const emailChanged =
       !!normalizedEmail && normalizedEmail !== current.email.trim().toLowerCase();
@@ -103,7 +108,24 @@ export class RecrutementDataService {
     }
     const { error } = await this.supabase.from('recrutement_candidats').update(row).eq('id', id);
     if (error) throw error;
+
+    if (current.hasPortalAccount) {
+      if (becomingRefused) {
+        await this.setPortalUserActive(id, false);
+      } else if (leavingRefused) {
+        await this.setPortalUserActive(id, true);
+      }
+    }
+
     this._candidates.update((list) => list.map((c) => (c.id === id ? updated : c)));
+  }
+
+  private async setPortalUserActive(candidatId: string, active: boolean): Promise<void> {
+    const rpc = active
+      ? 'enable_recrutement_candidat_portal_user'
+      : 'disable_recrutement_candidat_portal_user';
+    const { error } = await this.supabase.rpc(rpc, { p_candidat_id: candidatId });
+    if (error) throw error;
   }
 
   private async syncCandidateEmail(id: string, email: string): Promise<void> {

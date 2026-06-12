@@ -28,7 +28,7 @@ export const routes: Routes = [
         canActivate: [portalAccessGuard],
         children: [
           { path: '', redirectTo: 'home', pathMatch: 'full' },
-          { path: 'home', component: HomeComponent },
+          { path: 'home', component: HomeComponent, canActivate: [permissionGuard('PORTAIL')] },
           { path: 'reseau', component: ReseauComponent, canActivate: [permissionGuard('RESEAU')] },
           { path: 'admin', component: AdminComponent, canActivate: [permissionGuard('ADMIN')] },
           { path: 'admin/roles', component: AdminRolesComponent, canActivate: [permissionGuard('ADMIN')] },

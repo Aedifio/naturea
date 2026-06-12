@@ -33,7 +33,7 @@
     <p class="status-msg">Chargement…</p>
   } @else if (loadError()) {
     <p class="status-msg status-err">{{ loadError() }}</p>
-  } @else if (!roleNames().length) {
+  } @else if (!roles().length) {
     <p class="status-msg">Aucune permission configurée.</p>
   } @else {
     <div class="matrix-wrap">
@@ -50,17 +50,17 @@
           </tr>
         </thead>
         <tbody>
-          @for (role of roleNames(); track role) {
+          @for (role of roles(); track role.id) {
             <tr>
               <td class="col-role">
-                <span class="role-badge {{ roleClass(role) }}">{{ role }}</span>
+                <span class="role-badge {{ roleClass(role.name) }}">{{ role.name }}</span>
               </td>
               @for (app of apps; track app.code) {
                 <td class="col-app">
                   <select
                     class="perm-select"
-                    [ngModel]="cellValue(role, app.code)"
-                    (ngModelChange)="setCell(role, app.code, $event)"
+                    [ngModel]="cellValue(role.id, app.code)"
+                    (ngModelChange)="setCell(role.id, app.code, $event)"
                   >
                     @for (opt of permOptions; track opt.value) {
                       <option [value]="opt.value">{{ opt.label }}</option>

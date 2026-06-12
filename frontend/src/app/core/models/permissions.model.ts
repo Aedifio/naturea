@@ -3,6 +3,17 @@ import { AppCode, PermissionLevel } from './user.model';
 export type RolePermissions = Partial<Record<AppCode, PermissionLevel>>;
 
 export const APPS_META = [
+  {
+    code: 'PORTAIL' as AppCode,
+    name: 'Portail',
+    navLabel: 'Portail',
+    navClass: 'a-portail',
+    icon: '🏠',
+    className: 't-portail',
+    desc: "Page d'accueil du portail (actus, agenda, applications).",
+    route: '/home',
+    hideFromNav: true,
+  },
   { code: 'RESEAU' as AppCode, name: 'Réseau', navLabel: 'Réseau', navClass: 'a-reseau', icon: '📊', className: 't-recrut', desc: "Vue d'ensemble du réseau : audits, formations, communications, agenda.", route: '/reseau', kpiPublic: false },
   { code: 'CODIR' as AppCode, name: 'Codir', navLabel: 'Codir', navClass: 'a-codir', icon: '📈', className: 't-codir', desc: "Pilotage exécutif. Plan d'actions, suivi des décisions.", route: '/apps/codir' },
   { code: 'RECRUT' as AppCode, name: 'Recrutement Franchise', navLabel: 'Recrutement', navClass: 'a1', icon: '🤝', className: 't-recrut', desc: 'Pipeline candidats franchisés.', route: '/apps/recrutement' },

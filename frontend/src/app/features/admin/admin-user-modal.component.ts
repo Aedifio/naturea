@@ -63,7 +63,7 @@ export class AdminUserModalComponent {
   readonly saveCreate = output<PortalUserCreate>();
   readonly saveEdit = output<PortalUserUpdate>();
 
-  readonly roles = computed(() => this.permissions.knownRoles());
+  readonly roles = computed(() => this.permissions.portalRoles());
   readonly franchiseeRole = FRANCHISEE_ROLE;
   readonly factoryManagerRole = FACTORY_MANAGER_ROLE;
 
@@ -74,16 +74,16 @@ export class AdminUserModalComponent {
     email: ['', [Validators.required, Validators.email]],
     password: [''],
     name: ['', Validators.required],
-    role: ['Franchisé', Validators.required],
+    role_id: ['', Validators.required],
     agency_id: [null as number | null],
     factory_id: [null as number | null],
     actif: [true],
   });
 
   constructor() {
-    this.form.controls.role.valueChanges
+    this.form.controls.role_id.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((role) => this.onRoleChanged(role));
+      .subscribe((roleId) => this.onRoleChanged(roleId));
 
     effect(() => {
       if (!this.open()) {
@@ -96,11 +96,13 @@ export class AdminUserModalComponent {
       const u = this.user();
 
       if (isCreate) {
+        const defaultRole =
+          this.roles().find((r) => r.name === 'Franchisé') ?? this.roles()[0];
         this.form.reset({
           email: '',
           password: '',
           name: '',
-          role: 'Franchisé',
+          role_id: defaultRole?.id ?? '',
           agency_id: null,
           factory_id: null,
           actif: true,
@@ -112,7 +114,7 @@ export class AdminUserModalComponent {
           email: u.email ?? '',
           password: '',
           name: u.name,
-          role: u.role,
+          role_id: u.role_id,
           agency_id: u.agency_id,
           factory_id: u.factory_id,
           actif: u.actif,
@@ -126,7 +128,7 @@ export class AdminUserModalComponent {
         }
       }
       this.form.controls.password.updateValueAndValidity();
-      this.onRoleChanged(this.form.controls.role.value);
+      this.onRoleChanged(this.form.controls.role_id.value);
       this.cdr.markForCheck();
     });
   }
@@ -144,14 +146,15 @@ export class AdminUserModalComponent {
   submit(): void {
     if (this.form.invalid) return;
     const raw = this.form.getRawValue();
-    const agency_id = isFranchiseeRole(raw.role) ? raw.agency_id : null;
-    const factory_id = isFactoryManagerRole(raw.role) ? raw.factory_id : null;
+    const roleName = this.roleName(raw.role_id);
+    const agency_id = isFranchiseeRole(roleName) ? raw.agency_id : null;
+    const factory_id = isFactoryManagerRole(roleName) ? raw.factory_id : null;
     if (this.mode() === 'create') {
       this.saveCreate.emit({
         email: raw.email,
         password: raw.password,
         name: raw.name,
-        role: raw.role,
+        role_id: raw.role_id,
         agency_id,
         factory_id,
         actif: raw.actif,
@@ -160,7 +163,7 @@ export class AdminUserModalComponent {
       this.saveEdit.emit({
         email: raw.email,
         name: raw.name,
-        role: raw.role,
+        role_id: raw.role_id,
         agency_id,
         factory_id,
         actif: raw.actif,
@@ -169,17 +172,22 @@ export class AdminUserModalComponent {
     }
   }
 
-  private onRoleChanged(role: string): void {
-    this.agencyFieldVisible.set(isFranchiseeRole(role));
-    this.factoryFieldVisible.set(isFactoryManagerRole(role));
-    this.applyAgencyRules(role);
-    this.applyFactoryRules(role);
+  private roleName(roleId: string): string {
+    return this.roles().find((r) => r.id === roleId)?.name ?? '';
+  }
+
+  private onRoleChanged(roleId: string): void {
+    const roleName = this.roleName(roleId);
+    this.agencyFieldVisible.set(isFranchiseeRole(roleName));
+    this.factoryFieldVisible.set(isFactoryManagerRole(roleName));
+    this.applyAgencyRules(roleName);
+    this.applyFactoryRules(roleName);
     this.cdr.markForCheck();
   }
 
-  private applyAgencyRules(role: string): void {
+  private applyAgencyRules(roleName: string): void {
     const fc = this.form.controls.agency_id;
-    if (isFranchiseeRole(role)) {
+    if (isFranchiseeRole(roleName)) {
       fc.setValidators([Validators.required]);
     } else {
       fc.clearValidators();
@@ -188,9 +196,9 @@ export class AdminUserModalComponent {
     fc.updateValueAndValidity({ emitEvent: false });
   }
 
-  private applyFactoryRules(role: string): void {
+  private applyFactoryRules(roleName: string): void {
     const fc = this.form.controls.factory_id;
-    if (isFactoryManagerRole(role)) {
+    if (isFactoryManagerRole(roleName)) {
       fc.setValidators([Validators.required]);
     } else {
       fc.clearValidators();

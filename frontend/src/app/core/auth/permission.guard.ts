@@ -10,6 +10,7 @@ export function permissionGuard(appCode: AppCode): CanActivateFn {
     const permissions = inject(PortalPermissionsService);
     const router = inject(Router);
     await auth.whenReady();
+    await auth.ensureAccountActive();
     await permissions.whenReady();
     if (auth.canReadApp(appCode)) return true;
     return router.createUrlTree([auth.defaultRouteAfterLogin()]);

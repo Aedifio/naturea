@@ -22,7 +22,7 @@ export class AppReturnBannerComponent {
   /** Full banner label — skips APPS_META lookup when set */
   readonly labelOverride = input<string | undefined>(undefined, { alias: 'label' });
 
-  readonly isRecrutementCandidate = computed(() => this.auth.isRecrutementCandidate());
+  readonly showPortalReturn = computed(() => this.auth.canAccessPortail());
 
   readonly displayLabel = computed(() => {
     const override = this.labelOverride();

@@ -1,4 +1,5 @@
 export type AppCode =
+  | 'PORTAIL'
   | 'RESEAU'
   | 'CODIR'
   | 'RECRUT'
@@ -18,6 +19,7 @@ export interface PortalUser {
   /** Legacy seed field — not used at runtime with Supabase Auth. */
   password?: string;
   name: string;
+  roleId: string;
   role: string;
   /** Canonical agencies.id when the user is a Franchisé. */
   agencyId: number | null;
@@ -32,6 +34,7 @@ export interface PortalUser {
 
 export interface ActiveUser {
   name: string;
+  roleId: string;
   role: string;
   franchise: string;
   email: string;
@@ -50,4 +53,8 @@ export interface AppMeta {
   desc: string;
   route: string;
   kpiPublic?: boolean;
+  /** Hidden from main portal nav (e.g. PORTAIL — controlled via Accueil link). */
+  hideFromNav?: boolean;
+  navLabel?: string;
+  navClass?: string;
 }
