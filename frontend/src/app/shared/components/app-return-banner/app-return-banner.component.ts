@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { APPS_META } from '../../../core/models/permissions.model';
 import { permissionLabel } from '../../../core/models/kpi.model';
 import { AppCode } from '../../../core/models/user.model';
+import { NATUREA_LOGO } from '../../constants/branding';
 
 @Component({
   selector: 'app-return-banner',
@@ -14,6 +15,8 @@ import { AppCode } from '../../../core/models/user.model';
 })
 export class AppReturnBannerComponent {
   private readonly auth = inject(AuthService);
+
+  readonly logo = NATUREA_LOGO;
 
   /** App code — used to resolve icon, name and permission label from APPS_META. */
   readonly appCode = input<AppCode | undefined>();
