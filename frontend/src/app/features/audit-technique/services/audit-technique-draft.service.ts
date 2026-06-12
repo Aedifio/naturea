@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { NewAuditDraft } from '../audit-technique.models';
+import type { Audit, CorpsCatalogItem, NewAuditDraft } from '../audit-technique.models';
 import { createEmptyCorps } from '../constants/audit-technique.constants';
 
 @Injectable({ providedIn: 'root' })
@@ -8,8 +8,7 @@ export class AuditTechniqueDraftService {
   readonly activeCorpsId = signal<number | null>(null);
   readonly data = signal<NewAuditDraft | null>(null);
 
-  start(agenceId?: number): void {
-    void agenceId;
+  start(catalog: CorpsCatalogItem[]): void {
     this.step.set(0);
     this.activeCorpsId.set(null);
     this.data.set({
@@ -19,7 +18,25 @@ export class AuditTechniqueDraftService {
       chantiers: '',
       participants: '',
       commentaires: '',
-      corps: createEmptyCorps(),
+      corps: createEmptyCorps(catalog),
+    });
+  }
+
+  load(audit: Audit, catalog: CorpsCatalogItem[]): void {
+    const byId = new Map(audit.corps.map((c) => [c.id, c]));
+    this.step.set(0);
+    this.activeCorpsId.set(null);
+    this.data.set({
+      id: audit.id,
+      date: audit.date,
+      auditeur: audit.auditeur,
+      chantiers: audit.chantiers,
+      participants: audit.participants,
+      commentaires: audit.commentaires,
+      corps: createEmptyCorps(catalog).map((t) => {
+        const stored = byId.get(t.id);
+        return stored ? { ...t, ...stored, code: t.code, label: t.label } : t;
+      }),
     });
   }
 

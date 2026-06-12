@@ -1,5 +1,9 @@
 import type { Audit, CorpsMetier } from '../audit-technique.models';
 
+export function activeAudits(audits: Audit[] | undefined): Audit[] {
+  return (audits ?? []).filter((a) => !a.archived);
+}
+
 export function scoreColor(s: number | null | undefined): string {
   if (s === null || s === undefined) return '#8a948c';
   if (s >= 4) return '#2f8557';

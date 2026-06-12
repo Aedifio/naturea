@@ -1,14 +1,23 @@
+export interface AuditPhotoRef {
+  /** `portal_files.id` */
+  portalFileId: string;
+  filename: string;
+}
+
 export type EcartType = 'urgent' | 'mineur' | 'corrige' | 'conseil' | 'nvu';
 export type RectifStatus = 'en_attente' | 'en_cours' | 'corrige' | 'reporte';
 
-export interface CorpsMetier {
+export interface CorpsCatalogItem {
   id: number;
   code: string;
   label: string;
+}
+
+export interface CorpsMetier extends CorpsCatalogItem {
   note: number | null;
   ecart: EcartType | null;
   commentaire: string;
-  photos: string[];
+  photos: AuditPhotoRef[];
   rectifStatus: RectifStatus;
   rectifNote: string;
 }
@@ -21,6 +30,8 @@ export interface Audit {
   participants: string;
   commentaires: string;
   corps: CorpsMetier[];
+  archived?: boolean;
+  archivedAt?: string;
 }
 
 export interface Agence {
@@ -48,7 +59,7 @@ export interface UrgentEcart {
   commentaire: string;
   rectifStatus: RectifStatus;
   rectifNote: string;
-  photos: string[];
+  photos: AuditPhotoRef[];
 }
 
 export interface CorpsAvg {

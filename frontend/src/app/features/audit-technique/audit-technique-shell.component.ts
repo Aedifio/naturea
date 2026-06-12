@@ -4,7 +4,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AppReturnBannerComponent } from '../../shared/components/app-return-banner/app-return-banner.component';
 import { NATUREA_LOGO } from '../../shared/constants/branding';
 import { AuditTechniqueDataService } from './services/audit-technique-data.service';
-import { avgAudits, scoreColor } from './utils/audit-score.util';
+import { activeAudits, avgAudits, scoreColor } from './utils/audit-score.util';
 
 @Component({
   selector: 'app-audit-technique-shell',
@@ -25,7 +25,7 @@ export class AuditTechniqueShellComponent {
 
   readonly agencesNav = computed(() =>
     [...this.data.agences()]
-      .map((a) => ({ ...a, score: avgAudits(a.audits) }))
+      .map((a) => ({ ...a, score: avgAudits(activeAudits(a.audits)) }))
       .sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
   );
 

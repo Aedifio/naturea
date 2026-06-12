@@ -14,9 +14,26 @@
           </div>
         </div>
       </div>
-      <button type="button" class="btn btn-danger" (click)="deleteAudit()">Supprimer</button>
+      <div style="display: flex; gap: 8px">
+        @if (!au.archived) {
+          <a
+            class="btn btn-primary"
+            [routerLink]="['/apps/audit-technique/agence', ag.id, 'audit', au.id, 'edition']"
+          >Modifier</a>
+        }
+        @if (au.archived) {
+          <button type="button" class="btn btn-ghost" (click)="unarchiveAudit()">📂 Désarchiver</button>
+        } @else {
+          <button type="button" class="btn btn-ghost" (click)="archiveAudit()">📦 Archiver</button>
+        }
+      </div>
     </div>
     <div class="content fade-up">
+      @if (au.archived) {
+        <div class="card-sm archived-banner">
+          📦 Audit archivé@if (au.archivedAt) { — le {{ fmtDate(au.archivedAt.slice(0, 10)) }} }
+        </div>
+      }
       @if (au.chantiers || au.participants) {
         <div class="card-sm meta-row">
           @if (au.chantiers) {
@@ -83,6 +100,19 @@
           </table>
         }
       </div>
+      @if (corpsWithPhotos().length) {
+        <div class="card" style="margin-top: 20px">
+          <div class="section-title">Photos & pièces jointes</div>
+          @for (c of corpsWithPhotos(); track c.id) {
+            <div class="photo-corps-block">
+              <div class="photo-corps-label">
+                <span class="mono" style="color: var(--text3); margin-right: 8px">{{ c.code }}</span>{{ c.label }}
+              </div>
+              <app-audit-photo-grid [photos]="c.photos" />
+            </div>
+          }
+        </div>
+      }
       @if (au.commentaires) {
         <div class="card" style="margin-top: 20px">
           <div class="section-title">Commentaires généraux</div>

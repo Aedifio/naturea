@@ -28,6 +28,13 @@ export interface UploadedFileRef {
   portalFileId: string;
 }
 
+export interface PortalFileRow {
+  id: string;
+  bucket: StorageBucket;
+  path: string;
+  filename: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FileStorageService {
   private readonly supabase = inject(SupabaseService);
@@ -93,9 +100,77 @@ export class FileStorageService {
     return data?.signedUrl ?? null;
   }
 
+  async getPortalFile(id: string): Promise<PortalFileRow | null> {
+    const { data, error } = await this.supabase
+      .from('portal_files')
+      .select('id, bucket, path, filename')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data as PortalFileRow;
+  }
+
+  async getPortalFilesByIds(ids: string[]): Promise<PortalFileRow[]> {
+    if (!ids.length) return [];
+    const { data, error } = await this.supabase
+      .from('portal_files')
+      .select('id, bucket, path, filename')
+      .in('id', ids);
+    if (error) {
+      console.warn('[FileStorage] portal_files lookup failed', error);
+      return [];
+    }
+    return (data ?? []) as PortalFileRow[];
+  }
+
+  async getPortalFileByPath(bucket: StorageBucket, path: string): Promise<PortalFileRow | null> {
+    const { data, error } = await this.supabase
+      .from('portal_files')
+      .select('id, bucket, path, filename')
+      .eq('bucket', bucket)
+      .eq('path', path)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data as PortalFileRow;
+  }
+
+  async resolvePortalFileUrl(portalFileId: string): Promise<string | null> {
+    const row = await this.getPortalFile(portalFileId);
+    if (!row) return null;
+    return this.getSignedUrl(row.bucket, row.path);
+  }
+
+  /** Batch-load portal_files rows referenced by id or legacy storage path. */
+  async resolvePortalFileRefs(
+    ids: string[],
+    paths: Array<{ bucket: StorageBucket; path: string }>,
+  ): Promise<Map<string, PortalFileRow>> {
+    const map = new Map<string, PortalFileRow>();
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length) {
+      for (const row of await this.getPortalFilesByIds(uniqueIds)) {
+        map.set(`id:${row.id}`, row);
+      }
+    }
+    const uniquePaths = [...new Map(paths.map((p) => [`${p.bucket}:${p.path}`, p])).values()];
+    for (const { bucket, path } of uniquePaths) {
+      const row = await this.getPortalFileByPath(bucket, path);
+      if (row) map.set(`path:${bucket}:${path}`, row);
+    }
+    return map;
+  }
+
   async delete(bucket: StorageBucket, path: string): Promise<void> {
     await this.supabase.storage(bucket).remove([path]);
     await this.supabase.from('portal_files').delete().eq('path', path);
+  }
+
+  async deletePortalFile(portalFileId: string): Promise<void> {
+    const row = await this.getPortalFile(portalFileId);
+    if (row) {
+      await this.supabase.storage(row.bucket).remove([row.path]);
+    }
+    await this.supabase.from('portal_files').delete().eq('id', portalFileId);
   }
 
   /** Removes all storage objects and `portal_files` rows for an entity. */

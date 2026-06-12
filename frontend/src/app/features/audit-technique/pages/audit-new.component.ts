@@ -3,8 +3,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
-import type { EcartType } from '../audit-technique.models';
+import type { AuditPhotoRef, EcartType } from '../audit-technique.models';
 import { ECARTS, NEW_AUDIT_STEPS } from '../constants/audit-technique.constants';
+import { AuditPhotoGridComponent } from '../components/audit-photo-grid.component';
 import { AuditScoreRingComponent } from '../components/audit-score-ring.component';
 import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { AuditTechniqueDataService } from '../services/audit-technique-data.service';
@@ -14,7 +15,7 @@ import { scoreColor, scoreLabel } from '../utils/audit-score.util';
 @Component({
   selector: 'app-audit-new',
   standalone: true,
-  imports: [FormsModule, AuditScoreRingComponent],
+  imports: [FormsModule, AuditPhotoGridComponent, AuditScoreRingComponent],
   templateUrl: './audit-new.component.html',
 })
 export class AuditNewComponent {
@@ -28,6 +29,20 @@ export class AuditNewComponent {
     this.route.paramMap.pipe(map((p) => Number(p.get('agenceId')))),
     { initialValue: Number(this.route.snapshot.paramMap.get('agenceId')) },
   );
+  readonly auditId = toSignal(
+    this.route.paramMap.pipe(map((p) => {
+      const raw = p.get('auditId');
+      return raw ? Number(raw) : null;
+    })),
+    { initialValue: (() => {
+      const raw = this.route.snapshot.paramMap.get('auditId');
+      return raw ? Number(raw) : null;
+    })() },
+  );
+
+  private readonly initKey = signal<string | null>(null);
+
+  readonly editMode = computed(() => this.auditId() !== null);
 
   readonly steps = NEW_AUDIT_STEPS;
   readonly ecarts = ECARTS;
@@ -52,14 +67,34 @@ export class AuditNewComponent {
 
   constructor() {
     effect(() => {
-      const id = this.agenceId();
-      if (id) this.draft.start(id);
+      const agenceId = this.agenceId();
+      const auditId = this.auditId();
+      const catalog = this.data.corpsCatalog();
+      if (!agenceId || !catalog.length) return;
+
+      const key = auditId ? `edit-${agenceId}-${auditId}` : `new-${agenceId}`;
+      if (this.initKey() === key) return;
+      this.initKey.set(key);
+
+      if (auditId) {
+        const audit = this.data.getAudit(agenceId, auditId);
+        if (audit) this.draft.load(audit, catalog);
+      } else {
+        this.draft.start(catalog);
+      }
     });
   }
 
   cancel(): void {
+    const agenceId = this.agenceId();
+    const auditId = this.auditId();
+    this.initKey.set(null);
     this.draft.reset();
-    void this.router.navigate(['/apps/audit-technique/agence', this.agenceId()]);
+    if (auditId) {
+      void this.router.navigate(['/apps/audit-technique/agence', agenceId, 'audit', auditId]);
+    } else {
+      void this.router.navigate(['/apps/audit-technique/agence', agenceId]);
+    }
   }
 
   nextStep(): void {
@@ -121,24 +156,30 @@ export class AuditNewComponent {
     const files = (e.target as HTMLInputElement).files;
     if (!files?.length) return;
     Array.from(files).forEach((file) => {
-      void this.uploadPhoto(id, c.photos, file);
+      void this.uploadPhoto(id, file);
     });
     (e.target as HTMLInputElement).value = '';
   }
 
-  private async uploadPhoto(corpsId: number, _existing: string[], file: File): Promise<void> {
+  private async uploadPhoto(corpsId: number, file: File): Promise<void> {
     const agenceId = this.agenceId();
-    const path = `agence-${agenceId}/corps-${corpsId}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const auditId = this.draftData()?.id;
+    if (!auditId) return;
+    const path = `agence-${agenceId}/audit-${auditId}/corps-${corpsId}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
     try {
       const uploaded = await this.files.upload('audit-technique', path, file, {
         appSlot: 'AUDIT',
-        entityType: 'corps',
-        entityId: String(corpsId),
+        entityType: 'audit',
+        entityId: String(auditId),
         kind: 'photo',
       });
       const current = this.draft.data()?.corps.find((x) => x.id === corpsId);
       if (!current) return;
-      this.draft.patchCorps(corpsId, { photos: [...current.photos, uploaded.signedUrl] });
+      const photo: AuditPhotoRef = {
+        portalFileId: uploaded.portalFileId,
+        filename: uploaded.filename,
+      };
+      this.draft.patchCorps(corpsId, { photos: [...current.photos, photo] });
     } catch (err) {
       console.warn('[AuditNew] photo upload failed', err);
     }
@@ -148,15 +189,31 @@ export class AuditNewComponent {
     const id = this.activeCorpsId();
     const c = this.activeCorps();
     if (id === null || !c) return;
+    const photo = c.photos[idx];
+    if (!photo) return;
     this.draft.patchCorps(id, { photos: c.photos.filter((_, i) => i !== idx) });
+    if (!this.editMode()) {
+      void this.files.deletePortalFile(photo.portalFileId).catch((err) => {
+        console.warn('[AuditNew] photo delete failed', err);
+      });
+    }
   }
 
   saveAudit(): void {
     const d = this.draftData();
     if (!d) return;
-    this.data.addAudit(this.agenceId(), { ...d });
-    this.draft.reset();
-    void this.router.navigate(['/apps/audit-technique/agence', this.agenceId()]);
+    const agenceId = this.agenceId();
+    if (this.editMode()) {
+      this.data.updateAudit(agenceId, { ...d });
+      this.initKey.set(null);
+      this.draft.reset();
+      void this.router.navigate(['/apps/audit-technique/agence', agenceId, 'audit', d.id]);
+    } else {
+      this.data.addAudit(agenceId, { ...d });
+      this.initKey.set(null);
+      this.draft.reset();
+      void this.router.navigate(['/apps/audit-technique/agence', agenceId]);
+    }
   }
 
   ecartMeta(value: string | null) {

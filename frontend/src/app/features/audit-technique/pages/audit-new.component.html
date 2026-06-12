@@ -59,13 +59,13 @@
             <button type="button" class="photo-add" (click)="photoInput.click()">📷 Ajouter une photo</button>
             <input #photoInput type="file" accept="image/*" multiple hidden (change)="onPhotoSelect($event)" />
             @if (c.photos.length) {
-              <div class="photo-grid">
-                @for (p of c.photos; track $index; let i = $index) {
-                  <div class="photo-wrap">
-                    <img [src]="p" alt="" />
-                    <button type="button" class="photo-del" (click)="removePhoto(i)">×</button>
-                  </div>
-                }
+              <div class="photo-grid-editable">
+                <app-audit-photo-grid [photos]="c.photos" />
+                <div class="photo-actions">
+                  @for (p of c.photos; track p.portalFileId; let i = $index) {
+                    <button type="button" class="photo-del-inline" (click)="removePhoto(i)" [title]="'Retirer ' + p.filename">× {{ p.filename }}</button>
+                  }
+                </div>
               </div>
             }
           </div>
@@ -80,7 +80,7 @@
     <div class="topbar">
       <div>
         <button type="button" class="btn btn-ghost" style="margin-bottom: 8px; font-size: 12px" (click)="cancel()">← Annuler</button>
-        <h2>Nouvel audit — {{ ag.nom }}</h2>
+        <h2>{{ editMode() ? 'Modifier l\'audit' : 'Nouvel audit' }} — {{ ag.nom }}</h2>
       </div>
       <app-audit-score-ring [score]="score()" [size]="48" />
     </div>
@@ -213,7 +213,9 @@
         @if (step() < 2) {
           <button type="button" class="btn btn-primary" (click)="nextStep()">Étape suivante →</button>
         } @else {
-          <button type="button" class="btn btn-primary save-btn" (click)="saveAudit()">✓ Enregistrer l'audit</button>
+          <button type="button" class="btn btn-primary save-btn" (click)="saveAudit()">
+            {{ editMode() ? '✓ Enregistrer les modifications' : '✓ Enregistrer l\'audit' }}
+          </button>
         }
       </div>
     </div>

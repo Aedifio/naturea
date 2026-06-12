@@ -20,12 +20,17 @@ export const AUDIT_TECHNIQUE_ROUTES: Routes = [
       { path: 'urgents', component: AuditUrgentsComponent, canActivate: [auditTechniqueNetworkGuard()] },
       { path: 'classement', component: AuditClassementComponent, canActivate: [auditTechniqueNetworkGuard()] },
       { path: 'agence/:agenceId', component: AuditAgenceComponent, canActivate: [auditTechniqueAgencyGuard()] },
+      { path: 'agence/:agenceId/nouveau', component: AuditNewComponent, canActivate: [auditTechniqueAgencyGuard()] },
+      {
+        path: 'agence/:agenceId/audit/:auditId/edition',
+        component: AuditNewComponent,
+        canActivate: [auditTechniqueAgencyGuard()],
+      },
       {
         path: 'agence/:agenceId/audit/:auditId',
         component: AuditDetailComponent,
         canActivate: [auditTechniqueAgencyGuard()],
       },
-      { path: 'agence/:agenceId/nouveau', component: AuditNewComponent, canActivate: [auditTechniqueAgencyGuard()] },
     ],
   },
 ];

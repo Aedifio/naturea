@@ -1,20 +1,39 @@
 import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AgencyService } from '../../../core/services/agency.service';
+import { FileStorageService } from '../../../core/storage/file-storage.service';
 import { SupabaseService } from '../../../core/supabase/supabase.service';
-import type { Agence, Audit, AuditTechniqueState, CorpsAvg, CorpsMetier, UrgentEcart } from '../audit-technique.models';
-import { CORPS, createEmptyCorps } from '../constants/audit-technique.constants';
-import { auditAvg, avgAudits } from '../utils/audit-score.util';
+import type {
+  Agence,
+  Audit,
+  AuditPhotoRef,
+  AuditTechniqueState,
+  CorpsAvg,
+  CorpsCatalogItem,
+  CorpsMetier,
+  UrgentEcart,
+} from '../audit-technique.models';
+import { createEmptyCorps } from '../constants/audit-technique.constants';
+import {
+  collectStoredPhotoRefs,
+  hydrateAuditPhotos,
+  serializeAuditPhotos,
+} from '../utils/audit-photo.util';
+import { activeAudits, auditAvg, avgAudits } from '../utils/audit-score.util';
 
 @Injectable({ providedIn: 'root' })
 export class AuditTechniqueDataService {
   private readonly supabase = inject(SupabaseService);
   private readonly agencies = inject(AgencyService);
+  private readonly files = inject(FileStorageService);
   /** Lazy — avoids AuthService ↔ AppDataBootstrapService circular DI. */
   private readonly injector = inject(Injector);
 
   /** Audits keyed by `agencies.id`. */
   private readonly _auditsByAgencyId = signal<Map<number, Audit[]>>(new Map());
+  private readonly _corpsCatalog = signal<CorpsCatalogItem[]>([]);
+
+  readonly corpsCatalog = this._corpsCatalog.asReadonly();
 
   /** Agency list: metadata from `agencies`, audits from audit-technique tables. */
   readonly agences = computed(() => {
@@ -50,18 +69,20 @@ export class AuditTechniqueDataService {
 
   readonly agencesSortedByScore = computed(() =>
     [...this.agences()]
-      .map((a) => ({ ...a, score: avgAudits(a.audits) }))
+      .map((a) => ({ ...a, score: avgAudits(activeAudits(a.audits)) }))
       .sort(
         (a, b) =>
           (b.score ?? -1) - (a.score ?? -1) || a.nom.localeCompare(b.nom, 'fr'),
       ),
   );
 
-  readonly allAudits = computed(() => this.agences().flatMap((a) => a.audits));
+  readonly allAudits = computed(() => this.agences().flatMap((a) => activeAudits(a.audits)));
 
   readonly networkScore = computed(() => avgAudits(this.allAudits()));
 
-  readonly auditedCount = computed(() => this.agences().filter((a) => avgAudits(a.audits) !== null).length);
+  readonly auditedCount = computed(() =>
+    this.agences().filter((a) => avgAudits(activeAudits(a.audits)) !== null).length,
+  );
 
   readonly openUrgentsCount = computed(
     () => this.getAllUrgents().filter((u) => u.rectifStatus !== 'corrige').length,
@@ -78,10 +99,16 @@ export class AuditTechniqueDataService {
       return;
     }
 
-    const [auditsRes, corpsRes] = await Promise.all([
+    const [catalogRes, auditsRes, corpsRes] = await Promise.all([
+      this.supabase.from('corps_metiers').select('id, code, label').order('id'),
       this.supabase.from('audit_technique_audits').select('*'),
       this.supabase.from('audit_technique_corps').select('*'),
     ]);
+
+    if (catalogRes.error) {
+      console.error('[AuditTechnique] corps catalog load failed', catalogRes.error);
+    }
+    this._corpsCatalog.set(catalogRes.data ?? []);
 
     if (auditsRes.error) {
       console.error('[AuditTechnique] load failed', auditsRes.error);
@@ -89,17 +116,23 @@ export class AuditTechniqueDataService {
       return;
     }
 
+    const catalogById = new Map(this._corpsCatalog().map((cm) => [cm.id, cm]));
+    const corpsRows = corpsRes.data ?? [];
+    const { ids, paths } = collectStoredPhotoRefs(corpsRows.map((c) => c.photos ?? []));
+    const fileMap = await this.files.resolvePortalFileRefs(ids, paths);
+
     const corpsByAudit = new Map<string, CorpsMetier[]>();
-    for (const c of corpsRes.data ?? []) {
+    for (const c of corpsRows) {
       const list = corpsByAudit.get(c.audit_id) ?? [];
+      const ref = catalogById.get(c.corps_id);
       list.push({
         id: c.corps_id,
-        code: c.code,
-        label: c.label,
+        code: ref?.code ?? String(c.corps_id).padStart(2, '0'),
+        label: ref?.label ?? '—',
         note: c.note != null ? Number(c.note) : null,
         ecart: c.ecart,
         commentaire: c.commentaire ?? '',
-        photos: c.photos ?? [],
+        photos: hydrateAuditPhotos(c.photos, fileMap),
         rectifStatus: c.rectif_status,
         rectifNote: c.rectif_note ?? '',
       });
@@ -117,7 +150,9 @@ export class AuditTechniqueDataService {
         chantiers: payload['chantiers'] ?? '',
         participants: payload['participants'] ?? '',
         commentaires: payload['commentaires'] ?? '',
-        corps: corpsByAudit.get(a.id) ?? createEmptyCorps(),
+        corps: corpsByAudit.get(a.id) ?? this.createEmptyCorpsList(),
+        archived: a.archived ?? false,
+        archivedAt: a.archived_at ?? undefined,
       };
       const list = auditsByAgencyId.get(a.agency_id) ?? [];
       list.push(audit);
@@ -129,6 +164,7 @@ export class AuditTechniqueDataService {
 
   private clearCaches(): void {
     this._auditsByAgencyId.set(new Map());
+    this._corpsCatalog.set([]);
   }
 
   private persistAgence(agencyId: number): void {
@@ -143,6 +179,8 @@ export class AuditTechniqueDataService {
         id: auditId,
         agency_id: ag.id,
         audit_date: au.date,
+        archived: au.archived ?? false,
+        archived_at: au.archivedAt ?? null,
         payload: {
           auditeur: au.auditeur,
           chantiers: au.chantiers,
@@ -154,14 +192,12 @@ export class AuditTechniqueDataService {
       const corpsRows = au.corps.map((c) => ({
         audit_id: auditId,
         corps_id: c.id,
-        code: c.code,
-        label: c.label,
         note: c.note,
         ecart: c.ecart,
         rectif_status: c.rectifStatus,
         rectif_note: c.rectifNote,
         commentaire: c.commentaire,
-        photos: c.photos,
+        photos: serializeAuditPhotos(c.photos),
       }));
       if (corpsRows.length) {
         await this.supabase.from('audit_technique_corps').upsert(corpsRows, { onConflict: 'audit_id,corps_id' });
@@ -180,7 +216,7 @@ export class AuditTechniqueDataService {
   getAllUrgents(): UrgentEcart[] {
     const res: UrgentEcart[] = [];
     for (const ag of this.agences()) {
-      for (const au of ag.audits) {
+      for (const au of activeAudits(ag.audits)) {
         for (const c of au.corps) {
           if (c.ecart === 'urgent') {
             res.push({
@@ -207,7 +243,7 @@ export class AuditTechniqueDataService {
   getCorpsWeaknesses(): CorpsAvg[] {
     const all = this.allAudits();
     const result: CorpsAvg[] = [];
-    for (const cm of CORPS) {
+    for (const cm of this._corpsCatalog()) {
       const scores = all.flatMap((a) =>
         a.corps.filter((c) => c.id === cm.id && c.note !== null).map((c) => c.note as number),
       );
@@ -225,12 +261,15 @@ export class AuditTechniqueDataService {
 
   getRecentAgencies(limit = 3): Array<Agence & { lastDate: string; score: number | null }> {
     return [...this.agences()]
-      .filter((a) => a.audits.length > 0)
-      .map((a) => ({
-        ...a,
-        lastDate: [...a.audits].map((x) => x.date).sort().reverse()[0],
-        score: avgAudits(a.audits),
-      }))
+      .filter((a) => activeAudits(a.audits).length > 0)
+      .map((a) => {
+        const audits = activeAudits(a.audits);
+        return {
+          ...a,
+          lastDate: [...audits].map((x) => x.date).sort().reverse()[0],
+          score: avgAudits(audits),
+        };
+      })
       .sort((a, b) => b.lastDate.localeCompare(a.lastDate))
       .slice(0, limit);
   }
@@ -255,10 +294,46 @@ export class AuditTechniqueDataService {
     this.persistAgence(agenceId);
   }
 
+  updateAudit(agenceId: number, audit: Audit): void {
+    const existing = this.getAudit(agenceId, audit.id);
+    if (existing) this.deleteRemovedPhotos(existing, audit);
+
+    const audits = structuredClone(this._auditsByAgencyId().get(agenceId) ?? []);
+    const idx = audits.findIndex((a) => a.id === audit.id);
+    if (idx === -1) return;
+    audits[idx] = {
+      ...audit,
+      archived: audits[idx].archived,
+      archivedAt: audits[idx].archivedAt,
+    };
+    this._auditsByAgencyId.update((m) => new Map(m).set(agenceId, audits));
+    this.persistAgence(agenceId);
+  }
+
+  archiveAudit(agenceId: number, auditId: number): void {
+    const audits = structuredClone(this._auditsByAgencyId().get(agenceId) ?? []);
+    const au = audits.find((a) => a.id === auditId);
+    if (!au) return;
+    au.archived = true;
+    au.archivedAt = new Date().toISOString();
+    this._auditsByAgencyId.update((m) => new Map(m).set(agenceId, audits));
+    this.persistAgence(agenceId);
+  }
+
+  unarchiveAudit(agenceId: number, auditId: number): void {
+    const audits = structuredClone(this._auditsByAgencyId().get(agenceId) ?? []);
+    const au = audits.find((a) => a.id === auditId);
+    if (!au) return;
+    au.archived = false;
+    au.archivedAt = undefined;
+    this._auditsByAgencyId.update((m) => new Map(m).set(agenceId, audits));
+    this.persistAgence(agenceId);
+  }
+
   deleteAudit(agenceId: number, auditId: number): void {
     const audits = (this._auditsByAgencyId().get(agenceId) ?? []).filter((a) => a.id !== auditId);
     this._auditsByAgencyId.update((m) => new Map(m).set(agenceId, audits));
-    this.persistAgence(agenceId);
+    void this.supabase.from('audit_technique_audits').delete().eq('id', String(auditId));
   }
 
   replaceState(state: AuditTechniqueState): void {
@@ -280,11 +355,31 @@ export class AuditTechniqueDataService {
       chantiers: '',
       participants: '',
       commentaires: '',
-      corps: createEmptyCorps(),
+      corps: this.createEmptyCorpsList(),
+      archived: false,
     };
+  }
+
+  createEmptyCorpsList(): CorpsMetier[] {
+    return createEmptyCorps(this._corpsCatalog());
   }
 
   auditScore(audit: Audit): number | null {
     return auditAvg(audit);
+  }
+
+  async resolvePhotoUrl(photo: AuditPhotoRef): Promise<string | null> {
+    return this.files.resolvePortalFileUrl(photo.portalFileId);
+  }
+
+  private deleteRemovedPhotos(before: Audit, after: Audit): void {
+    const afterIds = new Set(after.corps.flatMap((c) => c.photos.map((p) => p.portalFileId)));
+    for (const photo of before.corps.flatMap((c) => c.photos)) {
+      if (!afterIds.has(photo.portalFileId)) {
+        void this.files.deletePortalFile(photo.portalFileId).catch((err) => {
+          console.warn('[AuditTechnique] photo delete failed', photo.portalFileId, err);
+        });
+      }
+    }
   }
 }

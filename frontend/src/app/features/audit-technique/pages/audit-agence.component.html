@@ -16,16 +16,16 @@
     <div class="grid-3" style="margin-bottom: 24px">
       <div class="metric">
         <div class="metric-label">Score moyen</div>
-        <div class="metric-value" [style.color]="score() ? 'var(--green)' : 'var(--text3)'">
-          {{ score() ? score()!.toFixed(2) : '—' }}
+        <div class="metric-value" [style.color]="scoreColor(score())">
+          {{ score() !== null && score() !== undefined ? score()!.toFixed(2) : '—' }}
         </div>
         <div class="metric-sub">{{ score() ? scoreLabel(score()) : '—' }}</div>
       </div>
       <div class="metric">
         <div class="metric-label">Nombre d'audits</div>
-        <div class="metric-value" style="color: var(--primary)">{{ a.audits.length }}</div>
+        <div class="metric-value" style="color: var(--primary)">{{ activeAuditList().length }}</div>
         <div class="metric-sub">
-          {{ a.audits.length ? 'Dernier : ' + fmtDate(sortedAudits()[0].date) : 'Aucun audit' }}
+          {{ activeAuditList().length ? 'Dernier : ' + fmtDate(sortedAudits()[0].date) : 'Aucun audit' }}
         </div>
       </div>
       <div class="metric">
@@ -53,7 +53,7 @@
               <tr class="clickable" [routerLink]="['/apps/audit-technique/agence', a.id, 'audit', au.id]">
                 <td><span class="mono" style="color: var(--text2)">{{ fmtDate(au.date) }}</span></td>
                 <td style="color: var(--text2)">{{ au.auditeur || '—' }}</td>
-                <td><span class="mono">{{ notedCount(au) }}/{{ corpsCount }}</span></td>
+                <td><span class="mono">{{ notedCount(au) }}/{{ corpsCount() }}</span></td>
                 <td><app-audit-score-pill [score]="auditScore(au)" /></td>
                 <td>
                   @if (urgentInAudit(au) > 0) {
@@ -80,5 +80,43 @@
         </table>
       }
     </div>
+    @if (archivedAuditList().length) {
+      <div class="card" style="margin-top: 20px">
+        <button
+          type="button"
+          class="archives-toggle"
+          (click)="toggleArchives()"
+        >
+          <span>📁 Archives ({{ archivedAuditList().length }})</span>
+          <span class="archives-toggle-hint">masqués des indicateurs actifs</span>
+          <span class="archives-toggle-icon">{{ archivesOpen() ? '▼' : '▶' }}</span>
+        </button>
+        @if (archivesOpen()) {
+          <table class="table" style="margin-top: 0">
+            <thead>
+              <tr><th>Date</th><th>Auditeur</th><th>Corps notés</th><th>Score</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (au of archivedAuditList(); track au.id) {
+                <tr class="clickable archived-row" [routerLink]="['/apps/audit-technique/agence', a.id, 'audit', au.id]">
+                  <td><span class="mono" style="color: var(--text3)">{{ fmtDate(au.date) }}</span></td>
+                  <td style="color: var(--text3)">{{ au.auditeur || '—' }}</td>
+                  <td><span class="mono" style="color: var(--text3)">{{ notedCount(au) }}/{{ corpsCount() }}</span></td>
+                  <td><app-audit-score-pill [score]="auditScore(au)" /></td>
+                  <td>
+                    <a
+                      class="btn btn-ghost"
+                      style="font-size: 12px"
+                      [routerLink]="['/apps/audit-technique/agence', a.id, 'audit', au.id]"
+                      (click)="$event.stopPropagation()"
+                    >Voir →</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
   </div>
 }
