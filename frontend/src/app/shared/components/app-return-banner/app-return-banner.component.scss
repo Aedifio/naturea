@@ -14,43 +14,108 @@
   background: #41532a;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  gap: 14px;
+  padding: 0 16px;
+  gap: 10px;
   border-bottom: 2px solid var(--accent-ink);
   z-index: 300;
 }
 
-.return-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 6px 13px;
-  border-radius: 6px;
-  font-size: 12.5px;
-  font-family: var(--sans);
-  text-decoration: none;
-  transition: background 0.2s;
-  white-space: nowrap;
-  cursor: pointer;
+/* Persistent app switcher — scrolls horizontally so it always fits the bar. */
+.nav-apps {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  -webkit-overflow-scrolling: touch;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.22);
+  &::-webkit-scrollbar {
+    height: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
   }
 }
 
-.return-label {
-  color: #fff;
-  font-family: var(--serif);
-  font-size: 18px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.bar-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+}
 
-  &.grow {
-    flex: 1;
-    min-width: 0;
+.nab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  padding: 5px 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
   }
+
+  &.on {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  .nd {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+}
+
+.return-home .nd {
+  background: rgba(90, 122, 58, 0.7);
+}
+.a1 .nd {
+  background: rgba(90, 122, 58, 0.7);
+}
+.a2 .nd {
+  background: rgba(196, 99, 42, 0.6);
+}
+.a3 .nd {
+  background: rgba(20, 30, 10, 0.8);
+}
+.a4 .nd {
+  background: rgba(45, 90, 142, 0.6);
+}
+.a5 .nd {
+  background: rgba(122, 80, 150, 0.6);
+}
+.a-reseau .nd {
+  background: rgba(196, 99, 42, 0.85);
+}
+.a-codir .nd {
+  background: rgba(45, 90, 142, 0.7);
+}
+.a-admin .nd {
+  background: rgba(196, 99, 42, 0.85);
 }
 
 .return-bar-right {
@@ -68,6 +133,7 @@
   cursor: pointer;
   font-family: var(--sans);
   transition: all 0.2s;
+  white-space: nowrap;
 
   &:hover {
     background: rgba(255, 255, 255, 0.22);

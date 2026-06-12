@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { APPS_META } from '../../../core/models/permissions.model';
 import { permissionLabel } from '../../../core/models/kpi.model';
@@ -8,7 +8,7 @@ import { AppCode } from '../../../core/models/user.model';
 @Component({
   selector: 'app-return-banner',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './app-return-banner.component.html',
   styleUrl: './app-return-banner.component.scss',
 })
@@ -22,7 +22,11 @@ export class AppReturnBannerComponent {
   /** Full banner label — skips APPS_META lookup when set */
   readonly labelOverride = input<string | undefined>(undefined, { alias: 'label' });
 
+  /** Apps shown in the persistent switcher (Admin is rendered separately). */
+  readonly navApps = APPS_META.filter((a) => a.code !== 'ADMIN' && !a.hideFromNav);
+
   readonly showPortalReturn = computed(() => this.auth.canAccessPortail());
+  readonly canShowAdmin = computed(() => this.auth.canAccess('ADMIN'));
 
   readonly displayLabel = computed(() => {
     const override = this.labelOverride();
@@ -39,6 +43,16 @@ export class AppReturnBannerComponent {
     const suffix = perm ? ` · ${perm}` : '';
     return `${icon} ${name}${suffix}`.trim();
   });
+
+  canShow(code: AppCode): boolean {
+    // Track session so buttons appear/update after auth restore on hard refresh
+    this.auth.currentUser();
+    return this.auth.canAccess(code);
+  }
+
+  permLabel(code: AppCode): string {
+    return permissionLabel(this.auth.getPermission(code));
+  }
 
   logout(): void {
     void this.auth.logout();
