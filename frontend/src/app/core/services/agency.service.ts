@@ -10,6 +10,8 @@ interface AgencyRow {
   adresse: string | null;
   slug: string | null;
   contact_email: string | null;
+  actif: boolean;
+  archived: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,7 +27,11 @@ export class AgencyService {
   readonly ready = this._ready.asReadonly();
 
   async load(): Promise<void> {
-    const { data, error } = await this.supabase.from('agencies').select('*').order('name');
+    const { data, error } = await this.supabase
+      .from('agencies')
+      .select('*')
+      .eq('archived', false)
+      .order('name');
 
     if (error) {
       console.error('[Agency] load failed', error);
@@ -74,7 +80,7 @@ export class AgencyService {
     return agency?.contact_email?.trim() ?? '';
   }
 
-  /** Portal user franchise picker: siège + active agencies. */
+  /** Portal user franchise picker: siège + non-archived agencies (includes disabled). */
   getFranchiseOptions(): string[] {
     return ['(siège)', ...this.getNames()];
   }
@@ -104,6 +110,8 @@ export class AgencyService {
       p_ville: input.ville.trim() || null,
       p_adresse: input.adresse.trim() || null,
       p_contact_email: input.contact_email.trim() || null,
+      p_actif: input.status === 'active',
+      p_archived: input.status === 'archived',
     });
     if (error) throw error;
     await this.load();

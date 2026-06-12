@@ -29,6 +29,27 @@
           <p class="field-hint">Utilisé pour les notifications Ossature (devis retour, etc.).</p>
         </div>
 
+        @if (mode() === 'edit') {
+          <div class="modal-field">
+            <label for="a-status">Statut</label>
+            <select id="a-status" formControlName="status">
+              <option value="active">Active</option>
+              <option value="disabled">Désactivée</option>
+              <option value="archived">Archivée</option>
+            </select>
+            @if (form.controls.status.value === 'disabled') {
+              <p class="field-hint field-hint-warn">
+                Les comptes liés ne pourront plus se connecter. La franchise reste visible dans les listes. Les comptes ne sont pas désactivés.
+              </p>
+            }
+            @if (form.controls.status.value === 'archived') {
+              <p class="field-hint field-hint-warn">
+                La franchise disparaît des listes et les comptes liés ne pourront plus se connecter. Les comptes ne sont pas désactivés.
+              </p>
+            }
+          </div>
+        }
+
         @if (error()) {
           <div class="modal-error">{{ error() }}</div>
         }

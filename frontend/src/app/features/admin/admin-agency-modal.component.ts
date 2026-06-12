@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import type { Agency, AgencyCreate, AgencyUpdate } from '../../core/models/agency.model';
+import type { Agency, AgencyCreate, AgencyStatus, AgencyUpdate } from '../../core/models/agency.model';
+import { agencyStatus } from '../../core/models/agency.model';
 
 export type AdminAgencyModalMode = 'create' | 'edit';
 
@@ -29,6 +30,7 @@ export class AdminAgencyModalComponent {
     ville: [''],
     adresse: [''],
     contact_email: ['', Validators.email],
+    status: ['active' as AgencyStatus],
   });
 
   constructor() {
@@ -39,13 +41,14 @@ export class AdminAgencyModalComponent {
       const a = this.agency();
 
       if (isCreate) {
-        this.form.reset({ name: '', ville: '', adresse: '', contact_email: '' });
+        this.form.reset({ name: '', ville: '', adresse: '', contact_email: '', status: 'active' });
       } else if (a) {
         this.form.reset({
           name: a.name,
           ville: a.ville ?? '',
           adresse: a.adresse ?? '',
           contact_email: a.contact_email ?? '',
+          status: agencyStatus(a),
         });
       }
     });
@@ -69,7 +72,7 @@ export class AdminAgencyModalComponent {
     if (this.mode() === 'create') {
       this.saveCreate.emit(payload);
     } else {
-      this.saveEdit.emit(payload);
+      this.saveEdit.emit({ ...payload, status: raw.status });
     }
   }
 }

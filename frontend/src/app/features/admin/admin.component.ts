@@ -137,6 +137,10 @@ export class AdminComponent implements OnInit {
     return u.id;
   }
 
+  userStatusClass(u: PortalUserAdminRow): string {
+    return u.actif ? 'admin-user-status-active' : 'admin-user-status-inactive';
+  }
+
   private formatSaveError(err: unknown): string {
     const msg = this.extractErrorMessage(err);
     if (msg.includes('Email already')) return 'Cet email est déjà utilisé.';

@@ -22,3 +22,20 @@
   color: var(--muted);
   white-space: nowrap;
 }
+
+.users-table td {
+  &.agency-status-active {
+    color: var(--ok);
+    font-weight: 600;
+  }
+
+  &.agency-status-disabled {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  &.agency-status-archived {
+    color: var(--wood);
+    font-weight: 600;
+  }
+}

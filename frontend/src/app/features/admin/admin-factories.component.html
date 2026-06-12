@@ -42,9 +42,7 @@
             <td>{{ f.nom }}</td>
             <td><code class="factory-key">{{ f.key }}</code></td>
             <td>{{ f.contact_email ?? '—' }}</td>
-            <td [class]="f.actif ? 'status-actif' : 'status-inactif'">
-              {{ f.actif ? '● Actif' : '● Inactif' }}
-            </td>
+            <td [class]="factoryStatusClass(f)">● {{ f.actif ? 'Actif' : 'Inactif' }}</td>
             <td class="updated-at">{{ f.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td>
               <button type="button" class="btn-edit" (click)="openEdit(f)">Modifier</button>

@@ -23,8 +23,18 @@ export class LoginComponent implements OnInit {
   password = '';
 
   ngOnInit(): void {
-    if (this.route.snapshot.queryParamMap.get('reason') === 'blocked') {
-      this.error.set('Votre compte a été désactivé. Contactez un administrateur.');
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    switch (reason) {
+      case 'account_disabled':
+      case 'blocked':
+        this.error.set('Votre compte a été désactivé. Contactez un administrateur.');
+        break;
+      case 'franchise_disabled':
+        this.error.set('Votre franchise a été désactivée. Contactez un administrateur.');
+        break;
+      case 'franchise_archived':
+        this.error.set('Votre franchise a été archivée. Contactez un administrateur.');
+        break;
     }
   }
 

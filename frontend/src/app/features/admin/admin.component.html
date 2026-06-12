@@ -42,9 +42,7 @@
             <td><span class="role-badge {{ roleClass(u.role) }}">{{ u.role }}</span></td>
             <td>{{ u.agency_nom ?? '(siège)' }}</td>
             <td>{{ u.factory_nom ?? '—' }}</td>
-            <td [class]="u.actif ? 'status-actif' : 'status-inactif'">
-              {{ u.actif ? '● Actif' : '● Inactif' }}
-            </td>
+            <td [class]="userStatusClass(u)">● {{ u.actif ? 'Actif' : 'Inactif' }}</td>
             <td class="last-sign-in">{{ u.last_sign_in_at ? (u.last_sign_in_at | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
             <td>
               <button type="button" class="btn-edit" (click)="openEdit(u)">Modifier</button>

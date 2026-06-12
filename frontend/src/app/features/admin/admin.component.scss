@@ -123,14 +123,16 @@
   }
 }
 
-.status-actif {
-  color: var(--ok);
-  font-weight: 600;
-}
+.users-table td {
+  &.admin-user-status-active {
+    color: var(--ok);
+    font-weight: 600;
+  }
 
-.status-inactif {
-  color: var(--danger);
-  font-weight: 600;
+  &.admin-user-status-inactive {
+    color: var(--wood);
+    font-weight: 600;
+  }
 }
 
 .last-sign-in {

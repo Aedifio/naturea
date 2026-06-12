@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import type { Agency, AgencyCreate, AgencyUpdate } from '../../core/models/agency.model';
+import type { Agency, AgencyCreate, AgencyStatus, AgencyUpdate } from '../../core/models/agency.model';
+import { agencyStatus, agencyStatusLabel } from '../../core/models/agency.model';
 import { AgencyService } from '../../core/services/agency.service';
 import { PageHeroComponent } from '../../shared/components/page-hero/page-hero.component';
 import { AdminAgencyModalComponent, AdminAgencyModalMode } from './admin-agency-modal.component';
@@ -103,6 +104,25 @@ export class AdminAgenciesComponent implements OnInit {
 
   trackAgency(a: Agency): number {
     return a.id;
+  }
+
+  statusOf(a: Agency): AgencyStatus {
+    return agencyStatus(a);
+  }
+
+  statusLabel(a: Agency): string {
+    return agencyStatusLabel(this.statusOf(a));
+  }
+
+  statusClass(a: Agency): string {
+    switch (this.statusOf(a)) {
+      case 'active':
+        return 'agency-status-active';
+      case 'disabled':
+        return 'agency-status-disabled';
+      case 'archived':
+        return 'agency-status-archived';
+    }
   }
 
   private formatSaveError(err: unknown): string {

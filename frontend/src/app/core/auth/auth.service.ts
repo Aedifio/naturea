@@ -25,8 +25,15 @@ interface PortalUserRow {
   actif: boolean;
   factory_id: number | null;
   agency_id: number | null;
-  agencies: { name: string } | { name: string }[] | null;
+  agencies: { name: string; actif: boolean; archived: boolean } | { name: string; actif: boolean; archived: boolean }[] | null;
 }
+
+type ProfileAccessStatus =
+  | 'ok'
+  | 'missing'
+  | 'user_inactive'
+  | 'franchise_disabled'
+  | 'franchise_archived';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -102,13 +109,9 @@ export class AuthService {
     }
     await this.storageAdapter.hydrate();
     const profileStatus = await this.resolveProfileStatus();
-    if (profileStatus === 'inactive') {
-      await this.supabase.auth.signOut();
-      return { ok: false, error: 'Votre compte a été désactivé.' };
-    }
     if (profileStatus !== 'ok') {
       await this.supabase.auth.signOut();
-      return { ok: false, error: 'Profil portail introuvable pour ce compte.' };
+      return { ok: false, error: this.profileAccessMessage(profileStatus) };
     }
     await this.loadProfileFromSession();
     try {
@@ -150,12 +153,12 @@ export class AuthService {
     }
   }
 
-  async logoutDueToBlockedAccount(): Promise<void> {
+  async logoutDueToBlockedAccess(reason: ProfileAccessStatus): Promise<void> {
     this.userSignal.set(null);
     syncSentryUser(null);
     this.storageAdapter.clearCache();
     await this.supabase.auth.signOut();
-    void this.router.navigate(['/login'], { queryParams: { reason: 'blocked' } });
+    void this.router.navigate(['/login'], { queryParams: { reason: this.profileAccessReasonParam(reason) } });
   }
 
   getPermission(appCode: AppCode): PermissionLevel {
@@ -275,29 +278,72 @@ export class AuthService {
   private async runAccountCheck(): Promise<void> {
     this.lastAccountCheckAt = Date.now();
     const status = await this.resolveProfileStatus();
-    if (status === 'inactive') {
-      await this.logoutDueToBlockedAccount();
-      return;
-    }
     if (status === 'missing') {
       await this.logout();
+      return;
+    }
+    if (status !== 'ok') {
+      await this.logoutDueToBlockedAccess(status);
     }
   }
 
-  private async resolveProfileStatus(): Promise<'ok' | 'inactive' | 'missing'> {
+  private async resolveProfileStatus(): Promise<ProfileAccessStatus> {
     const { data: authData } = await this.supabase.auth.getUser();
     const authUser = authData.user;
     if (!authUser?.id || !authUser.email) return 'missing';
 
     const { data: row, error } = await this.supabase.client
       .from('portal_users')
-      .select('id, actif')
+      .select('id, actif, agency_id, agencies(actif, archived)')
       .eq('auth_user_id', authUser.id)
       .maybeSingle();
 
     if (error || !row) return 'missing';
-    if (!row.actif) return 'inactive';
+    return this.resolveAccessFromRow(row as PortalUserRow);
+  }
+
+  private resolveAccessFromRow(row: PortalUserRow): ProfileAccessStatus {
+    if (!row.actif) return 'user_inactive';
+    const franchiseStatus = this.linkedFranchiseAccessStatus(row);
+    if (franchiseStatus) return franchiseStatus;
     return 'ok';
+  }
+
+  private linkedFranchiseAccessStatus(row: PortalUserRow): 'franchise_disabled' | 'franchise_archived' | null {
+    if (row.agency_id == null) return null;
+    const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
+    if (!agency) return null;
+    if (agency.archived) return 'franchise_archived';
+    if (!agency.actif) return 'franchise_disabled';
+    return null;
+  }
+
+  private profileAccessMessage(status: ProfileAccessStatus): string {
+    switch (status) {
+      case 'user_inactive':
+        return 'Votre compte a été désactivé. Contactez un administrateur.';
+      case 'franchise_disabled':
+        return 'Votre franchise a été désactivée. Contactez un administrateur.';
+      case 'franchise_archived':
+        return 'Votre franchise a été archivée. Contactez un administrateur.';
+      case 'missing':
+        return 'Profil portail introuvable pour ce compte.';
+      default:
+        return 'Connexion impossible.';
+    }
+  }
+
+  private profileAccessReasonParam(status: ProfileAccessStatus): string {
+    switch (status) {
+      case 'user_inactive':
+        return 'account_disabled';
+      case 'franchise_disabled':
+        return 'franchise_disabled';
+      case 'franchise_archived':
+        return 'franchise_archived';
+      default:
+        return 'blocked';
+    }
   }
 
   private async loadProfileFromSession(): Promise<boolean> {
@@ -307,11 +353,11 @@ export class AuthService {
 
     const { data: row, error } = await this.supabase.client
       .from('portal_users')
-      .select('id, legacy_id, name, role_id, actif, factory_id, agency_id, agencies(name), portal_roles(name)')
+      .select('id, legacy_id, name, role_id, actif, factory_id, agency_id, agencies(name, actif, archived), portal_roles(name)')
       .eq('auth_user_id', authUser.id)
       .maybeSingle();
 
-    if (error || !row || !row.actif) return false;
+    if (error || !row || this.resolveAccessFromRow(row as PortalUserRow) !== 'ok') return false;
 
     const roleName = this.portalRoleName(row as PortalUserRow);
     let recrutementCandidatId: string | null = null;

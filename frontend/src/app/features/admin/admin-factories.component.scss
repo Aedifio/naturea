@@ -25,3 +25,15 @@
   color: var(--muted);
   white-space: nowrap;
 }
+
+.users-table td {
+  &.factory-status-active {
+    color: var(--ok);
+    font-weight: 600;
+  }
+
+  &.factory-status-inactive {
+    color: var(--wood);
+    font-weight: 600;
+  }
+}

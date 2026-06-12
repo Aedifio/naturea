@@ -29,6 +29,7 @@
           <th>Email</th>
           <th>Adresse</th>
           <th>Slug</th>
+          <th>Statut</th>
           <th>Mise à jour</th>
           <th></th>
         </tr>
@@ -41,6 +42,7 @@
             <td>{{ a.contact_email ?? '—' }}</td>
             <td class="adresse">{{ a.adresse ?? '—' }}</td>
             <td><code class="agency-slug">{{ a.slug ?? '—' }}</code></td>
+            <td [class]="statusClass(a)">● {{ statusLabel(a) }}</td>
             <td class="updated-at">{{ a.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td>
               <button type="button" class="btn-edit" (click)="openEdit(a)">Modifier</button>

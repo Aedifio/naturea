@@ -105,6 +105,10 @@ export class AdminFactoriesComponent implements OnInit {
     return f.id;
   }
 
+  factoryStatusClass(f: Factory): string {
+    return f.actif ? 'factory-status-active' : 'factory-status-inactive';
+  }
+
   private formatSaveError(err: unknown): string {
     const msg = this.extractErrorMessage(err);
     if (msg.includes('duplicate key') || msg.includes('factory_key_key')) {
