@@ -1,6 +1,7 @@
 :host {
   display: block;
-  height: var(--return-banner-h, 50px);
+  /* Spacer matches the fixed bar; its real height is measured into --return-banner-h. */
+  height: var(--return-banner-h, 80px);
   flex-shrink: 0;
 }
 
@@ -10,14 +11,21 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: var(--return-banner-h, 50px);
   background: #41532a;
   display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px;
   border-bottom: 2px solid var(--accent-ink);
   z-index: 300;
+}
+
+/* Top row: logo (left) + connected user & logout (right) — always visible. */
+.bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .banner-brand {
@@ -28,39 +36,87 @@
 }
 
 .banner-logo {
-  height: 66px;
+  height: 96px;
   width: auto;
   display: block;
   border-radius: 5px;
 }
 
-/* Persistent app switcher — scrolls horizontally so it always fits the bar. */
-.nav-apps {
+/* User + logout — pinned right, never scrolled away. */
+.return-bar-right {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 5px;
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-  -webkit-overflow-scrolling: touch;
+  gap: 12px;
+}
 
-  &::-webkit-scrollbar {
-    height: 5px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nu-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nu-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nu-role {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nav-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--terra);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.nav-logout {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.82);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
   }
 }
 
-.bar-sep {
-  width: 1px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.22);
-  flex-shrink: 0;
+/* App switcher: wraps onto multiple rows so every app stays visible. */
+.nav-apps {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .nab {
@@ -130,74 +186,4 @@
 }
 .a-admin .nd {
   background: rgba(196, 99, 42, 0.85);
-}
-
-/* User + logout — pinned right, never scrolled away. */
-.return-bar-right {
-  margin-left: auto;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-user {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.nu-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.nu-name {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 12.5px;
-  font-weight: 600;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.nu-role {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.nav-av {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--terra);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.nav-logout {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.82);
-  padding: 5px 11px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  cursor: pointer;
-  font-family: var(--sans);
-  transition: all 0.2s;
-  white-space: nowrap;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.22);
-    color: #fff;
-  }
 }

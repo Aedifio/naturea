@@ -1,24 +1,35 @@
-<div class="app-return-bar">
-  <a routerLink="/home" class="banner-brand" title="alfred">
-    <img [src]="logo.src" [alt]="logo.alt" class="banner-logo" />
-  </a>
-  <span class="bar-sep"></span>
-
-  @if (showPortalReturn()) {
-    <a
-      routerLink="/home"
-      routerLinkActive="on"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="nab a-portail return-home"
-      title="Accueil"
-    >
-      <span class="nd">🏠</span>
-      Accueil
+<div class="app-return-bar" #bar>
+  <div class="bar-top">
+    <a routerLink="/home" class="banner-brand" title="alfred">
+      <img [src]="logo.src" [alt]="logo.alt" class="banner-logo" />
     </a>
-    <span class="bar-sep"></span>
-  }
+    <div class="return-bar-right">
+      @if (user(); as u) {
+        <div class="nav-user">
+          <div class="nu-text">
+            <div class="nu-name">{{ u.name }}</div>
+            <div class="nu-role">{{ u.role }}</div>
+          </div>
+          <div class="nav-av">{{ initials() }}</div>
+        </div>
+      }
+      <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
+    </div>
+  </div>
 
   <div class="nav-apps">
+    @if (showPortalReturn()) {
+      <a
+        routerLink="/home"
+        routerLinkActive="on"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="nab a-portail return-home"
+        title="Accueil"
+      >
+        <span class="nd">🏠</span>
+        Accueil
+      </a>
+    }
     @for (app of navApps; track app.code) {
       @if (canShow(app.code)) {
         <a
@@ -45,19 +56,5 @@
         Admin
       </a>
     }
-  </div>
-
-  <span class="bar-sep"></span>
-  <div class="return-bar-right">
-    @if (user(); as u) {
-      <div class="nav-user">
-        <div class="nu-text">
-          <div class="nu-name">{{ u.name }}</div>
-          <div class="nu-role">{{ u.role }}</div>
-        </div>
-        <div class="nav-av">{{ initials() }}</div>
-      </div>
-    }
-    <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
   </div>
 </div>

@@ -1,4 +1,13 @@
-import { Component, computed, inject, input } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+  computed,
+  inject,
+  input,
+} from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { APPS_META } from '../../../core/models/permissions.model';
@@ -13,8 +22,12 @@ import { NATUREA_LOGO } from '../../constants/branding';
   templateUrl: './app-return-banner.component.html',
   styleUrl: './app-return-banner.component.scss',
 })
-export class AppReturnBannerComponent {
+export class AppReturnBannerComponent implements AfterViewInit, OnDestroy {
   private readonly auth = inject(AuthService);
+
+  /** Banner element — its real height drives --return-banner-h so layouts stay aligned. */
+  @ViewChild('bar') private barRef?: ElementRef<HTMLElement>;
+  private resizeObserver?: ResizeObserver;
 
   readonly logo = NATUREA_LOGO;
   readonly user = this.auth.currentUser;
@@ -43,21 +56,18 @@ export class AppReturnBannerComponent {
   readonly showPortalReturn = computed(() => this.auth.canAccessPortail());
   readonly canShowAdmin = computed(() => this.auth.canAccess('ADMIN'));
 
-  readonly displayLabel = computed(() => {
-    const override = this.labelOverride();
-    if (override) return override;
+  ngAfterViewInit(): void {
+    const el = this.barRef?.nativeElement;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    this.resizeObserver = new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--return-banner-h', `${el.offsetHeight}px`);
+    });
+    this.resizeObserver.observe(el);
+  }
 
-    // Track session so label updates after auth restore on hard refresh
-    this.auth.currentUser();
-
-    const code = this.appCode();
-    const app = code ? APPS_META.find((a) => a.code === code) : undefined;
-    const name = this.title() ?? app?.name ?? '';
-    const icon = app?.icon ?? '';
-    const perm = code ? permissionLabel(this.auth.getPermission(code)) : '';
-    const suffix = perm ? ` · ${perm}` : '';
-    return `${icon} ${name}${suffix}`.trim();
-  });
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+  }
 
   canShow(code: AppCode): boolean {
     // Track session so buttons appear/update after auth restore on hard refresh
