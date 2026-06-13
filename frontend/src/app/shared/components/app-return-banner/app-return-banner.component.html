@@ -1,48 +1,9 @@
-<div class="app-return-bar" #bar>
-  <div class="bar-top">
-    <a routerLink="/home" class="banner-brand" title="alfred">
-      <img [src]="logo.src" [alt]="logo.alt" class="banner-logo" />
-    </a>
-    <div class="return-bar-right">
-      @if (user(); as u) {
-        <div class="nav-user">
-          <div class="nu-text">
-            <div class="nu-name">{{ u.name }}</div>
-            <div class="nu-role">{{ u.role }}</div>
-          </div>
-          <div class="nav-av">{{ initials() }}</div>
-        </div>
-      }
-      <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
-    </div>
-  </div>
-
-  <div class="nav-apps">
-    @for (app of navApps; track app.code) {
-      @if (canShow(app.code)) {
-        <a
-          class="nab {{ app.navClass }}"
-          routerLinkActive="on"
-          [routerLinkActiveOptions]="{ exact: false }"
-          [routerLink]="app.route"
-          [title]="permLabel(app.code)"
-        >
-          <span class="nd">{{ app.icon }}</span>
-          {{ app.navLabel }}
-        </a>
-      }
-    }
-    @if (canShowAdmin()) {
-      <a
-        class="nab a-admin"
-        routerLink="/admin"
-        routerLinkActive="on"
-        [routerLinkActiveOptions]="{ exact: false }"
-        title="Administration"
-      >
-        <span class="nd">⚙️</span>
-        Admin
-      </a>
-    }
+<div class="app-return-bar">
+  @if (showPortalReturn()) {
+    <a routerLink="/home" class="return-btn">← Retour au portail</a>
+  }
+  <span class="return-label grow">{{ displayLabel() }}</span>
+  <div class="return-bar-right">
+    <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
   </div>
 </div>

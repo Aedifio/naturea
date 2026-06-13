@@ -1,4 +1,4 @@
 export const NATUREA_LOGO = {
-  src: '/alfred-logo.png',
-  alt: 'alfred',
+  src: '/naturea-logo.png',
+  alt: 'Maisons Naturéa',
 } as const;
