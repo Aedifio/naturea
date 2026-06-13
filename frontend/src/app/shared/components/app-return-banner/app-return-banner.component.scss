@@ -1,6 +1,7 @@
 :host {
   display: block;
-  height: var(--return-banner-h, 50px);
+  /* Spacer matches the fixed bar; its real height is measured into --return-banner-h. */
+  height: var(--return-banner-h, 80px);
   flex-shrink: 0;
 }
 
@@ -10,51 +11,89 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: var(--return-banner-h, 50px);
   background: #41532a;
   display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 14px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px;
   border-bottom: 2px solid var(--accent-ink);
   z-index: 300;
 }
 
-.return-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 6px 13px;
-  border-radius: 6px;
-  font-size: 12.5px;
-  font-family: var(--sans);
+/* Top row: logo (left) + connected user & logout (right) — always visible.
+   Wraps on narrow screens so the user/logout block drops below the logo
+   instead of being clipped off-screen. */
+.bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.banner-brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   text-decoration: none;
-  transition: background 0.2s;
-  white-space: nowrap;
   cursor: pointer;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.22);
-  }
 }
 
-.return-label {
-  color: #fff;
-  font-family: var(--serif);
-  font-size: 18px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  &.grow {
-    flex: 1;
-    min-width: 0;
-  }
+.banner-logo {
+  height: 96px;
+  width: auto;
+  display: block;
+  border-radius: 5px;
 }
 
+/* User + logout — pinned right, never scrolled away. */
 .return-bar-right {
-  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nu-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nu-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nu-role {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nav-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--terra);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
   flex-shrink: 0;
 }
 
@@ -62,15 +101,93 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.82);
-  padding: 5px 11px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 11.5px;
   cursor: pointer;
   font-family: var(--sans);
   transition: all 0.2s;
+  white-space: nowrap;
 
   &:hover {
     background: rgba(255, 255, 255, 0.22);
     color: #fff;
   }
+}
+
+/* App switcher: wraps onto multiple rows so every app stays visible. */
+.nav-apps {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  padding: 5px 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
+
+  &.on {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  .nd {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+}
+
+.return-home .nd {
+  background: rgba(90, 122, 58, 0.7);
+}
+.a1 .nd {
+  background: rgba(90, 122, 58, 0.7);
+}
+.a2 .nd {
+  background: rgba(196, 99, 42, 0.6);
+}
+.a3 .nd {
+  background: rgba(20, 30, 10, 0.8);
+}
+.a4 .nd {
+  background: rgba(45, 90, 142, 0.6);
+}
+.a5 .nd {
+  background: rgba(122, 80, 150, 0.6);
+}
+.a-reseau .nd {
+  background: rgba(196, 99, 42, 0.85);
+}
+.a-codir .nd {
+  background: rgba(45, 90, 142, 0.7);
+}
+.a-admin .nd {
+  background: rgba(196, 99, 42, 0.85);
 }
