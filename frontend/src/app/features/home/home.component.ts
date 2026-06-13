@@ -95,11 +95,8 @@ export class HomeComponent {
   });
 
   readonly greeting = computed(() => {
-    const u = this.user();
-    if (!u) return 'Bienvenue';
     const h = new Date().getHours();
-    const greet = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
-    return `${greet}, ${u.name.split(' ')[0]} · ${u.role}`;
+    return h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
   });
 
   openModal(type: PortalModalType): void {
