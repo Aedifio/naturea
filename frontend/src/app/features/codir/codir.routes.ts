@@ -16,7 +16,7 @@ export const CODIR_ROUTES: Routes = [
         variant: 'codir',
         appCode: 'CODIR',
         title: 'CODIR',
-        tag: "Le codir d'alfred",
+        tag: 'Pilotage exécutif',
         showLogo: true,
         navItems: [
           { label: 'Tableau de bord', route: '/apps/codir', iconName: 'layout' },
