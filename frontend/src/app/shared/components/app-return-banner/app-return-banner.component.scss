@@ -20,12 +20,15 @@
   z-index: 300;
 }
 
-/* Top row: logo (left) + connected user & logout (right) — always visible. */
+/* Top row: logo (left) + connected user & logout (right) — always visible.
+   Wraps on narrow screens so the user/logout block drops below the logo
+   instead of being clipped off-screen. */
 .bar-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
 }
 
 .banner-brand {
@@ -33,6 +36,7 @@
   display: flex;
   align-items: center;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .banner-logo {

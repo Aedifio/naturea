@@ -18,18 +18,6 @@
   </div>
 
   <div class="nav-apps">
-    @if (showPortalReturn()) {
-      <a
-        routerLink="/home"
-        routerLinkActive="on"
-        [routerLinkActiveOptions]="{ exact: false }"
-        class="nab a-portail return-home"
-        title="Accueil"
-      >
-        <span class="nd">🏠</span>
-        Accueil
-      </a>
-    }
     @for (app of navApps; track app.code) {
       @if (canShow(app.code)) {
         <a
