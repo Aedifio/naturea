@@ -47,7 +47,17 @@
     }
   </div>
 
+  <span class="bar-sep"></span>
   <div class="return-bar-right">
+    @if (user(); as u) {
+      <div class="nav-user">
+        <div class="nu-text">
+          <div class="nu-name">{{ u.name }}</div>
+          <div class="nu-role">{{ u.role }}</div>
+        </div>
+        <div class="nav-av">{{ initials() }}</div>
+      </div>
+    }
     <button type="button" class="nav-logout" (click)="logout()">⏻ Déconnexion</button>
   </div>
 </div>

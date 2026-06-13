@@ -28,7 +28,7 @@
 }
 
 .banner-logo {
-  height: 54px;
+  height: 66px;
   width: auto;
   display: block;
   border-radius: 5px;
@@ -132,8 +132,55 @@
   background: rgba(196, 99, 42, 0.85);
 }
 
+/* User + logout — pinned right, never scrolled away. */
 .return-bar-right {
   margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nu-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nu-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nu-role {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nav-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--terra);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
   flex-shrink: 0;
 }
 

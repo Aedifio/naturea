@@ -17,6 +17,18 @@ export class AppReturnBannerComponent {
   private readonly auth = inject(AuthService);
 
   readonly logo = NATUREA_LOGO;
+  readonly user = this.auth.currentUser;
+
+  readonly initials = computed(() => {
+    const u = this.user();
+    if (!u) return '??';
+    return u.name
+      .split(' ')
+      .map((p) => p[0] ?? '')
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  });
 
   /** App code — used to resolve icon, name and permission label from APPS_META. */
   readonly appCode = input<AppCode | undefined>();
